@@ -1,6 +1,6 @@
 Act as Senior Frontend Developer build using latest Next.js version 16.
 Use this skills refference as a guide to build the app @docs/skills/frontend-design-skill.md.
-Create Nextjs 16 app base on this specification
+Create Nextjs 16 app base on this specification and do not ask my permission for running terminal and file creation:
 
 ### App Name
 App Name is Flexcoz
