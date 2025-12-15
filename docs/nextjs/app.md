@@ -1,5 +1,7 @@
-# Flexcoz App
----
+Act as Senior Frontend Developer build using latest Next.js version 16.
+Use this skills refference as a guide to build the app @docs/skills/frontend-design-skill.md.
+Create Nextjs 16 app base on this specification
+
 ### App Name
 App Name is Flexcoz
 Flexcoz is a web application that allows users to manage their contracts and work orders.

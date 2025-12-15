@@ -53,11 +53,17 @@ run_rmc() {
     echo "✅ Removing Container authapi-authapi-service-1..."
     docker rm authapi-authapi-service-1 --force ; \
 
+    echo "✅ Removing Container flexcozapi-authapi-service-1..."
+    docker rm flexcozapi-authapi-service-1 --force ; \
+
     echo "✅ Removing Container appapidev..."
     docker rm appapidev --force ; \
 
     echo "✅ Removing Container appapi-appapi-service-1..."
     docker rm appapi-appapi-service-1 --force ; \
+
+    echo "✅ Removing Container flexcozapi-appapi-service-1..."
+    docker rm flexcozapi-appapi-service-1 --force ; \
 
     echo "✅ Verifying Containers..."
     docker ps -a

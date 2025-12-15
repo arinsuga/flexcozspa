@@ -17,7 +17,7 @@ class ContractController extends Controller
 
     public function index()
     {
-        $contracts = $this->repository->getContractsByActive();
+        $contracts = $this->repository->all();
         return response()->json(['data' => $contracts], 200);
     }
 
