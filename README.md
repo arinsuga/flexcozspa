@@ -1,10 +1,6 @@
 # flexcozspa
 <img width="255" height="255" alt="flexcoz1" src="https://github.com/user-attachments/assets/feafd614-e054-4246-8303-2b433a429397" />
 
-Act as Senior Frontend Developer build using latest Next.js version 16.
-Use this skills refference as a guide to build the app @docs/skills/frontend-design-skill.md.
-Create Nextjs 16 app base on this specification and do not ask my permission for running terminal and file creation:
-
 ### App Name
 App Name is Flexcoz
 Flexcoz is a web application that allows users to manage their contracts and work orders.
