@@ -149,13 +149,15 @@ Use auto update for every new version release. user Service Worker to cache and 
 - Use Playwright for end-to-end testing
 
 **Design Requirements (UI)**
+- Use Material Design Concept
 - Use Tailwind CSS for styling
 - Make responsive design
 - Use this image for logo : @public/logo.png and put the logo file as static asset in public folder
 - Use this image for favicon : @public/favicon.ico and put the favicon file as static asset in public folder
 - Use this color theme : #5A9CB5 #FACE68 #FAAC68 #FA6868
 - Use Nano Banana for every static asset needed
-- Use this font : Poppins
+- Use google font montserrat
+- Use google icon font material icons
 - add dark mode base on user preference
 - Add responsive Navigation:
   - For mobile, tablet, and desktop.

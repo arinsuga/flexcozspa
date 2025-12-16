@@ -1,6 +1,6 @@
 Act as Senior Frontend Developer build using latest Next.js version 16.
 Use this skills refference as a guide to build the app @docs/skills/frontend-design-skill.md.
-Create Nextjs 16 app base on this specification and do not ask my permission for running terminal and file creation:
+Create Nextjs 16 app base on this specification:
 
 ### App Name
 App Name is Flexcoz
@@ -150,13 +150,15 @@ Use auto update for every new version release. user Service Worker to cache and 
 - Use Playwright for end-to-end testing
 
 **Design Requirements (UI)**
+- Use Material Design Concept
 - Use Tailwind CSS for styling
 - Make responsive design
-- Use this image for logo : @public/logo.png and put the logo file as static asset in public folder
-- Use this image for favicon : @public/favicon.ico and put the favicon file as static asset in public folder
+- Use @flexcoz image for logo and put the logo file as static asset in public folder
+- Convert @flexcoz image to favicon and put the favicon file as static asset in public folder
 - Use this color theme : #5A9CB5 #FACE68 #FAAC68 #FA6868
 - Use Nano Banana for every static asset needed
-- Use this font : Poppins
+- Use google font montserrat
+- Use google icon font material icons
 - add dark mode base on user preference
 - Add responsive Navigation:
   - For mobile, tablet, and desktop.

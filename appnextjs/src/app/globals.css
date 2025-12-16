@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+:root {
+  --background: #f8fafc;
+  --foreground: #1e293b;
+  
+  /* Flexcoz Colors */
+  --primary: #5A9CB5;
+  --secondary: #FACE68;
+  --accent: #FAAC68;
+  --error: #FA6868;
+  
+  --sidebar-bg: #ffffff;
+  --header-bg: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-error: var(--error);
+  
+  --color-sidebar: var(--sidebar-bg);
+  --color-header: var(--header-bg);
+
+  --font-montserrat: 'Montserrat', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+    
+    --sidebar-bg: #1e293b;
+    --header-bg: #1e293b;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-montserrat);
+}
