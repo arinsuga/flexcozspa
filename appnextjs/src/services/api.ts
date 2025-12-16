@@ -4,6 +4,7 @@ export const AUTH_API_URL = 'http://authapi.localhost/';
 export const APP_API_URL = 'http://appapi.localhost/';
 
 const createApi = (baseURL: string): AxiosInstance => {
+  console.log('Inside createApi...');
   const instance = axios.create({
     baseURL,
     headers: {
