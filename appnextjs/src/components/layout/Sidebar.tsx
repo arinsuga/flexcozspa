@@ -6,13 +6,13 @@ import { useUIStore } from '@/store/uiStore';
 
 const menuItems = [
   { name: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
-  { name: 'Contracts', path: '/contracts', icon: 'description' },
-  { name: 'Orders', path: '/orders', icon: 'shopping_cart' },
-  { name: 'Projects', path: '/projects', icon: 'business_center' },
-  { name: 'Vendors', path: '/vendors', icon: 'store' },
-  { name: 'Reference Types', path: '/reff-types', icon: 'label' },
-  { name: 'UOMs', path: '/uoms', icon: 'square_foot' },
-  { name: 'Sheet Groups', path: '/sheet-groups', icon: 'view_module' },
+  { name: 'Project Management', path: '/projects', icon: 'business_center' },
+  { name: 'Vendor Management', path: '/vendors', icon: 'store' },
+  { name: 'Reff Type Management', path: '/reff-types', icon: 'label' },
+  { name: 'UOM Management', path: '/uoms', icon: 'square_foot' },
+  { name: 'Sheet Group Management', path: '/sheet-groups', icon: 'view_module' },
+  { name: 'Contract Management', path: '/contracts', icon: 'description' },
+  { name: 'Order Management', path: '/orders', icon: 'shopping_cart' },
 ];
 
 export default function Sidebar() {

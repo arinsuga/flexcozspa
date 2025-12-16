@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import 'material-icons/iconfont/material-icons.css';
 import Providers from "@/components/providers/Providers";
 import UpdateNotification from "@/components/common/UpdateNotification";
 
@@ -9,8 +10,6 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   themeColor: "#5A9CB5",
 };
-
-
 
 export default function RootLayout({
   children,

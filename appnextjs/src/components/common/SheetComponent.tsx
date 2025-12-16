@@ -19,46 +19,58 @@ const SheetComponent = forwardRef((props: SheetComponentProps, ref) => {
   const jInstance = useRef<any>(null);
 
   useImperativeHandle(ref, () => ({
-    getJson: () => jInstance.current?.getJson(),
-    getData: () => jInstance.current?.getData(),
-    setData: (newData: any[]) => jInstance.current?.setData(newData),
+    getJson: () => jInstance.current?.[0]?.getJson(),
+    getData: () => jInstance.current?.[0]?.getData(),
+    setData: (newData: any[]) => jInstance.current?.[0]?.setData(newData),
   }));
 
   useEffect(() => {
     if (!jRef.current) return;
     
-    // Check if instance already exists to prevent double initialization in React Strict Mode
+    // Check if instance already exists
     if (jInstance.current) {
-        // If columns change, we might need to destroy and recreate or use generic update
-        // simple update for now
-        // jInstance.current.setData(data); // Be careful with loop
         return;
     }
 
-    // @ts-ignore - jspreadsheet-ce types might differ from actual usage or pro version
+    // @ts-ignore - jspreadsheet-ce v5 configuration
     const options = {
-      data: data,
-      columns: columns,
-      minDimensions: [columns.length || 5, 10], 
-      tableOverflow: true,
-      tableWidth: '100%',
-      tableHeight: '500px',
-      onchange: onchange,
-      oninsertrow: oninsertrow,
-      ondeleterow: ondeleterow,
-      allowComments: true,
-      contextMenu: true,
-      search: true,
-      pagination: 20,
+      worksheets: [{
+        data: data,
+        columns: columns,
+        minDimensions: [columns.length || 5, 10], 
+        tableOverflow: true,
+        tableWidth: '100%',
+        tableHeight: '500px',
+        onchange: onchange,
+        oninsertrow: oninsertrow,
+        ondeleterow: ondeleterow,
+        allowComments: true,
+        contextMenu: true,
+        search: true,
+        pagination: 20,
+      }],
     };
 
     // @ts-ignore
     jInstance.current = jspreadsheet(jRef.current, options);
 
     return () => {
-        if (jInstance.current) {
-            jInstance.current.destroy();
-            jInstance.current = null;
+        try {
+            if (jInstance.current) {
+                // jspreadsheet v5 cleanup
+                if (typeof jspreadsheet.destroy === 'function' && jRef.current) {
+                     jspreadsheet.destroy(jRef.current);
+                } else if (jInstance.current && typeof jInstance.current.destroy === 'function') {
+                     jInstance.current.destroy();
+                }
+            }
+        } catch (e) {
+            console.warn('Jspreadsheet cleanup error', e);
+            if (jRef.current) {
+                jRef.current.innerHTML = '';
+            }
+        } finally {
+             jInstance.current = null;
         }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,13 +78,10 @@ const SheetComponent = forwardRef((props: SheetComponentProps, ref) => {
 
   // Watch for data changes
   useEffect(() => {
-     if (jInstance.current && data && data.length > 0) {
-         // Only update if data actually differs significantly or on initial load?
-         // jspreadsheet setData wipes undo history usually.
-         // For now, we assume initial load is the main use case.
-         const currentData = jInstance.current.getJson();
+     if (jInstance.current && jInstance.current[0] && data && data.length > 0) {
+         const currentData = jInstance.current[0].getJson();
          if (JSON.stringify(currentData) !== JSON.stringify(data)) {
-            jInstance.current.setData(data);
+            jInstance.current[0].setData(data);
          }
      }
   }, [data]);

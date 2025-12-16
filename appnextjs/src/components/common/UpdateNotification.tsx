@@ -36,7 +36,7 @@ export default function UpdateNotification() {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-primary animate-fade-in flex items-center gap-4 max-w-sm">
+    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-primary animate-fade-in flex items-center gap-4 max-w-sm">
         <div className="flex-1">
             <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Update Available</h4>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
