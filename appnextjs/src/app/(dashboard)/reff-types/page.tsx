@@ -1,68 +1,68 @@
 'use client';
 
-import { useUOMs, useUOMMutations } from '@/hooks/useUOMs';
+import { useReffTypes, useReffTypeMutations } from '@/hooks/useReffTypes';
 import { useState } from 'react';
 import Button from '@/components/common/Button';
 import Modal from '@/components/common/Modal';
 import Input from '@/components/common/Input';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
-import { UOM } from '@/services/uomService';
+import { ReffType } from '@/services/refftypeService';
 
-export default function UOMPage() {
-  const { data: uoms, isLoading, error } = useUOMs();
-  const { createUOM, updateUOM, deleteUOM } = useUOMMutations();
+export default function ReffTypesPage() {
+  const { data: refftypes, isLoading, error } = useReffTypes();
+  const { createReffType, updateReffType, deleteReffType } = useReffTypeMutations();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingUOM, setEditingUOM] = useState<UOM | undefined>(undefined);
-  const [formData, setFormData] = useState<Partial<UOM>>({});
+  const [editingReffType, setEditingReffType] = useState<ReffType | undefined>(undefined);
+  const [formData, setFormData] = useState<Partial<ReffType>>({});
   
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [uomToDelete, setUOMToDelete] = useState<UOM | null>(null);
+  const [refftypeToDelete, setReffTypeToDelete] = useState<ReffType | null>(null);
 
   const handleCreate = () => {
-    setEditingUOM(undefined);
+    setEditingReffType(undefined);
     setFormData({});
     setIsModalOpen(true);
   };
 
-  const handleEdit = (uom: UOM) => {
-    setEditingUOM(uom);
-    setFormData(uom);
+  const handleEdit = (refftype: ReffType) => {
+    setEditingReffType(refftype);
+    setFormData(refftype);
     setIsModalOpen(true);
   };
 
-  const handleDeleteClick = (uom: UOM) => {
-    setUOMToDelete(uom);
+  const handleDeleteClick = (refftype: ReffType) => {
+    setReffTypeToDelete(refftype);
     setIsDeleteOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingUOM) {
-      await updateUOM.mutateAsync({ id: editingUOM.id, data: formData });
+    if (editingReffType) {
+      await updateReffType.mutateAsync({ id: editingReffType.id, data: formData });
     } else {
-      await createUOM.mutateAsync(formData);
+      await createReffType.mutateAsync(formData);
     }
     setIsModalOpen(false);
   };
 
   const handleConfirmDelete = async () => {
-    if (uomToDelete) {
-      await deleteUOM.mutateAsync(uomToDelete.id);
+    if (refftypeToDelete) {
+      await deleteReffType.mutateAsync(refftypeToDelete.id);
       setIsDeleteOpen(false);
-      setUOMToDelete(null);
+      setReffTypeToDelete(null);
     }
   };
 
-  if (isLoading) return <div className="p-4">Loading UOMs...</div>;
-  if (error) return <div className="p-4 text-error">Error loading UOMs</div>;
+  if (isLoading) return <div className="p-4">Loading Reference Types...</div>;
+  if (error) return <div className="p-4 text-error">Error loading Reference Types</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Units of Measure</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Reference Types</h1>
         <Button onClick={handleCreate} leftIcon="add">
-          New UOM
+          New Reference Type
         </Button>
       </div>
 
@@ -71,26 +71,26 @@ export default function UOMPage() {
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Symbol</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {uoms?.data?.map((uom: UOM) => (
-              <tr key={uom.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{uom.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{uom.symbol || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{uom.description || '-'}</td>
+            {refftypes?.data?.map((refftype: ReffType) => (
+              <tr key={refftype.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{refftype.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{refftype.code || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{refftype.description || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button 
-                    onClick={() => handleEdit(uom)}
+                    onClick={() => handleEdit(refftype)}
                     className="text-primary hover:text-indigo-900 mr-4"
                   >
                     Edit
                   </button>
                   <button 
-                    onClick={() => handleDeleteClick(uom)}
+                    onClick={() => handleDeleteClick(refftype)}
                     className="text-error hover:text-red-900"
                   >
                     Delete
@@ -98,10 +98,10 @@ export default function UOMPage() {
                 </td>
               </tr>
             ))}
-             {uoms?.data?.length === 0 && (
+             {refftypes?.data?.length === 0 && (
                 <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                        No UOMs found.
+                        No reference types found.
                     </td>
                 </tr>
             )}
@@ -112,7 +112,7 @@ export default function UOMPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingUOM ? 'Edit UOM' : 'New UOM'}
+        title={editingReffType ? 'Edit Reference Type' : 'New Reference Type'}
         size="md"
       >
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -123,9 +123,9 @@ export default function UOMPage() {
                    required
                />
                <Input
-                   label="Symbol"
-                   value={formData.symbol || ''}
-                   onChange={(e) => setFormData({...formData, symbol: e.target.value})} // e.g., kg, m
+                   label="Code"
+                   value={formData.code || ''}
+                   onChange={(e) => setFormData({...formData, code: e.target.value})}
                />
                <Input
                    label="Description"
@@ -136,8 +136,8 @@ export default function UOMPage() {
                     <Button variant="ghost" type="button" onClick={() => setIsModalOpen(false)}>
                     Cancel
                     </Button>
-                    <Button variant="primary" type="submit" isLoading={createUOM.isPending || updateUOM.isPending}>
-                    {editingUOM ? 'Update' : 'Create'}
+                    <Button variant="primary" type="submit" isLoading={createReffType.isPending || updateReffType.isPending}>
+                    {editingReffType ? 'Update' : 'Create'}
                     </Button>
                </div>
           </form>
@@ -147,10 +147,10 @@ export default function UOMPage() {
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
-        title="Delete UOM"
-        message={`Are you sure you want to delete ${uomToDelete?.name}?`}
+        title="Delete Reference Type"
+        message={`Are you sure you want to delete ${refftypeToDelete?.name}?`}
         variant="danger"
-        isLoading={deleteUOM.isPending}
+        isLoading={deleteReffType.isPending}
       />
     </div>
   );

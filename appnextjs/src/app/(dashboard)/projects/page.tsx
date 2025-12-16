@@ -8,8 +8,11 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Project } from '@/services/projectService';
 
 export default function ProjectsPage() {
-  const { data: projects, isLoading, error } = useProjects();
+  const { data: projectsData, isLoading, error } = useProjects();
   const { createProject, updateProject, deleteProject } = useProjectMutations();
+  
+  // Extract the projects array from the API response
+  const projects = projectsData?.data || [];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | undefined>(undefined);

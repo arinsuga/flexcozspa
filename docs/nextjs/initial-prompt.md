@@ -16,15 +16,18 @@ Flexcoz is a web application that allows users to manage their contracts and wor
 - Order and Order Sheet is Parent and Child relationship make very user friendly and excel spreadsheet like UIUX.
 
 ### Features
-- User Authentication
-- User Access Management
-- Work Sheet Management
-- Vendor Management
-- Project Management
-- Contract Management
-- Contract Sheet Management
-- Order Management
-- Order Sheet Management
+A. Authentication
+   - User Authentication
+   - User Access Management
+
+B. Data Management
+   1. Project Management
+   2. Vendor Management
+   3. Reff Type Management
+   4. UOM Management
+   5. Sheet Group Management
+   6. Contract Management
+   7. Order Management
 
 ### Tech Stack
 - Next.js

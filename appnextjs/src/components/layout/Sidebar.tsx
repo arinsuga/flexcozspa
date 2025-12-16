@@ -10,8 +10,9 @@ const menuItems = [
   { name: 'Orders', path: '/orders', icon: 'shopping_cart' },
   { name: 'Projects', path: '/projects', icon: 'business_center' },
   { name: 'Vendors', path: '/vendors', icon: 'store' },
-  { name: 'References', path: '/references', icon: 'list' },
+  { name: 'Reference Types', path: '/reff-types', icon: 'label' },
   { name: 'UOMs', path: '/uoms', icon: 'square_foot' },
+  { name: 'Sheet Groups', path: '/sheet-groups', icon: 'view_module' },
 ];
 
 export default function Sidebar() {

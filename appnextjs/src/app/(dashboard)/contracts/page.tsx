@@ -9,8 +9,13 @@ import { Contract } from '@/services/contractService';
 import Link from 'next/link';
 
 export default function ContractsPage() {
-  const { data: contracts, isLoading, error } = useContracts();
+  const { data: contractsResponse, isLoading, error } = useContracts();
   const { createContract, updateContract, deleteContract } = useContractMutations();
+
+  // Handle both direct array and paginated response formats
+  const contracts = Array.isArray(contractsResponse) 
+    ? contractsResponse 
+    : contractsResponse?.data || [];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | undefined>(undefined);

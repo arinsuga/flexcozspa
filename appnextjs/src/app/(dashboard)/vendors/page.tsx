@@ -8,8 +8,13 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Vendor } from '@/services/vendorService';
 
 export default function VendorsPage() {
-  const { data: vendors, isLoading, error } = useVendors();
+  const { data: vendorsResponse, isLoading, error } = useVendors();
   const { createVendor, updateVendor, deleteVendor } = useVendorMutations();
+
+  // Handle both direct array and paginated response formats
+  const vendors = Array.isArray(vendorsResponse) 
+    ? vendorsResponse 
+    : vendorsResponse?.data || [];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | undefined>(undefined);

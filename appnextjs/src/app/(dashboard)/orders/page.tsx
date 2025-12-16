@@ -9,8 +9,13 @@ import { Order } from '@/services/orderService';
 import Link from 'next/link';
 
 export default function OrdersPage() {
-  const { data: orders, isLoading, error } = useOrders();
+  const { data: ordersResponse, isLoading, error } = useOrders();
   const { createOrder, updateOrder, deleteOrder } = useOrderMutations();
+
+  // Handle both direct array and paginated response formats
+  const orders = Array.isArray(ordersResponse) 
+    ? ordersResponse 
+    : ordersResponse?.data || [];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | undefined>(undefined);
