@@ -24,6 +24,11 @@ export const useOrderMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Create Order Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const updateOrder = useMutation({
@@ -32,6 +37,11 @@ export const useOrderMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order', variables.id] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Update Order Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const deleteOrder = useMutation({

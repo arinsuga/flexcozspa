@@ -2,9 +2,9 @@ import { appApi } from './api';
 
 export interface ReffType {
   id: number;
-  name: string;
-  description?: string;
-  code?: string;
+  refftype_name: string;
+  refftype_description?: string;
+  refftype_code?: string;
 }
 
 export const refftypeService = {

@@ -37,6 +37,7 @@ class ContractController extends Controller
         $validated = $request->validate([
             'contract_number' => 'required|unique:contracts,contract_number',
             'contract_name' => 'required|string',
+            'project_id' => 'required|exists:projects,id',
         ]);
 
         $contract = $this->repository->create($request->all());

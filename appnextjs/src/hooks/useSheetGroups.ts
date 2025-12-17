@@ -23,6 +23,11 @@ export const useSheetGroupMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sheetgroups'] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Create SheetGroup Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const updateSheetGroup = useMutation({
@@ -30,6 +35,11 @@ export const useSheetGroupMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sheetgroups'] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Update SheetGroup Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const deleteSheetGroup = useMutation({

@@ -15,6 +15,8 @@ export default function UOMPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUOM, setEditingUOM] = useState<UOM | undefined>(undefined);
   const [formData, setFormData] = useState<Partial<UOM>>({});
+  const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
+  const [appError, setAppError] = useState<string | null>(null);
   
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [uomToDelete, setUOMToDelete] = useState<UOM | null>(null);
@@ -22,12 +24,16 @@ export default function UOMPage() {
   const handleCreate = () => {
     setEditingUOM(undefined);
     setFormData({});
+    setFormErrors({});
+    setAppError(null);
     setIsModalOpen(true);
   };
 
   const handleEdit = (uom: UOM) => {
     setEditingUOM(uom);
     setFormData(uom);
+    setFormErrors({});
+    setAppError(null);
     setIsModalOpen(true);
   };
 
@@ -38,12 +44,22 @@ export default function UOMPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingUOM) {
-      await updateUOM.mutateAsync({ id: editingUOM.id, data: formData });
-    } else {
-      await createUOM.mutateAsync(formData);
+    try {
+      if (editingUOM) {
+        await updateUOM.mutateAsync({ id: editingUOM.id, data: formData });
+      } else {
+        await createUOM.mutateAsync(formData);
+      }
+      setIsModalOpen(false);
+    } catch (error: any) {
+      if (error.response?.status === 422) {
+        setFormErrors(error.response.data.errors);
+      } else {
+        console.error('App Error:', error);
+        setAppError("An application error occurred. Please try again later.");
+        setIsModalOpen(false);
+      }
     }
-    setIsModalOpen(false);
   };
 
   const handleConfirmDelete = async () => {
@@ -59,6 +75,33 @@ export default function UOMPage() {
 
   return (
     <div className="space-y-6">
+      {appError && (
+        <div className="bg-red-50 border-l-4 border-error p-4 relative dark:bg-red-900/20 dark:border-red-500">
+            <div className="flex">
+                <div className="flex-shrink-0">
+                    <span className="text-error">⚠️</span>
+                </div>
+                <div className="ml-3">
+                    <p className="text-sm text-red-700 dark:text-red-200">
+                        {appError}
+                    </p>
+                </div>
+                <div className="ml-auto pl-3">
+                    <div className="-mx-1.5 -my-1.5">
+                        <button
+                            type="button"
+                            onClick={() => setAppError(null)}
+                            className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:ring-offset-red-50 dark:bg-transparent dark:hover:bg-red-900/40"
+                        >
+                            <span className="sr-only">Dismiss</span>
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Units of Measure</h1>
         <Button onClick={handleCreate} leftIcon="add">
@@ -79,9 +122,9 @@ export default function UOMPage() {
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {uoms?.data?.map((uom: UOM) => (
               <tr key={uom.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{uom.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{uom.symbol || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{uom.description || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{uom.uom_name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{uom.uom_code || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{uom.uom_description || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button 
                     onClick={() => handleEdit(uom)}
@@ -118,19 +161,22 @@ export default function UOMPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
                <Input
                    label="Name"
-                   value={formData.name || ''}
-                   onChange={(e) => setFormData({...formData, name: e.target.value})}
+                   value={formData.uom_name || ''}
+                   onChange={(e) => setFormData({...formData, uom_name: e.target.value})}
                    required
+                   error={formErrors?.uom_name?.[0]}
                />
                <Input
                    label="Symbol"
-                   value={formData.symbol || ''}
-                   onChange={(e) => setFormData({...formData, symbol: e.target.value})} // e.g., kg, m
+                   value={formData.uom_code || ''}
+                   onChange={(e) => setFormData({...formData, uom_code: e.target.value})} // e.g., kg, m
+                   error={formErrors?.uom_code?.[0]}
                />
                <Input
                    label="Description"
-                   value={formData.description || ''}
-                   onChange={(e) => setFormData({...formData, description: e.target.value})}
+                   value={formData.uom_description || ''}
+                   onChange={(e) => setFormData({...formData, uom_description: e.target.value})}
+                   error={formErrors?.uom_description?.[0]}
                />
                <div className="flex justify-end gap-3 mt-6">
                     <Button variant="ghost" type="button" onClick={() => setIsModalOpen(false)}>
@@ -148,7 +194,7 @@ export default function UOMPage() {
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Delete UOM"
-        message={`Are you sure you want to delete ${uomToDelete?.name}?`}
+        message={`Are you sure you want to delete ${uomToDelete?.uom_name}?`}
         variant="danger"
         isLoading={deleteUOM.isPending}
       />

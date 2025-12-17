@@ -59,7 +59,8 @@ const SheetComponent = forwardRef((props: SheetComponentProps, ref) => {
             if (jInstance.current) {
                 // jspreadsheet v5 cleanup
                 if (typeof jspreadsheet.destroy === 'function' && jRef.current) {
-                     jspreadsheet.destroy(jRef.current);
+                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                     jspreadsheet.destroy(jRef.current as any);
                 } else if (jInstance.current && typeof jInstance.current.destroy === 'function') {
                      jInstance.current.destroy();
                 }

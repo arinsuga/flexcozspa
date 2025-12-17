@@ -2,10 +2,10 @@ import { appApi } from './api';
 
 export interface SheetGroup {
   id: number;
-  name: string;
-  description?: string;
-  type: number; // 0 for work, 1 for cost
-  code?: string;
+  sheetgroup_name: string;
+  sheetgroup_description?: string;
+  sheetgroup_type: number; // 0 for work, 1 for cost
+  sheetgroup_code?: string;
 }
 
 export const sheetGroupService = {

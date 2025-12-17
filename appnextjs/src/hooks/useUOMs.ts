@@ -16,6 +16,11 @@ export const useUOMMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['uoms'] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Create UOM Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const updateUOM = useMutation({
@@ -23,6 +28,11 @@ export const useUOMMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['uoms'] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Update UOM Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const deleteUOM = useMutation({

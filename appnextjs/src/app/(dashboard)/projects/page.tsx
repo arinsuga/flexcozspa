@@ -6,6 +6,7 @@ import Button from '@/components/common/Button';
 import ProjectModal from '@/components/features/projects/ProjectModal';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Project } from '@/services/projectService';
+import SelectInput from '@/components/common/SelectInput';
 
 export default function ProjectsPage() {
   const [page, setPage] = useState(1);
@@ -21,12 +22,6 @@ export default function ProjectsPage() {
     }, 500);
     return () => clearTimeout(timer);
   }, [search]);
-
-  // Reset page when status filter changes
-  const handleStatusfilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setStatusFilter(e.target.value);
-      setPage(1);
-  }
 
   const { data: projectsData, isLoading, error } = useProjects({
     page,
@@ -45,14 +40,20 @@ export default function ProjectsPage() {
   
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
+  const [appError, setAppError] = useState<string | null>(null);
 
   const handleCreate = () => {
     setEditingProject(undefined);
+    setFormErrors({});
+    setAppError(null);
     setIsModalOpen(true);
   };
 
   const handleEdit = (project: Project) => {
     setEditingProject(project);
+    setFormErrors({});
+    setAppError(null);
     setIsModalOpen(true);
   };
 
@@ -62,12 +63,22 @@ export default function ProjectsPage() {
   };
 
   const handleSubmit = async (data: Partial<Project>) => {
-    if (editingProject) {
-      await updateProject.mutateAsync({ id: editingProject.id, data });
-    } else {
-      await createProject.mutateAsync(data);
+    try {
+      if (editingProject) {
+        await updateProject.mutateAsync({ id: editingProject.id, data });
+      } else {
+        await createProject.mutateAsync(data);
+      }
+      setIsModalOpen(false);
+    } catch (error: any) {
+        if (error.response?.status === 422) {
+            setFormErrors(error.response.data.errors);
+        } else {
+            console.error('App Error:', error);
+            setAppError("An application error occurred. Please try again later.");
+            setIsModalOpen(false);
+        }
     }
-    setIsModalOpen(false);
   };
 
   const handleConfirmDelete = async () => {
@@ -82,6 +93,33 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
+      {appError && (
+        <div className="bg-red-50 border-l-4 border-error p-4 relative dark:bg-red-900/20 dark:border-red-500">
+            <div className="flex">
+                <div className="flex-shrink-0">
+                    <span className="text-error">⚠️</span>
+                </div>
+                <div className="ml-3">
+                    <p className="text-sm text-red-700 dark:text-red-200">
+                        {appError}
+                    </p>
+                </div>
+                <div className="ml-auto pl-3">
+                    <div className="-mx-1.5 -my-1.5">
+                        <button
+                            type="button"
+                            onClick={() => setAppError(null)}
+                            className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:ring-offset-red-50 dark:bg-transparent dark:hover:bg-red-900/40"
+                        >
+                            <span className="sr-only">Dismiss</span>
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Projects</h1>
         <Button onClick={handleCreate} leftIcon="add">
@@ -101,16 +139,21 @@ export default function ProjectsPage() {
             />
         </div>
         <div className="w-full sm:w-48">
-            <select
+            <SelectInput
+                name="status_filter"
+                options={[
+                  { value: '', label: 'All Statuses' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'completed', label: 'Completed' },
+                  { value: 'on_hold', label: 'On Hold' }
+                ]}
                 value={statusFilter}
-                onChange={handleStatusfilterChange}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 border"
-            >
-                <option value="">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="on_hold">On Hold</option>
-            </select>
+                onChange={(value) => {
+                  setStatusFilter(value as string);
+                  setPage(1);
+                }}
+                placeholder="All Statuses"
+            />
         </div>
       </div>
 
@@ -122,20 +165,19 @@ export default function ProjectsPage() {
             {projects?.map((project: Project) => (
               <div key={project.id} className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 hover:shadow-md transition-shadow flex flex-col h-full">
                  <div className="flex justify-between items-start mb-2">
-                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{project.name}</h3>
+                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{project.project_name}</h3>
                      <span className={`px-2 py-1 text-xs rounded-full 
-                        ${project.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
-                          project.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
+                        ${project.is_active === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
                           'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
-                         {(project.status || 'unknown').replace('_', ' ')}
+                         {project.is_active === 1 ? 'Active' : 'Inactive'}
                      </span>
                  </div>
                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">
-                     {project.description || 'No description'}
+                     {project.project_description || 'No description'}
                  </p>
                  <div className="text-xs text-gray-500 mb-4 space-y-1">
-                     <div className="flex justify-between"><span>Start:</span> <span>{project.start_date || 'N/A'}</span></div>
-                     <div className="flex justify-between"><span>End:</span> <span>{project.end_date || 'N/A'}</span></div>
+                     <div className="flex justify-start gap-2"><span>Start:</span> <span>{project.project_startdt || 'N/A'}</span></div>
+                     <div className="flex justify-start gap-2"><span>End:</span> <span>{project.project_enddt || 'N/A'}</span></div>
                  </div>
                  <div className="flex justify-end gap-2 border-t pt-4 dark:border-gray-700 mt-auto">
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(project)}>Edit</Button>
@@ -185,6 +227,7 @@ export default function ProjectsPage() {
         onSubmit={handleSubmit}
         initialData={editingProject}
         isLoading={createProject.isPending || updateProject.isPending}
+        errors={formErrors}
       />
 
       <ConfirmDialog
@@ -192,7 +235,7 @@ export default function ProjectsPage() {
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Project"
-        message={`Are you sure you want to delete ${projectToDelete?.name}?`}
+        message={`Are you sure you want to delete ${projectToDelete?.project_name}?`}
         variant="danger"
         isLoading={deleteProject.isPending}
       />

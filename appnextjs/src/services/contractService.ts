@@ -2,17 +2,22 @@ import { appApi } from './api';
 
 export interface Contract {
   id: number;
+  project_id: number;
+  contract_name: string;
+  contract_description: string;
   contract_number: string;
-  name: string; // Assuming 'name' or 'contract_name' based on API. Using common naming.
-  description?: string;
-  start_date?: string;
-  end_date?: string;
-  amount?: number;
-  vendor_id?: number;
-  project_id?: number;
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
+  contract_pic: string;
+  contract_status: string;
+  contract_progress: string;
+  contract_dt: string;
+  contract_startdt: string;
+  contract_enddt: string;
+  contract_payment_dt: string;
+  contract_amount: string;
+  contract_payment: string;
+  contract_payment_status: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const contractService = {

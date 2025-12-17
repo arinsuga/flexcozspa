@@ -2,9 +2,9 @@ import { appApi } from './api';
 
 export interface UOM {
   id: number;
-  name: string;
-  description?: string;
-  symbol?: string; // e.g., kg, m, pcs
+  uom_name: string;
+  uom_description?: string;
+  uom_code?: string; // e.g., kg, m, pcs (mapped from symbol)
 }
 
 export const uomService = {

@@ -2,11 +2,19 @@ import { appApi } from './api';
 
 export interface Project {
   id: number;
-  name: string;
-  description?: string;
-  status: string;
-  start_date?: string;
-  end_date?: string;
+  project_name: string;
+  project_description?: string | null;
+  project_owner?: string | null;
+  project_pic?: string | null;
+  project_number?: string | null;
+  project_startdt?: string | null;
+  project_enddt?: string | null;
+  project_address?: string | null;
+  project_latitude?: string | null;
+  project_longitude?: string | null;
+  is_active: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const projectService = {

@@ -16,6 +16,11 @@ export const useReffTypeMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['refftypes'] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Create ReffType Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const updateReffType = useMutation({
@@ -23,6 +28,11 @@ export const useReffTypeMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['refftypes'] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Update ReffType Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const deleteReffType = useMutation({

@@ -7,6 +7,7 @@ import Modal from '@/components/common/Modal';
 import Input from '@/components/common/Input';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { SheetGroup } from '@/services/sheetGroupService';
+import SelectInput from '@/components/common/SelectInput';
 
 export default function SheetGroupsPage() {
   const { data: sheetgroups, isLoading, error } = useSheetGroups();
@@ -15,6 +16,8 @@ export default function SheetGroupsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSheetGroup, setEditingSheetGroup] = useState<SheetGroup | undefined>(undefined);
   const [formData, setFormData] = useState<Partial<SheetGroup>>({});
+  const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
+  const [appError, setAppError] = useState<string | null>(null);
   
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [sheetgroupToDelete, setSheetGroupToDelete] = useState<SheetGroup | null>(null);
@@ -24,12 +27,16 @@ export default function SheetGroupsPage() {
   const handleCreate = () => {
     setEditingSheetGroup(undefined);
     setFormData({});
+    setFormErrors({});
+    setAppError(null);
     setIsModalOpen(true);
   };
 
   const handleEdit = (sheetgroup: SheetGroup) => {
     setEditingSheetGroup(sheetgroup);
     setFormData(sheetgroup);
+    setFormErrors({});
+    setAppError(null);
     setIsModalOpen(true);
   };
 
@@ -40,12 +47,22 @@ export default function SheetGroupsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingSheetGroup) {
-      await updateSheetGroup.mutateAsync({ id: editingSheetGroup.id, data: formData });
-    } else {
-      await createSheetGroup.mutateAsync(formData);
+    try {
+      if (editingSheetGroup) {
+        await updateSheetGroup.mutateAsync({ id: editingSheetGroup.id, data: formData });
+      } else {
+        await createSheetGroup.mutateAsync(formData);
+      }
+      setIsModalOpen(false);
+    } catch (error: any) {
+      if (error.response?.status === 422) {
+        setFormErrors(error.response.data.errors);
+      } else {
+        console.error('App Error:', error);
+        setAppError("An application error occurred. Please try again later.");
+        setIsModalOpen(false);
+      }
     }
-    setIsModalOpen(false);
   };
 
   const handleConfirmDelete = async () => {
@@ -62,7 +79,7 @@ export default function SheetGroupsPage() {
 
   const filteredSheetGroups = sheetgroups?.data?.filter((sg: SheetGroup) => {
     if (filterType === 'all') return true;
-    return sg.type === parseInt(filterType);
+    return sg.sheetgroup_type === parseInt(filterType);
   }) || [];
 
   if (isLoading) return <div className="p-4">Loading Sheet Groups...</div>;
@@ -70,6 +87,33 @@ export default function SheetGroupsPage() {
 
   return (
     <div className="space-y-6">
+      {appError && (
+        <div className="bg-red-50 border-l-4 border-error p-4 relative dark:bg-red-900/20 dark:border-red-500">
+            <div className="flex">
+                <div className="flex-shrink-0">
+                    <span className="text-error">⚠️</span>
+                </div>
+                <div className="ml-3">
+                    <p className="text-sm text-red-700 dark:text-red-200">
+                        {appError}
+                    </p>
+                </div>
+                <div className="ml-auto pl-3">
+                    <div className="-mx-1.5 -my-1.5">
+                        <button
+                            type="button"
+                            onClick={() => setAppError(null)}
+                            className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:ring-offset-red-50 dark:bg-transparent dark:hover:bg-red-900/40"
+                        >
+                            <span className="sr-only">Dismiss</span>
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sheet Groups</h1>
         <Button onClick={handleCreate} leftIcon="add">
@@ -116,18 +160,18 @@ export default function SheetGroupsPage() {
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {filteredSheetGroups.map((sheetgroup: SheetGroup) => (
               <tr key={sheetgroup.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{sheetgroup.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{sheetgroup.code || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{sheetgroup.sheetgroup_name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{sheetgroup.sheetgroup_code || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <span className={`px-2 py-1 text-xs rounded-full ${
-                    sheetgroup.type === 0 
+                    sheetgroup.sheetgroup_type === 0 
                       ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' 
                       : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                   }`}>
-                    {getTypeLabel(sheetgroup.type)}
+                    {getTypeLabel(sheetgroup.sheetgroup_type)}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{sheetgroup.description || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{sheetgroup.sheetgroup_description || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button 
                     onClick={() => handleEdit(sheetgroup)}
@@ -164,34 +208,35 @@ export default function SheetGroupsPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
                <Input
                    label="Name"
-                   value={formData.name || ''}
-                   onChange={(e) => setFormData({...formData, name: e.target.value})}
+                   value={formData.sheetgroup_name || ''}
+                   onChange={(e) => setFormData({...formData, sheetgroup_name: e.target.value})}
                    required
+                   error={formErrors?.sheetgroup_name?.[0]}
                />
                <Input
                    label="Code"
-                   value={formData.code || ''}
-                   onChange={(e) => setFormData({...formData, code: e.target.value})}
+                   value={formData.sheetgroup_code || ''}
+                   onChange={(e) => setFormData({...formData, sheetgroup_code: e.target.value})}
+                   error={formErrors?.sheetgroup_code?.[0]}
                />
-               <div>
-                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                   Type
-                 </label>
-                 <select
-                   value={formData.type ?? ''}
-                   onChange={(e) => setFormData({...formData, type: parseInt(e.target.value)})}
-                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
-                   required
-                 >
-                   <option value="">Select type...</option>
-                   <option value="0">Work</option>
-                   <option value="1">Cost</option>
-                 </select>
-               </div>
+               <SelectInput
+                 label="Type"
+                 name="sheetgroup_type"
+                 required
+                 options={[
+                   { value: 0, label: 'Work' },
+                   { value: 1, label: 'Cost' }
+                 ]}
+                 value={formData.sheetgroup_type ?? ''}
+                 onChange={(value) => setFormData({...formData, sheetgroup_type: value as number})}
+                 placeholder="Select type..."
+                 error={formErrors?.sheetgroup_type?.[0]}
+               />
                <Input
                    label="Description"
-                   value={formData.description || ''}
-                   onChange={(e) => setFormData({...formData, description: e.target.value})}
+                   value={formData.sheetgroup_description || ''}
+                   onChange={(e) => setFormData({...formData, sheetgroup_description: e.target.value})}
+                   error={formErrors?.sheetgroup_description?.[0]}
                />
                <div className="flex justify-end gap-3 mt-6">
                     <Button variant="ghost" type="button" onClick={() => setIsModalOpen(false)}>
@@ -209,7 +254,7 @@ export default function SheetGroupsPage() {
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Sheet Group"
-        message={`Are you sure you want to delete ${sheetgroupToDelete?.name}?`}
+        message={`Are you sure you want to delete ${sheetgroupToDelete?.sheetgroup_name}?`}
         variant="danger"
         isLoading={deleteSheetGroup.isPending}
       />

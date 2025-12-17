@@ -24,6 +24,11 @@ export const useContractMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Create Contract Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const updateContract = useMutation({
@@ -32,6 +37,11 @@ export const useContractMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['contract', variables.id] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Update Contract Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const deleteContract = useMutation({

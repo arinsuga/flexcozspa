@@ -1,7 +1,9 @@
-@import "tailwindcss";
-
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #f8fafc;
@@ -13,7 +15,7 @@
   --accent: #FAAC68;
   --error: #FA6868;
   
-  --sidebar-bg: #ffffff;
+  --sidebar-bg: #5A9CB5;
   --header-bg: #ffffff;
 }
 
@@ -32,14 +34,12 @@
   --font-montserrat: 'Montserrat', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f1f5f9;
-    
-    --sidebar-bg: #1e293b;
-    --header-bg: #1e293b;
-  }
+.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  
+  --sidebar-bg: #1e293b;
+  --header-bg: #1e293b;
 }
 
 body {

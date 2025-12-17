@@ -32,7 +32,7 @@ export default function Sidebar() {
       {/* Sidebar */}
       <aside className={`
         fixed top-0 left-0 z-50 h-[100dvh] w-64 bg-sidebar border-r border-gray-200 transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static bg-white dark:bg-gray-900 dark:border-gray-800
+        lg:translate-x-0 lg:static dark:bg-gray-900 dark:border-gray-800
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex h-16 items-center justify-center border-b border-gray-200 dark:border-gray-800 px-6">
@@ -48,8 +48,8 @@ export default function Sidebar() {
               className={`
                 flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors
                 ${pathname.startsWith(item.path) 
-                  ? 'bg-primary/10 text-primary' 
-                  : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'}
+                  ? 'bg-white/20 text-white dark:bg-primary/10 dark:text-primary' 
+                  : 'text-white/80 hover:bg-white/10 dark:text-gray-400 dark:hover:bg-gray-800'}
               `}
             >
               <span className="material-icons text-[20px]">{item.icon}</span>

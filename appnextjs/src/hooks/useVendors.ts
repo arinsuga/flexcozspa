@@ -16,6 +16,11 @@ export const useVendorMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Create Vendor Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const updateVendor = useMutation({
@@ -23,6 +28,11 @@ export const useVendorMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendors'] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Update Vendor Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const deleteVendor = useMutation({

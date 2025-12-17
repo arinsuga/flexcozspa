@@ -2,12 +2,28 @@ import { appApi } from './api';
 
 export interface Vendor {
   id: number;
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  vendor_type_id?: number;
-  status: string;
+  vendortype_id: number;
+  // This field is derived on the frontend for display purposes
+  vendortype_name?: string; 
+  vendor_code: string;
+  vendor_name: string;
+  vendor_description?: string;
+  vendor_email?: string;
+  vendor_phone?: string;
+  vendor_mobile?: string;
+  vendor_fax?: string;
+  vendor_address?: string;
+  vendor_city?: string;
+  vendor_state?: string;
+  vendor_postal_code?: string;
+  vendor_country?: string;
+  vendor_tax_id?: string;
+  vendor_bank_account?: string;
+  vendor_bank_name?: string;
+  is_active: number;
+  vendor_notes?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const vendorService = {

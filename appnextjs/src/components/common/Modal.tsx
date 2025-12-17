@@ -52,13 +52,13 @@ export default function Modal({
         bg-white dark:bg-gray-900 shadow-2xl transition-all
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-6 py-4 dark:border-gray-800">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex items-center justify-between border-b px-6 py-4" style={{ backgroundColor: '#5A9CB5' }}>
+          <h3 className="text-lg font-semibold text-white">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 focus:outline-none"
+            className="text-white hover:text-gray-200 focus:outline-none"
           >
             <span className="material-icons">close</span>
           </button>

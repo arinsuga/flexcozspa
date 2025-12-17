@@ -24,6 +24,11 @@ export const useProjectMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
+    onError: (error: any) => {
+      if (error.response?.status !== 422) {
+        console.error('Create Project Error:', JSON.stringify(error.response?.data || error.message, null, 2));
+      }
+    }
   });
 
   const updateProject = useMutation({

@@ -1,6 +1,7 @@
 'use client';
 
 import { useDashboardStats } from '@/hooks/useDashboard';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const { data: stats, isLoading } = useDashboardStats();
@@ -48,14 +49,14 @@ export default function DashboardPage() {
          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
             <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Quick Actions</h3>
              <div className="grid grid-cols-2 gap-4">
-                 <button className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 transition lg:p-6">
+                 <Link href="/contracts/new" className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 transition lg:p-6">
                      <span className="material-icons text-primary text-3xl mb-2">add_circle</span>
                      <span className="text-sm font-medium">New Contract</span>
-                 </button>
-                 <button className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 transition lg:p-6">
+                 </Link>
+                 <Link href="/orders" className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 transition lg:p-6">
                      <span className="material-icons text-secondary text-3xl mb-2">shopping_basket</span>
                      <span className="text-sm font-medium">New Order</span>
-                 </button>
+                 </Link>
              </div>
          </div>
       </div>

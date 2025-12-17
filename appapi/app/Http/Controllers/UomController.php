@@ -37,6 +37,7 @@ class UomController extends Controller
         $validated = $request->validate([
             'uom_code' => 'required|unique:uoms,uom_code',
             'uom_name' => 'required|string',
+            'uom_description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
 
@@ -55,6 +56,7 @@ class UomController extends Controller
         $validated = $request->validate([
             'uom_code' => 'unique:uoms,uom_code,' . $id,
             'uom_name' => 'string',
+            'uom_description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
 

@@ -5,6 +5,7 @@ import Modal from '@/components/common/Modal';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import { Order } from '@/services/orderService';
+import SelectInput from '@/components/common/SelectInput';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface OrderModalProps {
   onSubmit: (data: Partial<Order>) => void;
   initialData?: Order;
   isLoading?: boolean;
+  errors?: Record<string, string[]>;
 }
 
 export default function OrderModal({
@@ -19,7 +21,8 @@ export default function OrderModal({
   onClose,
   onSubmit,
   initialData,
-  isLoading
+  isLoading,
+  errors
 }: OrderModalProps) {
   const [formData, setFormData] = useState<Partial<Order>>({
     order_number: '',
@@ -32,7 +35,7 @@ export default function OrderModal({
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData(prev => ({ ...prev, ...initialData }));
     } else {
       setFormData({
         order_number: '',
@@ -73,6 +76,7 @@ export default function OrderModal({
               value={formData.order_number}
               onChange={handleChange}
               required
+              error={errors?.order_number?.[0]}
             />
             <Input
               label="Order Name"
@@ -80,6 +84,7 @@ export default function OrderModal({
               value={formData.name}
               onChange={handleChange}
               required
+              error={errors?.name?.[0]}
             />
         </div>
         
@@ -88,6 +93,7 @@ export default function OrderModal({
           name="description"
           value={formData.description || ''}
           onChange={handleChange}
+          error={errors?.description?.[0]}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -97,21 +103,21 @@ export default function OrderModal({
                 type="number"
                 value={formData.amount}
                 onChange={handleChange}
+                error={errors?.amount?.[0]}
              />
-             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    className="block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
-                >
-                    <option value="pending">Pending</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
-             </div>
+             <SelectInput
+                label="Status"
+                name="status"
+                options={[
+                  { value: 'pending', label: 'Pending' },
+                  { value: 'in_progress', label: 'In Progress' },
+                  { value: 'completed', label: 'Completed' },
+                  { value: 'cancelled', label: 'Cancelled' }
+                ]}
+                value={formData.status}
+                onChange={(value) => setFormData(prev => ({ ...prev, status: value as string }))}
+                error={errors?.status?.[0]}
+             />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -121,6 +127,7 @@ export default function OrderModal({
               type="date"
               value={formData.order_date ? formData.order_date.split('T')[0] : ''}
               onChange={handleChange}
+              error={errors?.order_date?.[0]}
             />
              {/* Add Project/Contract/Vendor Pickers later */}
         </div>
