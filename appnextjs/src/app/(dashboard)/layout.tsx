@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push('/login');
     }
   }, [isAuthenticated, router, isClient]);
+
 
   if (!isClient) {
       return null;

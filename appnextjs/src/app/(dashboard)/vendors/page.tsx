@@ -7,6 +7,8 @@ import VendorModal from '@/components/features/vendors/VendorModal';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Vendor } from '@/services/vendorService';
 import { vendorTypeService } from '@/services/vendorTypeService';
+import Link from 'next/link';
+import { TableSkeleton } from '@/components/common/Skeleton';
 
 export default function VendorsPage() {
   const { data: vendorsResponse, isLoading, error } = useVendors();
@@ -89,7 +91,7 @@ export default function VendorsPage() {
     }
   };
 
-  if (isLoading) return <div className="p-4">Loading vendors...</div>;
+  if (isLoading) return <TableSkeleton cols={6} rows={8} />;
   if (error) return <div className="p-4 text-error">Error loading vendors</div>;
 
   return (

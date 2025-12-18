@@ -5,6 +5,7 @@ import { useOrder } from '@/hooks/useOrders';
 import { useOrderSheets, useOrderSheetMutations } from '@/hooks/useOrderSheets';
 import Button from '@/components/common/Button';
 import SheetComponent from '@/components/common/SheetComponent';
+import Loading from '@/components/common/Loading';
 import { useRef, useState, useEffect } from 'react';
 
 const COLUMNS = [
@@ -50,7 +51,7 @@ export default function OrderDetailPage() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {order.order_number}
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">{order.name}</p>
+            <p className="text-gray-500 dark:text-gray-400">{order.order_description}</p>
         </div>
         <div className="flex gap-2">
             <Button variant="ghost" onClick={() => router.back()} leftIcon="arrow_back">
@@ -72,24 +73,27 @@ export default function OrderDetailPage() {
             <h3 className="text-lg font-medium text-gray-900 dark:text-white border-b pb-2 dark:border-gray-700">
                 Details
             </h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 gap-4 text-sm">
                 <div>
                    <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Order Date</label>
-                   <div className="font-medium">{order.order_date || 'N/A'}</div>
+                   <div className="font-medium">{order.order_dt ? order.order_dt.split('T')[0] : 'N/A'}</div>
                 </div>
                 <div>
                    <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Status</label>
-                   <div className="font-medium capitalize">{order.status}</div>
-                </div>
-                <div>
-                   <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Amount</label>
-                   <div className="font-medium text-primary">
-                      {order.amount ? `$${order.amount.toLocaleString()}` : 'N/A'}
+                   <div className="font-medium capitalize">
+                        {order.order_status === '0' ? 'Open/Pending' : 
+                         order.order_status === '1' ? 'Approved' : 
+                         order.order_status === '2' ? 'Rejected' : 
+                         order.order_status}
                    </div>
                 </div>
-                <div className="col-span-2">
+                <div>
                     <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Description</label>
-                    <div className="mt-1">{order.description || 'No description provided.'}</div>
+                    <div className="mt-1">{order.order_description || 'No description provided.'}</div>
+                </div>
+                <div>
+                    <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Order PIC</label>
+                    <div className="mt-1">{order.order_pic || 'N/A'}</div>
                 </div>
             </div>
          </div>

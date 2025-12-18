@@ -7,6 +7,7 @@ import ContractModal from '@/components/features/contracts/ContractModal';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Contract } from '@/services/contractService';
 import Link from 'next/link';
+import { TableSkeleton } from '@/components/common/Skeleton';
 
 export default function ContractsPage() {
   const { data: contractsResponse, isLoading, error } = useContracts();
@@ -71,7 +72,7 @@ export default function ContractsPage() {
     }
   };
 
-  if (isLoading) return <div className="p-4">Loading contracts...</div>;
+  if (isLoading) return <TableSkeleton cols={7} rows={8} />;
   if (error) return <div className="p-4 text-error">Error loading contracts</div>;
 
   return (

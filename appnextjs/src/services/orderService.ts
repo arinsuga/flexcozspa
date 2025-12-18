@@ -2,15 +2,13 @@ import { appApi } from './api';
 
 export interface Order {
   id: number;
+  project_id: number;
+  contract_id: number;
+  order_dt: string;
   order_number: string;
-  name: string;
-  contract_id?: number;
-  project_id?: number;
-  vendor_id?: number;
-  description?: string;
-  order_date?: string;
-  amount?: number;
-  status: string;
+  order_description: string;
+  order_pic: string;
+  order_status: string;
   created_at?: string;
   updated_at?: string;
 }

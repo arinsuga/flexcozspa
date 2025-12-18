@@ -6,6 +6,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { Project } from '@/services/projectService';
 import Link from 'next/link';
 import SelectInput from '@/components/common/SelectInput';
+import Textarea from '@/components/common/Textarea';
 
 interface ContractFormProps {
   initialData?: Partial<Contract>;
@@ -91,13 +92,12 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
             Description
           </label>
           <div className="mt-1">
-            <textarea
+            <Textarea
               id="contract_description"
               name="contract_description"
               rows={3}
               value={formData.contract_description || ''}
               onChange={handleChange}
-              className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2"
             />
           </div>
         </div>

@@ -38,8 +38,8 @@ class OrderController extends Controller
             'project_id' => 'required|exists:projects,id',
             'contract_id' => 'required|exists:contracts,id',
             'order_dt' => 'nullable|date',
-            'order_number' => 'nullable|string|unique:orders,order_number',
-            'order_description' => 'nullable|string',
+            'order_number' => 'required|nullable|string|unique:orders,order_number',
+            'order_description' => 'required|nullable|string',
             'order_pic' => 'nullable|string',
             'order_status' => 'nullable|string',
         ]);
@@ -60,8 +60,8 @@ class OrderController extends Controller
             'project_id' => 'exists:projects,id',
             'contract_id' => 'exists:contracts,id',
             'order_dt' => 'nullable|date',
-            'order_number' => 'nullable|string|unique:orders,order_number,' . $id,
-            'order_description' => 'nullable|string',
+            'order_number' => 'required|nullable|string|unique:orders,order_number,' . $id,
+            'order_description' => 'required|nullable|string',
             'order_pic' => 'nullable|string',
             'order_status' => 'nullable|string',
         ]);

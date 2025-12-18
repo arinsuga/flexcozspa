@@ -8,6 +8,7 @@ import { Contract } from '@/services/contractService';
 import { useProjects } from '@/hooks/useProjects';
 import { Project } from '@/services/projectService';
 import SelectInput from '@/components/common/SelectInput';
+import Textarea from '@/components/common/Textarea';
 
 interface ContractModalProps {
   isOpen: boolean;
@@ -74,7 +75,7 @@ export default function ContractModal({
     }
   }, [initialData, isOpen]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -114,12 +115,13 @@ export default function ContractModal({
             />
         </div>
         
-        <Input
+        <Textarea
           label="Description"
           name="contract_description"
           value={formData.contract_description || ''}
           onChange={handleChange}
           error={errors?.contract_description?.[0]}
+          rows={3}
         />
 
         <SelectInput

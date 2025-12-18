@@ -7,6 +7,7 @@ import OrderModal from '@/components/features/orders/OrderModal';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Order } from '@/services/orderService';
 import Link from 'next/link';
+import { TableSkeleton } from '@/components/common/Skeleton';
 
 export default function OrdersPage() {
   const { data: ordersResponse, isLoading, error } = useOrders();
@@ -80,7 +81,7 @@ export default function OrdersPage() {
       }
   };
 
-  if (isLoading) return <div className="p-4">Loading orders...</div>;
+  if (isLoading) return <TableSkeleton cols={5} rows={8} />;
   if (error) return <div className="p-4 text-error">Error loading orders</div>;
 
   return (
@@ -123,7 +124,7 @@ export default function OrdersPage() {
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Order No</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
@@ -137,14 +138,17 @@ export default function OrdersPage() {
                         {order.order_number}
                     </Link>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{order.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{order.order_description}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                        {order.status}
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.order_status)}`}>
+                        {order.order_status === '0' ? 'Open/Pending' : 
+                         order.order_status === '1' ? 'Approved' : 
+                         order.order_status === '2' ? 'Rejected' : 
+                         order.order_status}
                     </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                   {order.order_date || 'N/A'}
+                   {order.order_dt ? order.order_dt.split('T')[0] : 'N/A'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button 

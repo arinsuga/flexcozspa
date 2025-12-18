@@ -2,6 +2,7 @@
 
 import { useDashboardStats } from '@/hooks/useDashboard';
 import Link from 'next/link';
+import Loading from '@/components/common/Loading';
 
 export default function DashboardPage() {
   const { data: stats, isLoading } = useDashboardStats();
@@ -53,7 +54,7 @@ export default function DashboardPage() {
                      <span className="material-icons text-primary text-3xl mb-2">add_circle</span>
                      <span className="text-sm font-medium">New Contract</span>
                  </Link>
-                 <Link href="/orders" className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 transition lg:p-6">
+                  <Link href="/orders/new" className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 transition lg:p-6">
                      <span className="material-icons text-secondary text-3xl mb-2">shopping_basket</span>
                      <span className="text-sm font-medium">New Order</span>
                  </Link>
