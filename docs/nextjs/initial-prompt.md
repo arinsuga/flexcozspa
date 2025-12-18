@@ -23,11 +23,13 @@ A. Authentication
 B. Data Management
    1. Project Management
    2. Vendor Management
-   3. Reff Type Management
-   4. UOM Management
-   5. Sheet Group Management
-   6. Contract Management
-   7. Order Management
+   7. Contract Management
+   8. Order Management
+   9. System Data
+      - Vendor Type Management
+      - Reff Type Management
+      - UOM Management
+      - Sheet Group Management
 
 ### Tech Stack
 - Next.js

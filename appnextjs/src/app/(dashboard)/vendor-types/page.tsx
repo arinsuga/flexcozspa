@@ -1,0 +1,223 @@
+'use client';
+
+import { useVendorTypes, useVendorTypeMutations } from '@/hooks/useVendorTypes';
+import { useState } from 'react';
+import Button from '@/components/common/Button';
+import Modal from '@/components/common/Modal';
+import Input from '@/components/common/Input';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
+import { VendorType } from '@/services/vendorTypeService';
+
+export default function VendorTypesPage() {
+  const { data: vendorTypes, isLoading, error } = useVendorTypes();
+  const { createVendorType, updateVendorType, deleteVendorType } = useVendorTypeMutations();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingVendorType, setEditingVendorType] = useState<VendorType | undefined>(undefined);
+  const [formData, setFormData] = useState<Partial<VendorType>>({});
+  const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
+  const [appError, setAppError] = useState<string | null>(null);
+  
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [vendorTypeToDelete, setVendorTypeToDelete] = useState<VendorType | null>(null);
+
+  const handleCreate = () => {
+    setEditingVendorType(undefined);
+    setFormData({ is_active: 1 });
+    setFormErrors({});
+    setAppError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (vendorType: VendorType) => {
+    setEditingVendorType(vendorType);
+    setFormData(vendorType);
+    setFormErrors({});
+    setAppError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteClick = (vendorType: VendorType) => {
+    setVendorTypeToDelete(vendorType);
+    setIsDeleteOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingVendorType) {
+        await updateVendorType.mutateAsync({ id: editingVendorType.id, data: formData });
+      } else {
+        await createVendorType.mutateAsync(formData);
+      }
+      setIsModalOpen(false);
+    } catch (error: any) {
+      if (error.response?.status === 422) {
+        setFormErrors(error.response.data.errors);
+      } else {
+        console.error('App Error:', error);
+        setAppError("An application error occurred. Please try again later.");
+        setIsModalOpen(false);
+      }
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (vendorTypeToDelete) {
+      await deleteVendorType.mutateAsync(vendorTypeToDelete.id);
+      setIsDeleteOpen(false);
+      setVendorTypeToDelete(null);
+    }
+  };
+
+  if (isLoading) return <div className="p-4">Loading Vendor Types...</div>;
+  if (error) return <div className="p-4 text-error">Error loading Vendor Types</div>;
+
+  return (
+    <div className="space-y-6">
+      {appError && (
+        <div className="bg-red-50 border-l-4 border-error p-4 relative dark:bg-red-900/20 dark:border-red-500">
+            <div className="flex">
+                <div className="flex-shrink-0">
+                    <span className="text-error">⚠️</span>
+                </div>
+                <div className="ml-3">
+                    <p className="text-sm text-red-700 dark:text-red-200">
+                        {appError}
+                    </p>
+                </div>
+                <div className="ml-auto pl-3">
+                    <div className="-mx-1.5 -my-1.5">
+                        <button
+                            type="button"
+                            onClick={() => setAppError(null)}
+                            className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:ring-offset-red-50 dark:bg-transparent dark:hover:bg-red-900/40"
+                        >
+                            <span className="sr-only">Dismiss</span>
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vendor Types</h1>
+        <Button onClick={handleCreate} leftIcon="add">
+          New Vendor Type
+        </Button>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            {vendorTypes?.data?.map((vt: VendorType) => (
+              <tr key={vt.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{vt.vendortype_code}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{vt.vendortype_name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{vt.vendortype_description || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${vt.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {vt.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button 
+                    onClick={() => handleEdit(vt)}
+                    className="text-primary hover:text-indigo-900 mr-4"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteClick(vt)}
+                    className="text-error hover:text-red-900"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+             {vendorTypes?.data?.length === 0 && (
+                <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                        No Vendor Types found.
+                    </td>
+                </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingVendorType ? 'Edit Vendor Type' : 'New Vendor Type'}
+        size="md"
+      >
+          <form onSubmit={handleSubmit} className="space-y-4">
+               <Input
+                   label="Code"
+                   value={formData.vendortype_code || ''}
+                   onChange={(e) => setFormData({...formData, vendortype_code: e.target.value.toUpperCase()})}
+                   required
+                   error={formErrors?.vendortype_code?.[0]}
+                   placeholder="e.g. SUPPLIER"
+               />
+               <Input
+                   label="Name"
+                   value={formData.vendortype_name || ''}
+                   onChange={(e) => setFormData({...formData, vendortype_name: e.target.value})}
+                   required
+                   error={formErrors?.vendortype_name?.[0]}
+                   placeholder="e.g. Supplier"
+               />
+               <Input
+                   label="Description"
+                   value={formData.vendortype_description || ''}
+                   onChange={(e) => setFormData({...formData, vendortype_description: e.target.value})}
+                   error={formErrors?.vendortype_description?.[0]}
+               />
+               <div className="flex items-center gap-2">
+                 <input 
+                   type="checkbox" 
+                   id="is_active"
+                   checked={formData.is_active === 1}
+                   onChange={(e) => setFormData({...formData, is_active: e.target.checked ? 1 : 0})}
+                   className="rounded border-gray-300 text-primary focus:ring-primary"
+                 />
+                 <label htmlFor="is_active" className="text-sm text-gray-700 dark:text-gray-300">Active</label>
+               </div>
+               
+               <div className="flex justify-end gap-3 mt-6">
+                    <Button variant="ghost" type="button" onClick={() => setIsModalOpen(false)}>
+                    Cancel
+                    </Button>
+                    <Button variant="primary" type="submit" isLoading={createVendorType.isPending || updateVendorType.isPending}>
+                    {editingVendorType ? 'Update' : 'Create'}
+                    </Button>
+               </div>
+          </form>
+      </Modal>
+
+      <ConfirmDialog
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Vendor Type"
+        message={`Are you sure you want to delete ${vendorTypeToDelete?.vendortype_name}?`}
+        variant="danger"
+        isLoading={deleteVendorType.isPending}
+      />
+    </div>
+  );
+}
