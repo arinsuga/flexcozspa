@@ -3,7 +3,7 @@
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class OrderstatusesTableSeeder extends Seeder
+class ProjectstatusesTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -16,43 +16,41 @@ class OrderstatusesTableSeeder extends Seeder
             [
                 'id' => 0,
                 'name' => 'Open',
-                'description' => 'Order is open and active',
+                'description' => 'Project is open and active',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'id' => 1,
                 'name' => 'Approved',
-                'description' => 'Order has been approved',
+                'description' => 'Project has been approved',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'id' => 2,
                 'name' => 'Closed',
-                'description' => 'Order has been closed',
+                'description' => 'Project has been closed',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'id' => 3,
                 'name' => 'Canceled/Rejected',
-                'description' => 'Order has been canceled or rejected',
+                'description' => 'Project has been canceled or rejected',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
                 'id' => 4,
                 'name' => 'Pending',
-                'description' => 'Order is pending approval',
+                'description' => 'Project is pending approval',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
         ];
 
-        // Using upsert or just insert ignore to prevent duplicate key errors if run multiple times
-        // Attempting to just clean and insert or insertIgnore if supported, but simple insert for now as migrations are usually fresh.
-        // Assuming fresh seed:
-        DB::table('orderstatuses')->insertOrIgnore($statuses);
+        // Using insertOrIgnore to prevent duplicate key errors if run multiple times
+        DB::table('projectstatuses')->insertOrIgnore($statuses);
     }
 }

@@ -81,6 +81,9 @@ Route::apiResource('orderstatuses', 'OrderStatusController')->only(['index', 'sh
 // Contract Statuses API
 Route::apiResource('contractstatuses', 'ContractStatusController')->only(['index', 'show']);
 
+// Project Statuses API
+Route::apiResource('projectstatuses', 'ProjectStatusController')->only(['index', 'show']);
+
 // Contract Sheets API
 Route::apiResource('contractsheets', 'ContractSheetController');
 Route::get('contracts/{contractId}/sheets', 'ContractSheetController@getByContract')->name('contractsheets.by.contract');

@@ -27,6 +27,7 @@ class CreateProjectsTable extends Migration
             $table->string('project_address')->nullable();
             $table->string('project_latitude')->nullable();
             $table->string('project_longitude')->nullable();
+            $table->integer('projectstatus_id')->default(0); // 0=Open, 1=approved, 2=Closed, 3=Canceled/Rejected, 4=Pending
             $table->boolean('is_active')->default(1); // Active/inactive flag
             $table->timestamps();
         });

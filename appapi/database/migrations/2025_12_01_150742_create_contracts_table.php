@@ -20,7 +20,7 @@ class CreateContractsTable extends Migration
             $table->string('contract_description')->nullable();
             $table->string('contract_number')->nullable();
             $table->string('contract_pic')->nullable();
-            $table->integer('contractstatus_id')->default(0);
+            $table->integer('contractstatus_id')->default(0); // 0=Open, 1=approved, 2=Closed, 3=Canceled/Rejected, 4=Pending
             $table->decimal('contract_progress', 5, 2)->nullable();
 
             $table->date('contract_dt')->nullable();

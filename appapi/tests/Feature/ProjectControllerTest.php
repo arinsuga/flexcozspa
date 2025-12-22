@@ -30,8 +30,8 @@ class ProjectControllerTest extends TestCase
     public function it_returns_list_of_active_projects()
     {
         $projects = [
-            ['id' => 1, 'project_name' => 'Project 1', 'is_active' => true],
-            ['id' => 2, 'project_name' => 'Project 2', 'is_active' => true],
+            ['id' => 1, 'project_name' => 'Project 1', 'projectstatus_id' => 0, 'is_active' => true],
+            ['id' => 2, 'project_name' => 'Project 2', 'projectstatus_id' => 0, 'is_active' => true],
         ];
 
         $this->repository
@@ -49,7 +49,7 @@ class ProjectControllerTest extends TestCase
     /** @test */
     public function it_returns_a_single_project()
     {
-        $project = ['id' => 1, 'project_name' => 'Project 1', 'is_active' => true];
+        $project = ['id' => 1, 'project_name' => 'Project 1', 'projectstatus_id' => 0, 'is_active' => true];
 
         $this->repository
             ->shouldReceive('find')
@@ -86,6 +86,7 @@ class ProjectControllerTest extends TestCase
         $projectData = [
             'project_number' => 'PRJ-001',
             'project_name' => 'New Project',
+            'projectstatus_id' => 0,
             'is_active' => true,
         ];
 
@@ -127,10 +128,11 @@ class ProjectControllerTest extends TestCase
     {
         $updateData = [
             'project_name' => 'Updated Project Name',
+            'projectstatus_id' => 1,
             'is_active' => false,
         ];
 
-        $existingProject = ['id' => 1, 'project_name' => 'Old Name', 'is_active' => true];
+        $existingProject = ['id' => 1, 'project_name' => 'Old Name', 'projectstatus_id' => 0, 'is_active' => true];
         $updatedProject = array_merge($existingProject, $updateData);
 
         $this->repository
@@ -171,7 +173,7 @@ class ProjectControllerTest extends TestCase
     /** @test */
     public function it_deletes_a_project()
     {
-        $project = ['id' => 1, 'project_name' => 'Project 1', 'is_active' => true];
+        $project = ['id' => 1, 'project_name' => 'Project 1', 'projectstatus_id' => 0, 'is_active' => true];
 
         $this->repository
             ->shouldReceive('find')
