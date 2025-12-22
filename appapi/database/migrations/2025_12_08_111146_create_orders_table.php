@@ -22,7 +22,7 @@ class CreateOrdersTable extends Migration
             $table->string('order_number')->nullable();
             $table->string('order_description')->nullable();
             $table->string('order_pic')->nullable();
-            $table->string('order_status')->nullable()->default(0); // 0=open/pending, 1=approved, 2=rejected
+            $table->integer('order_status')->nullable()->default(0); // 0=open/pending, 1=approved, 2=rejected
 
             $table->timestamps();
 

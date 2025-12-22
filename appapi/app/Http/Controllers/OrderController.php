@@ -41,7 +41,7 @@ class OrderController extends Controller
             'order_number' => 'required|nullable|string|unique:orders,order_number',
             'order_description' => 'required|nullable|string',
             'order_pic' => 'nullable|string',
-            'order_status' => 'nullable|string',
+            'order_status' => 'nullable|integer|in:0,1,2',
         ]);
 
         $order = $this->repository->create($request->all());
@@ -63,7 +63,7 @@ class OrderController extends Controller
             'order_number' => 'required|nullable|string|unique:orders,order_number,' . $id,
             'order_description' => 'required|nullable|string',
             'order_pic' => 'nullable|string',
-            'order_status' => 'nullable|string',
+            'order_status' => 'nullable|integer|in:0,1,2',
         ]);
 
         $updated = $this->repository->update($id, $request->all());

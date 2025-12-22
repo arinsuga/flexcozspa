@@ -23,9 +23,9 @@ A. Authentication
 B. Data Management
    1. Project Management
    2. Vendor Management
-   7. Contract Management
-   8. Order Management
-   9. System Data
+   3. Contract Management
+   4. Order Management
+   5. System Data
       - Vendor Type Management
       - Reff Type Management
       - UOM Management

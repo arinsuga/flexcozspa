@@ -78,7 +78,7 @@ class OrderControllerTest extends TestCase
                 'order_number' => 'ORD001',
                 'order_description' => 'Order 1',
                 'order_pic' => 'John Doe',
-                'order_status' => 'active',
+                'order_status' => 1,
                 'order_dt' => '2025-12-01',
             ],
             [
@@ -88,7 +88,7 @@ class OrderControllerTest extends TestCase
                 'order_number' => 'ORD002',
                 'order_description' => 'Order 2',
                 'order_pic' => 'Jane Smith',
-                'order_status' => 'pending',
+                'order_status' => 0,
                 'order_dt' => '2025-12-02',
             ],
         ];
@@ -115,7 +115,7 @@ class OrderControllerTest extends TestCase
             'order_number' => 'ORD001',
             'order_description' => 'Order 1',
             'order_pic' => 'John Doe',
-            'order_status' => 'active',
+            'order_status' => 1,
             'order_dt' => '2025-12-01',
         ];
 
@@ -157,7 +157,7 @@ class OrderControllerTest extends TestCase
             'order_number' => 'ORD003',
             'order_description' => 'New Order',
             'order_pic' => 'John Doe',
-            'order_status' => 'active',
+            'order_status' => 1,
             'order_dt' => '2025-12-08',
         ];
 
@@ -217,8 +217,9 @@ class OrderControllerTest extends TestCase
     public function it_updates_an_existing_order()
     {
         $updateData = [
+            'order_number' => 'ORD001', // Required by validation
             'order_description' => 'Updated Order Description',
-            'order_status' => 'completed',
+            'order_status' => 1,
         ];
 
         $existingOrder = [
@@ -228,7 +229,7 @@ class OrderControllerTest extends TestCase
             'order_number' => 'ORD001',
             'order_description' => 'Old Description',
             'order_pic' => 'John Doe',
-            'order_status' => 'active',
+            'order_status' => 0,
             'order_dt' => '2025-12-01',
         ];
 

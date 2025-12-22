@@ -35,7 +35,7 @@ class ContractControllerTest extends TestCase
         ];
 
         $this->repository
-            ->shouldReceive('getContractsByActive')
+            ->shouldReceive('all')
             ->once()
             ->andReturn($contracts);
 
@@ -83,9 +83,12 @@ class ContractControllerTest extends TestCase
     /** @test */
     public function it_creates_a_new_contract()
     {
+        factory(\App\Project::class)->create(['id' => 1]);
+
         $contractData = [
             'contract_number' => 'CNT003',
             'contract_name' => 'New Contract',
+            'project_id' => 1,
         ];
 
         $createdContract = array_merge(['id' => 3], $contractData);

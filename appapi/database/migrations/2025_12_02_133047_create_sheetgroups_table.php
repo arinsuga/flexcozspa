@@ -16,7 +16,7 @@ class CreateSheetgroupsTable extends Migration
         Schema::create('sheetgroups', function (Blueprint $table) {
             // Primary key
             $table->bigIncrements('id');
-            
+
             // Sheet group identification
             $table->string('sheetgroup_code')->unique(); // Unique code
             $table->string('sheetgroup_name'); // Group name
