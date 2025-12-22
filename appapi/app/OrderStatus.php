@@ -11,7 +11,7 @@ class OrderStatus extends Model
      *
      * @var string
      */
-    protected $table = 'order_statuses';
+    protected $table = 'orderstatuses';
 
     /**
      * The attributes that are mass assignable.

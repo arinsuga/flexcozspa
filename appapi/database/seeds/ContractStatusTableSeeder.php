@@ -3,7 +3,7 @@
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class ContractStatusTableSeeder extends Seeder
+class ContractstatusesTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -13,21 +13,37 @@ class ContractStatusTableSeeder extends Seeder
     public function run()
     {
         $statuses = [
-            0 => 'open',
-            1 => 'closed',
-            2 => 'canceled',
-            3 => 'pending',
+            [
+                'id' => 0,
+                'name' => 'Open',
+                'description' => 'Contract is open and active',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 1,
+                'name' => 'Closed',
+                'description' => 'Contract has been closed',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 2,
+                'name' => 'Canceled',
+                'description' => 'Contract has been canceled',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 3,
+                'name' => 'Pending',
+                'description' => 'Contract is pending approval',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ];
 
-        foreach ($statuses as $id => $name) {
-            DB::table('contract_statuses')->updateOrInsert(
-                ['id' => $id],
-                [
-                    'name' => $name,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            );
-        }
+        // Using insertOrIgnore to prevent duplicate key errors if run multiple times
+        DB::table('contractstatuses')->insertOrIgnore($statuses);
     }
 }

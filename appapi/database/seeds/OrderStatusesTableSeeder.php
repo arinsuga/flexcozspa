@@ -3,7 +3,7 @@
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class OrderStatusesTableSeeder extends Seeder
+class OrderstatusesTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -39,6 +39,6 @@ class OrderStatusesTableSeeder extends Seeder
         // Using upsert or just insert ignore to prevent duplicate key errors if run multiple times
         // Attempting to just clean and insert or insertIgnore if supported, but simple insert for now as migrations are usually fresh.
         // Assuming fresh seed:
-        DB::table('order_statuses')->insertOrIgnore($statuses);
+        DB::table('orderstatuses')->insertOrIgnore($statuses);
     }
 }
