@@ -16,6 +16,7 @@ use App\Repositories\Contracts\ContractSheetRepositoryInterface;
 use App\Repositories\Contracts\OrderRepositoryInterface;
 use App\Repositories\Contracts\OrdersheetRepositoryInterface;
 use App\Repositories\Contracts\OrderStatusRepositoryInterface;
+use App\Repositories\Contracts\ContractStatusRepositoryInterface;
 
 // Repository Implementations
 use App\Repositories\ProjectRepository;
@@ -29,6 +30,7 @@ use App\Repositories\ContractSheetRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\OrdersheetRepository;
 use App\Repositories\Eloquents\OrderStatusRepository;
+use App\Repositories\ContractStatusRepository;
 
 // Models
 use App\Project;
@@ -42,6 +44,7 @@ use App\ContractSheet;
 use App\Order;
 use App\Ordersheet;
 use App\OrderStatus;
+use App\ContractStatus;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -100,6 +103,15 @@ class RepositoryServiceProvider extends ServiceProvider
         // OrderStatus Repository Binding
         $this->app->bind(OrderStatusRepositoryInterface::class, function ($app) {
             return new OrderStatusRepository(new OrderStatus());
+        });
+        // OrderStatus Repository Binding
+        $this->app->bind(OrderStatusRepositoryInterface::class, function ($app) {
+            return new OrderStatusRepository(new OrderStatus());
+        });
+
+        // ContractStatus Repository Binding
+        $this->app->bind(ContractStatusRepositoryInterface::class, function ($app) {
+            return new ContractStatusRepository(new ContractStatus());
         });
     }
 

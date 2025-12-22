@@ -38,7 +38,7 @@ class Contract extends Model
         'contract_description',
         'contract_number',
         'contract_pic',
-        'contract_status',
+        'contractstatus_id',
         'contract_progress',
         'contract_dt',
         'contract_startdt',
@@ -63,6 +63,14 @@ class Contract extends Model
     public function orders()
     {
         return $this->hasMany('App\Order', 'contract_id');
+    }
+
+    /**
+     * Get the status of the contract.
+     */
+    public function contractStatus()
+    {
+        return $this->belongsTo('App\ContractStatus', 'contractstatus_id');
     }
 
 }

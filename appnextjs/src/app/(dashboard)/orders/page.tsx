@@ -140,11 +140,11 @@ export default function OrdersPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{order.order_description}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.order_status)}`}>
-                        {order.order_status === '0' ? 'Open/Pending' : 
-                         order.order_status === '1' ? 'Approved' : 
-                         order.order_status === '2' ? 'Rejected' : 
-                         order.order_status}
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.orderstatus_id)}`}>
+                        {order.orderstatus_id === '0' ? 'Open/Pending' : 
+                         order.orderstatus_id === '1' ? 'Approved' : 
+                         order.orderstatus_id === '2' ? 'Rejected' : 
+                         order.orderstatus_id}
                     </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">

@@ -37,7 +37,7 @@ export default function OrderForm({ initialData, onSubmit, isLoading, errors }: 
     order_description: initialData?.order_description || '',
     order_pic: initialData?.order_pic || '',
     order_dt: initialData?.order_dt || getCurrentDate(),
-    order_status: initialData?.order_status || '0',
+    orderstatus_id: initialData?.orderstatus_id || '0',
     project_id: initialData?.project_id || undefined,
     contract_id: initialData?.contract_id || undefined,
   }));
@@ -126,7 +126,7 @@ export default function OrderForm({ initialData, onSubmit, isLoading, errors }: 
         />
         <SelectInput
           label="Status"
-          name="order_status"
+          name="orderstatus_id"
           options={[
             { value: '0', label: 'Open/Pending' },
             { value: '1', label: 'Approved' },
@@ -134,9 +134,9 @@ export default function OrderForm({ initialData, onSubmit, isLoading, errors }: 
             { value: 'completed', label: 'Completed' },
             { value: 'cancelled', label: 'Cancelled' }
           ]}
-          value={formData.order_status}
-          onChange={(value) => setFormData(prev => ({ ...prev, order_status: value as string }))}
-          error={errors?.order_status?.[0]}
+          value={formData.orderstatus_id}
+          onChange={(value) => setFormData(prev => ({ ...prev, orderstatus_id: value as string }))}
+          error={errors?.orderstatus_id?.[0]}
         />
       </div>
 

@@ -36,7 +36,7 @@ class Order extends Model
         'order_number',
         'order_description',
         'order_pic',
-        'order_status',
+        'orderstatus_id',
     ];
 
     /**
@@ -68,6 +68,6 @@ class Order extends Model
      */
     public function status()
     {
-        return $this->belongsTo('App\OrderStatus', 'order_status');
+        return $this->belongsTo('App\OrderStatus', 'orderstatus_id');
     }
 }

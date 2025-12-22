@@ -81,10 +81,10 @@ export default function OrderDetailPage() {
                 <div>
                    <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Status</label>
                    <div className="font-medium capitalize">
-                        {order.order_status === '0' ? 'Open/Pending' : 
-                         order.order_status === '1' ? 'Approved' : 
-                         order.order_status === '2' ? 'Rejected' : 
-                         order.order_status}
+                        {order.orderstatus_id === '0' ? 'Open/Pending' : 
+                         order.orderstatus_id === '1' ? 'Approved' : 
+                         order.orderstatus_id === '2' ? 'Rejected' : 
+                         order.orderstatus_id}
                    </div>
                 </div>
                 <div>

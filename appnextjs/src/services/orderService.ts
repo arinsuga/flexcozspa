@@ -8,7 +8,7 @@ export interface Order {
   order_number: string;
   order_description: string;
   order_pic: string;
-  order_status: string;
+  orderstatus_id: string;
   created_at?: string;
   updated_at?: string;
 }

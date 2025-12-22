@@ -43,7 +43,7 @@ class OrderControllerTest extends TestCase
                 'contract_description' => 'Primary construction contract for the 50-story residential tower including foundation, structure, and finishing.',
                 'contract_number' => 'CNT-2023-001-A',
                 'contract_pic' => 'John Anderson',
-                'contract_status' => 'Active',
+                'contractstatus_id' => 0,
                 'contract_progress' => 65,
                 'contract_dt' => '2023-01-10',
                 'contract_startdt' => '2023-01-15',
@@ -78,7 +78,7 @@ class OrderControllerTest extends TestCase
                 'order_number' => 'ORD001',
                 'order_description' => 'Order 1',
                 'order_pic' => 'John Doe',
-                'order_status' => 1,
+                'orderstatus_id' => 1,
                 'order_dt' => '2025-12-01',
             ],
             [
@@ -88,7 +88,7 @@ class OrderControllerTest extends TestCase
                 'order_number' => 'ORD002',
                 'order_description' => 'Order 2',
                 'order_pic' => 'Jane Smith',
-                'order_status' => 0,
+                'orderstatus_id' => 0,
                 'order_dt' => '2025-12-02',
             ],
         ];
@@ -115,7 +115,7 @@ class OrderControllerTest extends TestCase
             'order_number' => 'ORD001',
             'order_description' => 'Order 1',
             'order_pic' => 'John Doe',
-            'order_status' => 1,
+            'orderstatus_id' => 1,
             'order_dt' => '2025-12-01',
         ];
 
@@ -157,7 +157,7 @@ class OrderControllerTest extends TestCase
             'order_number' => 'ORD003',
             'order_description' => 'New Order',
             'order_pic' => 'John Doe',
-            'order_status' => 1,
+            'orderstatus_id' => 1,
             'order_dt' => '2025-12-08',
         ];
 
@@ -219,7 +219,7 @@ class OrderControllerTest extends TestCase
         $updateData = [
             'order_number' => 'ORD001', // Required by validation
             'order_description' => 'Updated Order Description',
-            'order_status' => 1,
+            'orderstatus_id' => 1,
         ];
 
         $existingOrder = [
@@ -229,7 +229,7 @@ class OrderControllerTest extends TestCase
             'order_number' => 'ORD001',
             'order_description' => 'Old Description',
             'order_pic' => 'John Doe',
-            'order_status' => 0,
+            'orderstatus_id' => 0,
             'order_dt' => '2025-12-01',
         ];
 
