@@ -3,11 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
+    "dev": "next dev --webpack",
     "build": "next build --webpack",
-    "start": "NODE_ENV=production AUTHAPIURL=https://authapi.hd-desk.com/ APPAPIURL=https://appapi.hd-desk.com/ node server.js",
-    "localstart": "NODE_ENV=production node server.js",
-    "winstart": "set NODE_ENV=production && node server.js",
+    "start": "next start",
     "lint": "eslint",
     "test": "jest",
     "test:watch": "jest --watch"
