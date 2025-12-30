@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
     "build": "next build --webpack",
+    "dev": "NODE_ENV=development node server.js",
+    "windev": "set NODE_ENV=development node server.js",
     "start": "NODE_ENV=production node server.js",
     "winstart": "set NODE_ENV=production && node server.js",
     "lint": "eslint",
