@@ -1,10 +1,12 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
-// export const AUTH_API_URL = 'http://authapi.localhost/';
-// export const APP_API_URL = 'http://appapi.localhost/';
+export const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTHAPIURL || 'http://authapi.localhost/';
+export const APP_API_URL  = process.env.NEXT_PUBLIC_APPAPIURL  || 'http://appapi.localhost/';
 
-export const AUTH_API_URL = process.env.AUTHAPIURL || 'http://authapi.localhost/';
-export const APP_API_URL  = process.env.APPAPIURL  || 'http://appapi.localhost/';
+console.log('AUTH_API_URL: ', AUTH_API_URL);
+console.log('APP_API_URL: ', APP_API_URL);
+console.log('process.env.NEXT_PUBLIC_AUTHAPIURL: ', process.env.NEXT_PUBLIC_AUTHAPIURL);
+console.log('process.env.NEXT_PUBLIC_APPAPIURL: ', process.env.NEXT_PUBLIC_APPAPIURL);
 
 const createApi = (baseURL: string): AxiosInstance => {
   console.log('Inside createApi...');

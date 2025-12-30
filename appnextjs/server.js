@@ -1,8 +1,21 @@
+// import { createServer } from 'http';
+// import { parse } from 'url';
+// import next from 'next';
+// import fs from 'fs';
+// import path from 'path';
+// import { loadEnvConfig } from '@next/env';
+
 const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
 const fs = require('fs');
 const path = require('path');
+const { loadEnvConfig } = require('@next/env');
+
+console.log(`process.env.NODE_ENV: ${process.env.NODE_ENV}`);
+
+const dev = process.env.NODE_ENV !== 'production';
+loadEnvConfig('./', dev);
 
 // Log errors to a file for cPanel debugging
 const logError = (error) => {
@@ -23,11 +36,10 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const port = parseInt(process.env.PORT || '3000', 10);
-const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev });
+const app = next({ dev }); // Next.js instance created
 const handle = app.getRequestHandler();
 
-app.prepare()
+app.prepare() // <--- .env.production is loaded HERE by Next.js
   .then(() => {
     createServer((req, res) => {
       try {
