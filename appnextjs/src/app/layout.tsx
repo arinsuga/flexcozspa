@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import 'material-icons/iconfont/material-icons.css';
 import Providers from "@/components/providers/Providers";
@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Flexcoz",
   description: "Flexible solution for contract and order management",
   manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
   themeColor: "#5A9CB5",
 };
 
