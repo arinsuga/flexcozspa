@@ -33,7 +33,7 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
     contract_amount: initialData?.contract_amount || '',
     contract_pic: initialData?.contract_pic || '',
     project_id: initialData?.project_id || undefined,
-    contract_status: initialData?.contract_status || 'Active',
+    contractstatus_id: initialData?.contractstatus_id || 0,
     contract_progress: initialData?.contract_progress || '0',
     contract_payment: initialData?.contract_payment || '',
     contract_payment_status: initialData?.contract_payment_status || '',
@@ -123,8 +123,20 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
         </div>
 
         <div className="sm:col-span-3">
-           <label htmlFor="contract_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-           <input type="text" name="contract_status" id="contract_status" value={formData.contract_status || 'Active'} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+           <label htmlFor="contractstatus_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+           <select 
+             name="contractstatus_id" 
+             id="contractstatus_id" 
+             value={formData.contractstatus_id} 
+             onChange={handleChange} 
+             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+           >
+             <option value={0}>Open</option>
+             <option value={1}>Approved</option>
+             <option value={2}>Closed</option>
+             <option value={3}>Canceled/Rejected</option>
+             <option value={4}>Pending</option>
+           </select>
         </div>
 
         <div className="sm:col-span-6">

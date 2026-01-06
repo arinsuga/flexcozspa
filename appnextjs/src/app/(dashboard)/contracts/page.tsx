@@ -8,8 +8,10 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Contract } from '@/services/contractService';
 import Link from 'next/link';
 import { TableSkeleton } from '@/components/common/Skeleton';
+import { useRouter } from 'next/navigation';
 
 export default function ContractsPage() {
+  const router = useRouter();
   const { data: contractsResponse, isLoading, error } = useContracts();
   const { createContract, updateContract, deleteContract } = useContractMutations();
 
@@ -49,10 +51,15 @@ export default function ContractsPage() {
     try {
       if (editingContract) {
         await updateContract.mutateAsync({ id: editingContract.id, data });
+        setIsModalOpen(false);
       } else {
-        await createContract.mutateAsync(data);
+        const result = await createContract.mutateAsync(data);
+        setIsModalOpen(false);
+        const newId = result?.id || result?.data?.id;
+        if (newId) {
+            router.push(`/contracts/${newId}`);
+        }
       }
-      setIsModalOpen(false);
     } catch (error: any) {
       if (error.response?.status === 422) {
         setFormErrors(error.response.data.errors);
@@ -142,7 +149,16 @@ export default function ContractsPage() {
                    {contract.contract_pic}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                   {contract.contract_status}
+                   {(() => {
+                     const statusMap: Record<number, string> = {
+                       0: 'Open',
+                       1: 'Approved', 
+                       2: 'Closed',
+                       3: 'Canceled/Rejected',
+                       4: 'Pending'
+                     };
+                     return statusMap[contract.contractstatus_id] || 'Unknown';
+                   })()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button 

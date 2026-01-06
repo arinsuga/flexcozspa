@@ -2,12 +2,31 @@ import { appApi } from './api';
 
 export interface ContractSheet {
   id: number;
+  project_id: number;
   contract_id: number;
-  item_name: string;
-  qty: number;
-  unit_price: number;
-  total_price: number;
-  description?: string;
+  sheet_dt: string;
+  sheet_type: number;
+  sheetgroup_type: number;
+  sheetgroup_id: number;
+  sheetheader_id: number | null;
+  sheet_code: string;
+  sheet_name: string;
+  sheet_description: string;
+  sheet_notes: string;
+  sheet_qty: string;
+  sheet_price: string;
+  sheet_grossamt: string;
+  sheet_discountrate: string;
+  sheet_discountvalue: string;
+  sheet_taxrate: string;
+  sheet_taxvalue: string;
+  sheet_netamt: string;
+  uom_id: number;
+  uom_name: string;
+  sheetgroup_seqno: number;
+  sheet_seqno: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export const contractSheetService = {

@@ -7,7 +7,7 @@ export interface Contract {
   contract_description: string;
   contract_number: string;
   contract_pic: string;
-  contract_status: string;
+  contractstatus_id: number;
   contract_progress: string;
   contract_dt: string;
   contract_startdt: string;
