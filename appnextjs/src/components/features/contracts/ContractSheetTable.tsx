@@ -13,11 +13,12 @@ interface ContractSheetTableProps {
   uoms: UOM[];
   contractId: number | string;
   projectId: number;
+  sheetgroupId?: number;
   onchange?: (instance: any, cell: any, x: any, y: any, value: any) => void;
 }
 
 const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
-  const { data, uoms, contractId, projectId, onchange } = props;
+  const { data, uoms, contractId, projectId, sheetgroupId = 1, onchange } = props;
   const jRef = useRef<HTMLDivElement>(null);
   const jInstance = useRef<any>(null);
 
@@ -99,6 +100,12 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       const rawData = getJInstance()?.getData();
       if (!Array.isArray(rawData)) return [];
 
+      const hasValue = (val: any) => {
+        if (val === null || val === undefined) return false;
+        const strVal = String(val).trim();
+        return strVal !== '' && strVal !== 'null' && strVal !== 'undefined' && strVal !== '0' && strVal !== '0.00';
+      };
+
       return rawData
         .map((row: any, index: number) => {
           if (!Array.isArray(row)) return null;
@@ -113,8 +120,10 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             // total is calculated, not stored
           ] = row;
 
-          // Skip empty rows
-          if (!sheet_code && !description && !qty && !uom_id && !price) return null;
+          // Skip empty rows - strictly check for content
+          if (!hasValue(sheet_code) && !hasValue(description) && !hasValue(qty) && !hasValue(price)) {
+            return null;
+          }
 
           const qtyNum = parseFloat(qty) || 0;
           const priceNum = parseFloat(price) || 0;
@@ -130,9 +139,9 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             sheet_dt: new Date().toISOString(),
             sheet_type: 0,
             sheetgroup_type: 0,
-            sheetgroup_id: 1,
+            sheetgroup_id: sheetgroupId,
             sheetheader_id: null,
-            sheet_code: sheet_code || `SHT-${String(index + 1).padStart(3, '0')}`,
+            sheet_code: sheet_code || '',
             sheet_name: description || '',
             sheet_description: description || '',
             sheet_notes: '',
@@ -186,7 +195,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     const columns = [
       { type: 'hidden', name: 'id', title: 'ID', width: 0 },
       { type: 'text', name: 'sheet_code', title: 'Code', width: 150, align: 'left' },
-      { type: 'text', name: 'description', title: 'Description', width: 700, align: 'left' },
+      { type: 'text', name: 'description', title: 'Description', width: 650, align: 'left' },
       { type: 'numeric', name: 'qty', title: 'Vol', width: 120, mask: '#,##0.00', align: 'right' },
       { 
         type: 'dropdown', 

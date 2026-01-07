@@ -3,24 +3,24 @@
 import { useRouter } from 'next/navigation';
 import { useContract } from '@/hooks/useContracts';
 import { useContractSheets } from '@/hooks/useContractSheets';
+import { useContractStatuses } from '@/hooks/useContractStatuses';
 import { useQuery } from '@tanstack/react-query';
 import { uomService } from '@/services/uomService';
 import Button from '@/components/common/Button';
 import ContractSheetTable from '@/components/features/contracts/ContractSheetTable';
-import { useRef } from 'react';
+import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import { useContractSheetMutations } from '@/hooks/useContractSheets';
+import { useSheetGroupsByType } from '@/hooks/useSheetGroups';
+import { ContractSheet } from '@/services/contractSheetService';
+import { SheetGroup } from '@/services/sheetGroupService';
 
 interface ContractDetailClientProps {
   id: string;
 }
 
-const STATUS_MAP: Record<number, string> = {
-  0: 'Open',
-  1: 'Approved',
-  2: 'Closed',
-  3: 'Canceled/Rejected',
-  4: 'Pending'
-};
+// Hardcoded STATUS_MAP removed in favor of dynamic fetching
+
+// Hardcoded WORK_TABS removed in favor of dynamic fetching from sheetGroupService
 
 export default function ContractDetailClient({ id }: ContractDetailClientProps) {
   const router = useRouter();
@@ -30,29 +30,116 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
     queryKey: ['uoms'],
     queryFn: () => uomService.getAll(),
   });
+  const { data: sheetGroupsData, isLoading: isSheetGroupsLoading } = useSheetGroupsByType(0);
+  const { data: statusesData, isLoading: isStatusesLoading } = useContractStatuses();
   const { saveSheet } = useContractSheetMutations();
 
+  const sheetGroups = useMemo(() => {
+    return Array.isArray(sheetGroupsData) ? sheetGroupsData : (sheetGroupsData?.data || []);
+  }, [sheetGroupsData]);
+  
+  const statuses = useMemo(() => {
+    return Array.isArray(statusesData) ? statusesData : (statusesData?.data || []);
+  }, [statusesData]);
+
+  const statusMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    statuses.forEach((s: any) => {
+      map[s.id] = s.status_name;
+    });
+    return map;
+  }, [statuses]);
+
+  const [activeTabId, setActiveTabId] = useState<number | null>(null);
+  const [localSheets, setLocalSheets] = useState<ContractSheet[]>([]);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const sheetRef = useRef<any>(null);
 
   // Extract contract from response - handle different API response structures
   const contract = contractData?.data || contractData;
-  const sheets = Array.isArray(sheetsData) ? sheetsData : (sheetsData?.data || []);
-  const uoms = Array.isArray(uomsData) ? uomsData : (uomsData?.data || []);
+
+  // Sync localSheets with API data once upon initial load
+  useEffect(() => {
+    if (sheetsData && !hasInitialized) {
+      const sheets = Array.isArray(sheetsData) ? sheetsData : (sheetsData?.data || []);
+      setLocalSheets(sheets);
+      setHasInitialized(true);
+    }
+  }, [sheetsData, hasInitialized]);
+
+  // Initialize activeTabId when sheetGroups are loaded
+  useEffect(() => {
+    if (sheetGroups.length > 0 && activeTabId === null) {
+      setActiveTabId(sheetGroups[0].id);
+    }
+  }, [sheetGroups, activeTabId]);
+
+  const uoms = useMemo(() => {
+    return Array.isArray(uomsData) ? uomsData : (uomsData?.data || []);
+  }, [uomsData]);
+
+  // Sync current tab data to localSheets
+  const syncCurrentTabToLocal = useCallback(() => {
+    if (sheetRef.current && activeTabId !== null) {
+      const currentTabRows: Partial<ContractSheet>[] = sheetRef.current.getSheetData();
+      const currentSheetGroupId = activeTabId;
+      
+      setLocalSheets(prev => {
+        // Remove old rows for this group and add new ones from the spreadsheet
+        const otherRows = prev.filter(s => s.sheetgroup_id !== currentSheetGroupId);
+        const updatedRows = currentTabRows.map((row: Partial<ContractSheet>) => ({
+          ...row,
+          sheetgroup_id: currentSheetGroupId,
+          contract_id: typeof id === 'string' ? parseInt(id) : id,
+          project_id: contract?.project_id
+        })) as ContractSheet[];
+        return [...otherRows, ...updatedRows];
+      });
+    }
+  }, [activeTabId, id, contract?.project_id]);
+
+  const handleTabClick = (groupId: number) => {
+    if (groupId === activeTabId) return;
+    syncCurrentTabToLocal();
+    setActiveTabId(groupId);
+  };
+
+  // Filter localSheets based on current tab
+  const filteredSheets = useMemo(() => {
+    if (activeTabId === null) return [];
+    return localSheets.filter((s: ContractSheet) => s.sheetgroup_id === activeTabId);
+  }, [localSheets, activeTabId]);
 
   const handleSave = async () => {
-    if (!sheetRef.current) return;
+    if (activeTabId === null) return;
     
+    // Latest data from current tab
+    const currentTabRows: Partial<ContractSheet>[] = sheetRef.current?.getSheetData() || [];
+    const currentSheetGroupId = activeTabId;
+    
+    // Combine with other tabs from local state
+    const allRowsToSave = [
+      ...localSheets.filter(s => s.sheetgroup_id !== currentSheetGroupId),
+      ...currentTabRows.map((row: Partial<ContractSheet>) => ({
+        ...row,
+        sheetgroup_id: currentSheetGroupId,
+        contract_id: typeof id === 'string' ? parseInt(id) : id,
+        project_id: contract?.project_id
+      }))
+    ];
+
     try {
-      const sheetData = sheetRef.current.getSheetData();
-      await saveSheet.mutateAsync({ contractId: id, rows: sheetData });
+      await saveSheet.mutateAsync({ contractId: id, rows: allRowsToSave as Partial<ContractSheet>[] });
       alert('Saved successfully!');
+      // After save, we reset initialization to refresh from API
+      setHasInitialized(false);
     } catch (error) {
       console.error('Save failed', error);
       alert('Failed to save.');
     }
   };
 
-  if (isContractLoading || isSheetsLoading || isUomsLoading) {
+  if (isContractLoading || isSheetsLoading || isUomsLoading || isSheetGroupsLoading || isStatusesLoading) {
     return <div className="p-6">Loading...</div>;
   }
   
@@ -82,7 +169,7 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
             </div>
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Status</label>
-              <div className="font-medium">{STATUS_MAP[contract.contractstatus_id] || 'Unknown'}</div>
+              <div className="font-medium">{statusMap[contract.contractstatus_id] || 'Unknown'}</div>
             </div>
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Start Date</label>
@@ -118,13 +205,40 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
             </div>
           </div>
 
-          <ContractSheetTable 
-            ref={sheetRef} 
-            data={sheets} 
-            uoms={uoms}
-            contractId={id}
-            projectId={contract.project_id}
-          />
+          <div className="border-b border-gray-200 dark:border-gray-700">
+            <nav className="-mb-px flex space-x-8 overflow-x-auto whitespace-nowrap scrollbar-hide" aria-label="Tabs">
+              {sheetGroups.map((group: SheetGroup) => {
+                const tabLabel = `${group.sheetgroup_code}. ${group.sheetgroup_name}`;
+                return (
+                  <button
+                    key={group.id}
+                    onClick={() => handleTabClick(group.id)}
+                    className={`
+                      whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                      ${activeTabId === group.id
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                      }
+                    `}
+                  >
+                    {tabLabel}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {activeTabId !== null && (
+            <ContractSheetTable 
+              key={`sheet-tab-${activeTabId}`}
+              ref={sheetRef} 
+              data={filteredSheets} 
+              uoms={uoms}
+              contractId={id}
+              projectId={contract.project_id}
+              sheetgroupId={activeTabId}
+            />
+          )}
         </div>
       </div>
     </div>
