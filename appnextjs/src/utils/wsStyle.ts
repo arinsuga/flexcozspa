@@ -28,7 +28,30 @@ const wsStyleLight = `
           background-color: #f9fafb !important;
           color: #6b7280 !important;
           border-right: 1px solid #d1d5db !important;
-        }`;
+        }
+
+        /* 3. Content Selection & Highlight (Excludes Titles) */
+        /* Multi-cell selection background */
+        .selected .highlight,
+        .selected .highlight-selected {
+          background-color: #5A9CB5 !important;
+        }
+
+        /* Active selection border (floating element) */
+        .selected .jss_highlight, 
+        .selected jss_worksheet_highlight,
+        .selected .highlight {
+          border: 1px solid #f6f8f9ff !important;
+          z-index: 10 !important;
+        }
+
+        /* Specific border highlights */
+       .selected .highlight-top { border-top: 1px solid #5A9CB5 !important; }
+       .selected .highlight-bottom { border-bottom: 1px solid #5A9CB5 !important; }
+       .selected .highlight-left { border-left: 1px solid #5A9CB5 !important; }
+       .selected .highlight-right { border-right: 1px solid #5A9CB5 !important; }
+
+        `;
 
 const wsStyleDark = `
         /* 2. Dark Mode Styles */
