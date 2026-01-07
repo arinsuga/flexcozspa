@@ -211,18 +211,37 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     ];
 
     const handleChange = (instance: any, cell: any, x: any, y: any, value: any) => {
-      if (!instance || typeof instance.getRowData !== 'function' || y === undefined) return;
+      console.log('JSS onchange triggered:', { x, y, value });
+      if (!instance || y === undefined) return;
+      
+      const nx = parseInt(x);
+      const ny = parseInt(y);
       const qtyCol = 3;
       const priceCol = 5;
       const totalCol = 6;
 
-      if (x === qtyCol || x === priceCol) {
+      if (nx === qtyCol || nx === priceCol) {
         try {
-          const rowData = instance.getRowData(y);
-          if (rowData) {
-            const qty = parseFloat(rowData[qtyCol]) || 0;
-            const price = parseFloat(rowData[priceCol]) || 0;
-            instance.setValueFromCoords(totalCol, y, qty * price, false);
+          const parseVal = (v: any) => {
+            if (v === null || v === undefined || v === '') return 0;
+            if (typeof v === 'string') {
+              const cleaned = v.replace(/[^0-9.-]/g, '');
+              return parseFloat(cleaned) || 0;
+            }
+            return parseFloat(v) || 0;
+          };
+
+          const vQty = (nx === qtyCol) ? value : instance.getValueFromCoords(qtyCol, ny);
+          const vPrice = (nx === priceCol) ? value : instance.getValueFromCoords(priceCol, ny);
+          
+          const qty = parseVal(vQty);
+          const price = parseVal(vPrice);
+          const total = qty * price;
+
+          if (typeof instance.setValueFromCoords === 'function') {
+            // Updated to use triggerEvent = false (5th param) if supported, to avoid infinite loops
+            // if setValueFromCoords triggers another onchange.
+            instance.setValueFromCoords(totalCol, ny, total, true, false);
           }
         } catch (e) {
           console.warn('Calc error', e);
@@ -233,13 +252,16 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
 
     // jspreadsheet-ce v5 stable initialization
     const options = {
+      // Event at top level is often preferred in JSS CE
+      onchange: handleChange,
       worksheets: [{
         data: initialData,
         columns: columns,
-        minDimensions: [6, 1000], // Reverted back to 1000
+        minDimensions: [6, 1000], 
         tableOverflow: true,
         tableWidth: '100%',
         tableHeight: '600px',
+        // Also keep it here for specific worksheet handling if version requires it
         onchange: handleChange,
       }],
       allowComments: true,
@@ -248,7 +270,6 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       pagination: 50,
       copyCompatibility: true,
       defaultColWidth: 100,
-      // Suppress potential selection crashes by providing a no-op handler if needed
       onselection: () => {},
     };
 
@@ -259,7 +280,6 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     } catch (err) {
       console.error('JSS Init error:', err);
     }
-
     return () => {
       try {
         if (container && typeof jspreadsheet.destroy === 'function') {
