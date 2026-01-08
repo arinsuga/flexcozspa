@@ -2,15 +2,14 @@ import { appApi } from './api';
 
 export interface ContractStatus {
   id: number;
-  status_name: string;
-  status_description?: string;
-  status_color?: string;
+  name: string;
+  description?: string;
   created_at?: string;
   updated_at?: string;
 }
 
 export const contractStatusService = {
-  getAll: async (params?: any) => {
+  getAll: async (params?: Record<string, unknown>) => {
     const response = await appApi.get('contractstatuses', { params });
     return response.data;
   },

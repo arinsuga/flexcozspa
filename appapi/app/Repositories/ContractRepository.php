@@ -8,10 +8,18 @@ use App\Repositories\Data\EloquentRepository;
 
 class ContractRepository extends EloquentRepository implements ContractRepositoryInterface
 {
-    protected $contract;
+    public function all()
+    {
+        return $this->data->with(['contractStatus', 'project'])->get();
+    }
+
+    public function find($parId)
+    {
+        return $this->data->with(['contractStatus', 'project'])->find($parId);
+    }
 
     public function getContractByCode($code)
     {
-        return $this->data->where('contract_code', $code)->first();
+        return $this->data->with(['contractStatus', 'project'])->where('contract_code', $code)->first();
     }
 }

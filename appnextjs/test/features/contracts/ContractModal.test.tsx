@@ -1,6 +1,9 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ContractModal from '@/components/features/contracts/ContractModal';
+import { useProjects } from '@/hooks/useProjects';
+
+jest.mock('@/hooks/useProjects');
 
 // Mock Modal since it might use Portals which require setup, or just valid DOM nesting
 // But my Modal is likely simple. If it uses createPortal, JSDOM handles it usually.
@@ -12,6 +15,10 @@ describe('ContractModal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (useProjects as jest.Mock).mockReturnValue({
+      data: { data: [{ id: 1, project_name: 'Test Project' }] },
+      isLoading: false
+    });
   });
 
   it('renders correctly when open', () => {
@@ -56,7 +63,7 @@ describe('ContractModal', () => {
 
     expect(mockOnSubmit).toHaveBeenCalledWith(expect.objectContaining({
       contract_number: 'CTR-001',
-      name: 'Test Contract'
+      contract_name: 'Test Contract'
     }));
   });
 

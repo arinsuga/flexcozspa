@@ -22,13 +22,6 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
   const jRef = useRef<HTMLDivElement>(null);
   const jInstance = useRef<any>(null);
 
-  // Memoize uomOptions to prevent unnecessary spreadsheet re-initializations
-  const uomOptions = React.useMemo(() => {
-    return uoms.reduce((acc, uom) => {
-      acc[uom.id] = uom.uom_name;
-      return acc;
-    }, {} as Record<number, string>);
-  }, [uoms]);
 
   const getJInstance = () => {
     const j = jInstance.current;
@@ -73,7 +66,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         const code = row[1];
         const description = row[2];
         const qty = row[3];
-        const uom_id = row[4];
+        const uom_name = row[4];
         const price = row[5];
         
         const hasValue = (val: any) => {
@@ -82,7 +75,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           return strVal !== '' && strVal !== 'null' && strVal !== 'undefined' && strVal !== '0' && strVal !== '0.00';
         };
         
-        const isPartiallyEmpty = !hasValue(code) || !hasValue(description) || !hasValue(qty) || !hasValue(uom_id) || !hasValue(price);
+        const isPartiallyEmpty = !hasValue(code) || !hasValue(description) || !hasValue(qty) || !hasValue(uom_name) || !hasValue(price);
         
         return !isPartiallyEmpty;
       });
@@ -115,7 +108,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             sheet_code,
             description,
             qty,
-            uom_id,
+            uom_name,
             price,
             // total is calculated, not stored
           ] = row;
@@ -129,8 +122,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           const priceNum = parseFloat(price) || 0;
           const grossAmt = qtyNum * priceNum;
 
-          // Find UOM name from ID
-          const uom = uoms.find((u) => u.id === parseInt(uom_id));
+          // Find UOM ID from name
+          const uom = uoms.find((u) => u.uom_name === uom_name);
 
           const sheet: Partial<ContractSheet> = {
             id: id ? parseInt(id) : undefined,
@@ -153,8 +146,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             sheet_taxrate: '11.00',
             sheet_taxvalue: (grossAmt * 0.11).toFixed(2),
             sheet_netamt: (grossAmt * 1.11).toFixed(2),
-            uom_id: parseInt(uom_id) || 1,
-            uom_name: uom?.uom_name || '',
+            uom_id: uom?.id || 1,
+            uom_name: uom_name || '',
             sheetgroup_seqno: index + 1,
             sheet_seqno: index + 1,
           };
@@ -173,7 +166,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       sheet.sheet_code,
       sheet.sheet_description,
       parseFloat(sheet.sheet_qty),
-      sheet.uom_id,
+      sheet.uom_name,
       parseFloat(sheet.sheet_price),
       parseFloat(sheet.sheet_grossamt), // Total (calculated)
     ]);
@@ -198,12 +191,10 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       { type: 'text', name: 'description', title: 'Description', width: 650, align: 'left' },
       { type: 'numeric', name: 'qty', title: 'Vol', width: 120, mask: '#,##0.00', align: 'right' },
       { 
-        type: 'dropdown', 
-        name: 'uom_id', 
+        type: 'text', 
+        name: 'uom_name', 
         title: 'Sat', 
         width: 150,
-        source: Object.entries(uomOptions).map(([id, name]) => ({ id: parseInt(id), name })),
-        autocomplete: true,
         align: 'center'
       },
       { type: 'numeric', name: 'price', title: 'H.Satuan', width: 200, mask: '#,##0.00', align: 'right' },
@@ -301,7 +292,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         jInstance.current = null;
       }
     };
-  }, [uomOptions, onchange]); // Re-init only when critical options change
+  }, [onchange]); // Re-init only when critical options change
 
   // Watch for external data changes
   useEffect(() => {

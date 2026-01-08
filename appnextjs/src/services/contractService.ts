@@ -1,4 +1,6 @@
 import { appApi } from './api';
+import { ContractStatus } from './contractStatusService';
+import { Project } from './projectService';
 
 export interface Contract {
   id: number;
@@ -18,10 +20,12 @@ export interface Contract {
   contract_payment_status: string;
   created_at: string;
   updated_at: string;
+  contract_status?: ContractStatus;
+  project?: Project;
 }
 
 export const contractService = {
-  getAll: async (params?: any) => {
+  getAll: async (params?: Record<string, unknown>) => {
     const response = await appApi.get('contracts', { params });
     return response.data;
   },

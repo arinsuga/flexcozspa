@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useContract } from '@/hooks/useContracts';
 import { useContractSheets } from '@/hooks/useContractSheets';
 import { useContractStatuses } from '@/hooks/useContractStatuses';
+import { useProject } from '@/hooks/useProjects';
 import { useQuery } from '@tanstack/react-query';
 import { uomService } from '@/services/uomService';
 import Button from '@/components/common/Button';
@@ -32,6 +33,13 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
   });
   const { data: sheetGroupsData, isLoading: isSheetGroupsLoading } = useSheetGroupsByType(0);
   const { data: statusesData, isLoading: isStatusesLoading } = useContractStatuses();
+  
+  // Extract contract from response - handle different API response structures
+  const contract = contractData?.data || contractData;
+  
+  const { data: projectData, isLoading: isProjectLoading } = useProject(contract?.project_id);
+  const project = projectData?.data || projectData;
+
   const { saveSheet } = useContractSheetMutations();
 
   const sheetGroups = useMemo(() => {
@@ -45,7 +53,7 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
   const statusMap = useMemo(() => {
     const map: Record<number, string> = {};
     statuses.forEach((s: any) => {
-      map[s.id] = s.status_name;
+      map[s.id] = s.name;
     });
     return map;
   }, [statuses]);
@@ -54,9 +62,6 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
   const [localSheets, setLocalSheets] = useState<ContractSheet[]>([]);
   const [hasInitialized, setHasInitialized] = useState(false);
   const sheetRef = useRef<any>(null);
-
-  // Extract contract from response - handle different API response structures
-  const contract = contractData?.data || contractData;
 
   // Sync localSheets with API data once upon initial load
   useEffect(() => {
@@ -139,7 +144,7 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
     }
   };
 
-  if (isContractLoading || isSheetsLoading || isUomsLoading || isSheetGroupsLoading || isStatusesLoading) {
+  if (isContractLoading || isSheetsLoading || isUomsLoading || isSheetGroupsLoading || isStatusesLoading || isProjectLoading) {
     return <div className="p-6">Loading...</div>;
   }
   
@@ -163,6 +168,14 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
           </div>
 
           <div className="grid grid-cols-4 gap-3 text-md">
+            <div>
+              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Project Number</label>
+              <div className="font-medium">{project?.project_number || 'N/A'}</div>
+            </div>
+            <div>
+              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Project Name</label>
+              <div className="font-medium">{project?.project_name || 'N/A'}</div>
+            </div>
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Contract Number</label>
               <div className="font-medium">{contract.contract_number}</div>

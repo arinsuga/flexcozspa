@@ -38,6 +38,7 @@ class ContractController extends Controller
             'contract_number' => 'required|unique:contracts,contract_number',
             'contract_name' => 'required|string',
             'project_id' => 'required|exists:projects,id',
+            'contractstatus_id' => 'nullable|integer|exists:contractstatuses,id',
         ]);
 
         $contract = $this->repository->create($request->all());
@@ -55,6 +56,7 @@ class ContractController extends Controller
         $validated = $request->validate([
             'contract_number' => 'unique:contracts,contract_number,' . $id,
             'contract_name' => 'string',
+            'contractstatus_id' => 'nullable|integer|exists:contractstatuses,id',
         ]);
 
         $updated = $this->repository->update($id, $request->all());

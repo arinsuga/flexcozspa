@@ -1,6 +1,7 @@
 'use client';
 
 import { useContracts, useContractMutations } from '@/hooks/useContracts';
+import { useProjects } from '@/hooks/useProjects';
 import { useState } from 'react';
 import Button from '@/components/common/Button';
 import ContractModal from '@/components/features/contracts/ContractModal';
@@ -9,16 +10,28 @@ import { Contract } from '@/services/contractService';
 import Link from 'next/link';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { useRouter } from 'next/navigation';
+import { Project } from '@/services/projectService';
+import axios from 'axios';
 
 export default function ContractsPage() {
   const router = useRouter();
   const { data: contractsResponse, isLoading, error } = useContracts();
+  const { data: projectsResponse } = useProjects();
   const { createContract, updateContract, deleteContract } = useContractMutations();
 
   // Handle both direct array and paginated response formats
   const contracts = Array.isArray(contractsResponse) 
     ? contractsResponse 
     : contractsResponse?.data || [];
+
+  const projects = Array.isArray(projectsResponse)
+    ? projectsResponse
+    : projectsResponse?.data || [];
+
+  const projectMap = projects.reduce((acc: Record<number, Project>, project: Project) => {
+    acc[project.id] = project;
+    return acc;
+  }, {});
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | undefined>(undefined);
@@ -60,12 +73,18 @@ export default function ContractsPage() {
             router.push(`/contracts/${newId}`);
         }
       }
-    } catch (error: any) {
-      if (error.response?.status === 422) {
-        setFormErrors(error.response.data.errors);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 422) {
+          setFormErrors(err.response.data.errors);
+        } else {
+          console.error('App Error:', err);
+          setAppError("An application error occurred. Please try again later.");
+          setIsModalOpen(false);
+        }
       } else {
-        console.error('App Error:', error);
-        setAppError("An application error occurred. Please try again later.");
+        console.error('App Error:', err);
+        setAppError("An unexpected error occurred. Please try again later.");
         setIsModalOpen(false);
       }
     }
@@ -118,21 +137,30 @@ export default function ContractsPage() {
       </div>
 
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project No</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contract No</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Dates</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">PIC</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {contracts?.map((contract: Contract) => (
               <tr key={contract.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {projectMap[contract.project_id]?.project_number || '-'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">
+                    {projectMap[contract.project_id]?.project_name || '-'}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
                     <Link href={`/contracts/${contract.id}`} className="hover:underline">
                         {contract.contract_number}
@@ -149,36 +177,31 @@ export default function ContractsPage() {
                    {contract.contract_pic}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                   {(() => {
-                     const statusMap: Record<number, string> = {
-                       0: 'Open',
-                       1: 'Approved', 
-                       2: 'Closed',
-                       3: 'Canceled/Rejected',
-                       4: 'Pending'
-                     };
-                     return statusMap[contract.contractstatus_id] || 'Unknown';
-                   })()}
+                   {contract.contract_status?.name || 'N/A'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button 
-                    onClick={() => handleEdit(contract)}
-                    className="text-primary hover:text-indigo-900 mr-4"
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteClick(contract)}
-                    className="text-error hover:text-red-900"
-                  >
-                    Delete
-                  </button>
+                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                  <div className="flex justify-center gap-3">
+                    <button 
+                      onClick={() => handleEdit(contract)}
+                      className="text-primary hover:text-indigo-900"
+                      title="Edit"
+                    >
+                      <span className="material-icons">edit</span>
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteClick(contract)}
+                      className="text-error hover:text-red-900"
+                      title="Delete"
+                    >
+                      <span className="material-icons">delete</span>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
             {contracts?.length === 0 && (
                 <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                         No contracts found. Create one to get started.
                     </td>
                 </tr>
@@ -186,6 +209,7 @@ export default function ContractsPage() {
           </tbody>
         </table>
       </div>
+    </div>
 
       <ContractModal
         isOpen={isModalOpen}

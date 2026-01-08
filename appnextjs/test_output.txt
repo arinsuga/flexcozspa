@@ -1,0 +1,208 @@
+  console.log
+    AUTH_API_URL:  http://authapi.localhost/
+
+      at Object.<anonymous> (src/services/api.ts:33:9)
+
+  console.log
+    APP_API_URL:  http://appapi.localhost/
+
+      at Object.<anonymous> (src/services/api.ts:34:9)
+
+  console.log
+    process.env.NEXT_PUBLIC_AUTHAPIURL:  undefined
+
+      at Object.<anonymous> (src/services/api.ts:35:9)
+
+  console.log
+    process.env.NEXT_PUBLIC_APPAPIURL:  undefined
+
+      at Object.<anonymous> (src/services/api.ts:36:9)
+
+  console.log
+    AUTH_API_URL:  http://authapi.localhost/
+
+      at Object.<anonymous> (src/services/api.ts:33:9)
+
+  console.log
+    APP_API_URL:  http://appapi.localhost/
+
+      at Object.<anonymous> (src/services/api.ts:34:9)
+
+  console.log
+    process.env.NEXT_PUBLIC_AUTHAPIURL:  undefined
+
+      at Object.<anonymous> (src/services/api.ts:35:9)
+
+  console.log
+    process.env.NEXT_PUBLIC_APPAPIURL:  undefined
+
+      at Object.<anonymous> (src/services/api.ts:36:9)
+
+FAIL test/features/contracts/ContractsPage.test.tsx
+  ContractsPage
+    × renders list of contracts (14 ms)
+    × opens create modal when New Contract button is clicked (3 ms)
+    × opens edit modal with data when Edit is clicked (2 ms)
+    × opens delete confirmation when Delete is clicked (1 ms)
+    × calls delete mutation when confirmed (3 ms)
+
+  ● ContractsPage › renders list of contracts
+
+    invariant expected app router to be mounted
+
+    [0m [90m 15 |[39m
+     [90m 16 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mContractsPage[39m() {
+    [31m[1m>[22m[39m[90m 17 |[39m   [36mconst[39m router [33m=[39m useRouter()[33m;[39m
+     [90m    |[39m                           [31m[1m^[22m[39m
+     [90m 18 |[39m   [36mconst[39m { data[33m:[39m contractsResponse[33m,[39m isLoading[33m,[39m error } [33m=[39m useContracts()[33m;[39m
+     [90m 19 |[39m   [36mconst[39m { data[33m:[39m projectsResponse } [33m=[39m useProjects()[33m;[39m
+     [90m 20 |[39m   [36mconst[39m { createContract[33m,[39m updateContract[33m,[39m deleteContract } [33m=[39m useContractMutations()[33m;[39m[0m
+
+      at useRouter (node_modules/next/src/client/components/navigation.ts:149:11)
+      at ContractsPage (C:\arns\repository\Github\arinsuga\flexcoz\flexcozspa\appnextjs\src\app\(dashboard)../../../../../../../contracts/page.tsx:17:27)
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:11778:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (test/features/contracts/ContractsPage.test.tsx:63:11)
+
+  ● ContractsPage › opens create modal when New Contract button is clicked
+
+    invariant expected app router to be mounted
+
+    [0m [90m 15 |[39m
+     [90m 16 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mContractsPage[39m() {
+    [31m[1m>[22m[39m[90m 17 |[39m   [36mconst[39m router [33m=[39m useRouter()[33m;[39m
+     [90m    |[39m                           [31m[1m^[22m[39m
+     [90m 18 |[39m   [36mconst[39m { data[33m:[39m contractsResponse[33m,[39m isLoading[33m,[39m error } [33m=[39m useContracts()[33m;[39m
+     [90m 19 |[39m   [36mconst[39m { data[33m:[39m projectsResponse } [33m=[39m useProjects()[33m;[39m
+     [90m 20 |[39m   [36mconst[39m { createContract[33m,[39m updateContract[33m,[39m deleteContract } [33m=[39m useContractMutations()[33m;[39m[0m
+
+      at useRouter (node_modules/next/src/client/components/navigation.ts:149:11)
+      at ContractsPage (C:\arns\repository\Github\arinsuga\flexcoz\flexcozspa\appnextjs\src\app\(dashboard)../../../../../../../contracts/page.tsx:17:27)
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:11778:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (test/features/contracts/ContractsPage.test.tsx:72:11)
+
+  ● ContractsPage › opens edit modal with data when Edit is clicked
+
+    invariant expected app router to be mounted
+
+    [0m [90m 15 |[39m
+     [90m 16 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mContractsPage[39m() {
+    [31m[1m>[22m[39m[90m 17 |[39m   [36mconst[39m router [33m=[39m useRouter()[33m;[39m
+     [90m    |[39m                           [31m[1m^[22m[39m
+     [90m 18 |[39m   [36mconst[39m { data[33m:[39m contractsResponse[33m,[39m isLoading[33m,[39m error } [33m=[39m useContracts()[33m;[39m
+     [90m 19 |[39m   [36mconst[39m { data[33m:[39m projectsResponse } [33m=[39m useProjects()[33m;[39m
+     [90m 20 |[39m   [36mconst[39m { createContract[33m,[39m updateContract[33m,[39m deleteContract } [33m=[39m useContractMutations()[33m;[39m[0m
+
+      at useRouter (node_modules/next/src/client/components/navigation.ts:149:11)
+      at ContractsPage (C:\arns\repository\Github\arinsuga\flexcoz\flexcozspa\appnextjs\src\app\(dashboard)../../../../../../../contracts/page.tsx:17:27)
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:11778:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (test/features/contracts/ContractsPage.test.tsx:78:11)
+
+  ● ContractsPage › opens delete confirmation when Delete is clicked
+
+    invariant expected app router to be mounted
+
+    [0m [90m 15 |[39m
+     [90m 16 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mContractsPage[39m() {
+    [31m[1m>[22m[39m[90m 17 |[39m   [36mconst[39m router [33m=[39m useRouter()[33m;[39m
+     [90m    |[39m                           [31m[1m^[22m[39m
+     [90m 18 |[39m   [36mconst[39m { data[33m:[39m contractsResponse[33m,[39m isLoading[33m,[39m error } [33m=[39m useContracts()[33m;[39m
+     [90m 19 |[39m   [36mconst[39m { data[33m:[39m projectsResponse } [33m=[39m useProjects()[33m;[39m
+     [90m 20 |[39m   [36mconst[39m { createContract[33m,[39m updateContract[33m,[39m deleteContract } [33m=[39m useContractMutations()[33m;[39m[0m
+
+      at useRouter (node_modules/next/src/client/components/navigation.ts:149:11)
+      at ContractsPage (C:\arns\repository\Github\arinsuga\flexcoz\flexcozspa\appnextjs\src\app\(dashboard)../../../../../../../contracts/page.tsx:17:27)
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:11778:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (test/features/contracts/ContractsPage.test.tsx:87:11)
+
+  ● ContractsPage › calls delete mutation when confirmed
+
+    invariant expected app router to be mounted
+
+    [0m [90m 15 |[39m
+     [90m 16 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mContractsPage[39m() {
+    [31m[1m>[22m[39m[90m 17 |[39m   [36mconst[39m router [33m=[39m useRouter()[33m;[39m
+     [90m    |[39m                           [31m[1m^[22m[39m
+     [90m 18 |[39m   [36mconst[39m { data[33m:[39m contractsResponse[33m,[39m isLoading[33m,[39m error } [33m=[39m useContracts()[33m;[39m
+     [90m 19 |[39m   [36mconst[39m { data[33m:[39m projectsResponse } [33m=[39m useProjects()[33m;[39m
+     [90m 20 |[39m   [36mconst[39m { createContract[33m,[39m updateContract[33m,[39m deleteContract } [33m=[39m useContractMutations()[33m;[39m[0m
+
+      at useRouter (node_modules/next/src/client/components/navigation.ts:149:11)
+      at ContractsPage (C:\arns\repository\Github\arinsuga\flexcoz\flexcozspa\appnextjs\src\app\(dashboard)../../../../../../../contracts/page.tsx:17:27)
+      at Object.react_stack_bottom_frame (node_modules/react-dom/cjs/react-dom-client.development.js:25904:20)
+      at renderWithHooks (node_modules/react-dom/cjs/react-dom-client.development.js:7662:22)
+      at updateFunctionComponent (node_modules/react-dom/cjs/react-dom-client.development.js:10166:19)
+      at beginWork (node_modules/react-dom/cjs/react-dom-client.development.js:11778:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:17641:22)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:17469:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:17450:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:16583:35)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:18957:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:590:34)
+      at process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:884:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (test/features/contracts/ContractsPage.test.tsx:95:11)
+
+Test Suites: 1 failed, 1 total
+Tests:       5 failed, 5 total
+Snapshots:   0 total
+Time:        1.008 s
+Ran all test suites matching test/features/contracts/ContractsPage.test.tsx.
