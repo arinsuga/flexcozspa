@@ -73,4 +73,12 @@ class Contract extends Model
         return $this->belongsTo('App\ContractStatus', 'contractstatus_id');
     }
 
+    /**
+     * Contract sheets that belong to this contract.
+     */
+    public function contractSheets()
+    {
+        return $this->hasMany('App\ContractSheet', 'contract_id');
+    }
+
 }

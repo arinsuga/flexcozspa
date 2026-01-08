@@ -54,6 +54,6 @@ class CreateAttendsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('attend');
+        Schema::dropIfExists('attends');
     }
 }

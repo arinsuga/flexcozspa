@@ -22,7 +22,10 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
   
   const { data: statusData } = useContractStatuses();
   const statuses = (statusData || []) as ContractStatus[];
+
+  console.log('statuses: ', statuses);
   
+
   // Get current date in YYYY-MM-DD format
   const getCurrentDate = () => {
     const today = new Date();
@@ -38,7 +41,7 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
     contract_amount: initialData?.contract_amount || '',
     contract_pic: initialData?.contract_pic || '',
     project_id: initialData?.project_id || undefined,
-    contractstatus_id: initialData?.contractstatus_id ?? 0,
+    contractstatus_id: initialData?.contractstatus_id ?? 1,
     contract_progress: initialData?.contract_progress || '0',
     contract_payment: initialData?.contract_payment || '',
     contract_payment_status: initialData?.contract_payment_status || '',
@@ -137,7 +140,7 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
                label: status.name
              }))}
              value={formData.contractstatus_id}
-             onChange={(value) => setFormData(prev => ({ ...prev, contractstatus_id: value as number }))}
+             onChange={(value) => setFormData(prev => ({ ...prev, contractstatus_id: value ? Number(value) : 0 }))}
              placeholder="Select Status"
            />
         </div>

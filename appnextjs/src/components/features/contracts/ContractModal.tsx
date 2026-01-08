@@ -9,6 +9,8 @@ import { useProjects } from '@/hooks/useProjects';
 import { Project } from '@/services/projectService';
 import SelectInput from '@/components/common/SelectInput';
 import Textarea from '@/components/common/Textarea';
+import { useContractStatuses } from '@/hooks/useContractStatuses';
+import { ContractStatus } from '@/services/contractStatusService';
 
 interface ContractModalProps {
   isOpen: boolean;
@@ -30,6 +32,9 @@ export default function ContractModal({
   const { data: projectsData } = useProjects();
   const projects = (projectsData?.data || []) as Project[];
   
+  const { data: statusData } = useContractStatuses();
+  const statuses = (statusData || []) as ContractStatus[];
+
   // Get current date in YYYY-MM-DD format
   const getCurrentDate = () => {
     const today = new Date();
@@ -45,7 +50,7 @@ export default function ContractModal({
     contract_enddt: '',
     project_id: undefined,
     contract_pic: '',
-    contractstatus_id: 0,
+    contractstatus_id: 1,
     contract_progress: '',
     contract_payment: '',
     contract_payment_status: '',
@@ -66,7 +71,7 @@ export default function ContractModal({
         contract_enddt: currentDate,
         project_id: undefined,
         contract_pic: '',
-        contractstatus_id: 0,
+        contractstatus_id: 1,
         contract_progress: '0',
         contract_payment: '0.00',
         contract_payment_status: 'Unpaid',
@@ -155,25 +160,19 @@ export default function ContractModal({
               onChange={handleChange}
               error={errors?.contract_amount?.[0]}
             />
-            <div>
-              <label htmlFor="contractstatus_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-              <select
-                name="contractstatus_id"
-                id="contractstatus_id"
-                value={formData.contractstatus_id || 0}
-                onChange={handleChange}
-                className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              >
-                <option value={0}>Open</option>
-                <option value={1}>Approved</option>
-                <option value={2}>Closed</option>
-                <option value={3}>Canceled/Rejected</option>
-                <option value={4}>Pending</option>
-              </select>
-              {errors?.contractstatus_id?.[0] && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.contractstatus_id[0]}</p>
-              )}
-            </div>
+            <SelectInput
+              label="Status"
+              name="contractstatus_id"
+              required
+              options={statuses.map(status => ({
+                value: status.id,
+                label: status.name
+              }))}
+              value={formData.contractstatus_id || 1}
+              onChange={(value) => setFormData(prev => ({ ...prev, contractstatus_id: value ? Number(value) : 1 }))}
+              placeholder="Select Status"
+              error={errors?.contractstatus_id?.[0]}
+            />
         </div>
 
         <div className="border-t pt-4 mt-4">

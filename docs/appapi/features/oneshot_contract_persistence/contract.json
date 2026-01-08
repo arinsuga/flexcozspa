@@ -1,0 +1,90 @@
+{
+  "contract_name": "Integrated Multi-Disciplinary Project",
+  "contract_number": "CNT-2026-X-001",
+  "project_id": 1,
+  "contractstatus_id": 1,
+  "contract_description": "Standardized data sample for all work categories with dummy codes",
+  "contract_sheets": [
+    /* A. PREPARATION WORK */
+    { 
+      "id": "h_a", "sheet_type": 0, "sheetgroup_type": 0, "sheetgroup_id": 1, "sheet_code": "A.00", "sheet_name": "SITE PREPARATION", 
+      "project_id": 1, "uom_id": 1, "uom_name": "LS", "sheetgroup_seqno": 100 
+    },
+    { 
+      "sheet_type": 1, "sheetheader_id": "h_a", "sheetgroup_type": 0, "sheetgroup_id": 1, "sheet_code": "A.01", "sheet_name": "Mobilization", 
+      "sheet_qty": 1, "sheet_price": 5000, "project_id": 1, "uom_id": 1, "uom_name": "LS", "sheet_seqno": 1 
+    },
+    /* B. DEMOLISH WORK */
+    { 
+      "id": "h_b", "sheet_type": 0, "sheetgroup_type": 0, "sheetgroup_id": 2, "sheet_code": "B.00", "sheet_name": "DEMOLITION WORKS", 
+      "project_id": 1, "uom_id": 2, "uom_name": "m2", "sheetgroup_seqno": 200 
+    },
+    { 
+      "sheet_type": 1, "sheetheader_id": "h_b", "sheetgroup_type": 0, "sheetgroup_id": 2, "sheet_code": "B.01", "sheet_name": "Masonry Demo", 
+      "sheet_qty": 150, "sheet_price": 60, "project_id": 1, "uom_id": 2, "uom_name": "m2", "sheet_seqno": 2 
+    },
+    /* C. CIVIL WORK */
+    { 
+      "id": "h_c", "sheet_type": 0, "sheetgroup_type": 0, "sheetgroup_id": 3, "sheet_code": "C.00", "sheet_name": "CONSTRUCTION & CIVIL", 
+      "project_id": 1, "uom_id": 3, "uom_name": "m3", "sheetgroup_seqno": 300 
+    },
+    { 
+      "sheet_type": 1, "sheetheader_id": "h_c", "sheetgroup_type": 0, "sheetgroup_id": 3, "sheet_code": "C.01", "sheet_name": "Foundation Slab", 
+      "sheet_qty": 40, "sheet_price": 2500, "project_id": 1, "uom_id": 3, "uom_name": "m3", "sheet_seqno": 3 
+    },
+    /* D. FINISHING WORK */
+    { 
+      "id": "h_d", "sheet_type": 0, "sheetgroup_type": 0, "sheetgroup_id": 4, "sheet_code": "D.00", "sheet_name": "FINISHING WORKS", 
+      "project_id": 1, "uom_id": 2, "uom_name": "m2", "sheetgroup_seqno": 400 
+    },
+    { 
+      "sheet_type": 1, "sheetheader_id": "h_d", "sheetgroup_type": 0, "sheetgroup_id": 4, "sheet_code": "D.01", "sheet_name": "Floor Screed", 
+      "sheet_qty": 500, "sheet_price": 45, "project_id": 1, "uom_id": 2, "uom_name": "m2", "sheet_seqno": 4 
+    },
+    /* E. MEP WORK */
+    { 
+      "id": "h_e", "sheet_type": 0, "sheetgroup_type": 0, "sheetgroup_id": 5, "sheet_code": "E.00", "sheet_name": "MECHANICAL & ELECTRICAL", 
+      "project_id": 1, "uom_id": 1, "uom_name": "LS", "sheetgroup_seqno": 500 
+    },
+    { 
+      "sheet_type": 1, "sheetheader_id": "h_e", "sheetgroup_type": 0, "sheetgroup_id": 5, "sheet_code": "E.01", "sheet_name": "Electrical Main Box", 
+      "sheet_qty": 2, "sheet_price": 12000, "project_id": 1, "uom_id": 1, "uom_name": "LS", "sheet_seqno": 5 
+    },
+    /* F. INTERIOR WORK */
+    { 
+      "id": "h_f", "sheet_type": 0, "sheetgroup_type": 0, "sheetgroup_id": 6, "sheet_code": "F.00", "sheet_name": "INTERIOR FIT-OUT", 
+      "project_id": 1, "uom_id": 1, "uom_name": "unit", "sheetgroup_seqno": 600 
+    },
+    { 
+      "sheet_type": 1, "sheetheader_id": "h_f", "sheetgroup_type": 0, "sheetgroup_id": 6, "sheet_code": "F.01", "sheet_name": "Workstations", 
+      "sheet_qty": 20, "sheet_price": 450, "project_id": 1, "uom_id": 1, "uom_name": "unit", "sheet_seqno": 6 
+    },
+    /* G. LANDSCAPE */
+    { 
+      "id": "h_g", "sheet_type": 0, "sheetgroup_type": 0, "sheetgroup_id": 7, "sheet_code": "G.00", "sheet_name": "LANDSCAPING", 
+      "project_id": 1, "uom_id": 2, "uom_name": "m2", "sheetgroup_seqno": 700 
+    },
+    { 
+      "sheet_type": 1, "sheetheader_id": "h_g", "sheetgroup_type": 0, "sheetgroup_id": 7, "sheet_code": "G.01", "sheet_name": "Garden Sodding", 
+      "sheet_qty": 1000, "sheet_price": 15, "project_id": 1, "uom_id": 2, "uom_name": "m2", "sheet_seqno": 7 
+    },
+    /* H. OTHER WORK */
+    { 
+      "id": "h_h", "sheet_type": 0, "sheetgroup_type": 0, "sheetgroup_id": 8, "sheet_code": "H.00", "sheet_name": "MISCELLANEOUS", 
+      "project_id": 1, "uom_id": 1, "uom_name": "LS", "sheetgroup_seqno": 800 
+    },
+    { 
+      "sheet_type": 1, "sheetheader_id": "h_h", "sheetgroup_type": 0, "sheetgroup_id": 8, "sheet_code": "H.01", "sheet_name": "Site Cleanup", 
+      "sheet_qty": 1, "sheet_price": 1500, "project_id": 1, "uom_id": 1, "uom_name": "LS", "sheet_seqno": 8 
+    },
+    /* I. ADD WORK */
+    { 
+      "id": "h_i", "sheet_type": 0, "sheetgroup_type": 0, "sheetgroup_id": 9, "sheet_code": "I.00", "sheet_name": "ADDITIONAL WORKS", 
+      "project_id": 1, "uom_id": 1, "uom_name": "pt", "sheetgroup_seqno": 900 
+    },
+    { 
+      "sheet_type": 1, "sheetheader_id": "h_i", "sheetgroup_type": 0, "sheetgroup_id": 9, "sheet_code": "I.01", "sheet_name": "Change Order #1", 
+      "sheet_qty": 5, "sheet_price": 200, "project_id": 1, "uom_id": 1, "uom_name": "pt", "sheet_seqno": 9 
+    }
+  ]
+}

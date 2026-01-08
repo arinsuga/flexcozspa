@@ -22,4 +22,9 @@ class ContractRepository extends EloquentRepository implements ContractRepositor
     {
         return $this->data->with(['contractStatus', 'project'])->where('contract_code', $code)->first();
     }
+
+    public function findWithSheets($id)
+    {
+        return $this->data->with(['contractStatus', 'project', 'contractSheets'])->find($id);
+    }
 }

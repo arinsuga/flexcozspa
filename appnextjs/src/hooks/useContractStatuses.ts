@@ -5,6 +5,7 @@ export const useContractStatuses = (params?: any) => {
   return useQuery({
     queryKey: ['contract-statuses', params],
     queryFn: () => contractStatusService.getAll(params),
+    staleTime: 0,
   });
 };
 

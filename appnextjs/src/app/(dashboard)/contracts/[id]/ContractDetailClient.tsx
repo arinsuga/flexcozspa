@@ -1,8 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useContract } from '@/hooks/useContracts';
-import { useContractSheets } from '@/hooks/useContractSheets';
+import { useContract, useContractMutations } from '@/hooks/useContracts';
 import { useContractStatuses } from '@/hooks/useContractStatuses';
 import { useProject } from '@/hooks/useProjects';
 import { useQuery } from '@tanstack/react-query';
@@ -10,7 +9,6 @@ import { uomService } from '@/services/uomService';
 import Button from '@/components/common/Button';
 import ContractSheetTable from '@/components/features/contracts/ContractSheetTable';
 import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
-import { useContractSheetMutations } from '@/hooks/useContractSheets';
 import { useSheetGroupsByType } from '@/hooks/useSheetGroups';
 import { ContractSheet } from '@/services/contractSheetService';
 import { SheetGroup } from '@/services/sheetGroupService';
@@ -26,21 +24,19 @@ interface ContractDetailClientProps {
 export default function ContractDetailClient({ id }: ContractDetailClientProps) {
   const router = useRouter();
   const { data: contractData, isLoading: isContractLoading } = useContract(id);
-  const { data: sheetsData, isLoading: isSheetsLoading } = useContractSheets(id);
   const { data: uomsData, isLoading: isUomsLoading } = useQuery({
     queryKey: ['uoms'],
     queryFn: () => uomService.getAll(),
   });
   const { data: sheetGroupsData, isLoading: isSheetGroupsLoading } = useSheetGroupsByType(0);
   const { data: statusesData, isLoading: isStatusesLoading } = useContractStatuses();
+  const { updateContract: updateContractMutation } = useContractMutations();
   
   // Extract contract from response - handle different API response structures
   const contract = contractData?.data || contractData;
   
   const { data: projectData, isLoading: isProjectLoading } = useProject(contract?.project_id);
   const project = projectData?.data || projectData;
-
-  const { saveSheet } = useContractSheetMutations();
 
   const sheetGroups = useMemo(() => {
     return Array.isArray(sheetGroupsData) ? sheetGroupsData : (sheetGroupsData?.data || []);
@@ -65,12 +61,12 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
 
   // Sync localSheets with API data once upon initial load
   useEffect(() => {
-    if (sheetsData && !hasInitialized) {
-      const sheets = Array.isArray(sheetsData) ? sheetsData : (sheetsData?.data || []);
+    if (contract && !hasInitialized) {
+      const sheets = contract.contract_sheets || [];
       setLocalSheets(sheets);
       setHasInitialized(true);
     }
-  }, [sheetsData, hasInitialized]);
+  }, [contract, hasInitialized]);
 
   // Initialize activeTabId when sheetGroups are loaded
   useEffect(() => {
@@ -133,8 +129,27 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
       }))
     ];
 
+    // Sort sheets by sheetgroup_id sequentially (A-I)
+    // sheetgroup_id 1: PREPARATION, 2: DEMOLISH, etc.
+    const sortedSheets = [...allRowsToSave].sort((a, b) => {
+      if (a.sheetgroup_id !== b.sheetgroup_id) {
+        return (a.sheetgroup_id || 0) - (b.sheetgroup_id || 0);
+      }
+      return (a.sheet_seqno || 0) - (b.sheet_seqno || 0);
+    });
+
     try {
-      await saveSheet.mutateAsync({ contractId: id, rows: allRowsToSave as Partial<ContractSheet>[] });
+      // One-shot persistence: update contract with nested sheets
+      // Ensure top-level contract fields are also correctly typed
+      await updateContractMutation.mutateAsync({ 
+        id, 
+        data: { 
+          ...contract,
+          project_id: parseInt(contract.project_id as unknown as string),
+          contractstatus_id: contract.contractstatus_id ? parseInt(contract.contractstatus_id as unknown as string) : null,
+          contract_sheets: sortedSheets as ContractSheet[] 
+        } 
+      });
       alert('Saved successfully!');
       // After save, we reset initialization to refresh from API
       setHasInitialized(false);
@@ -144,7 +159,7 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
     }
   };
 
-  if (isContractLoading || isSheetsLoading || isUomsLoading || isSheetGroupsLoading || isStatusesLoading || isProjectLoading) {
+  if (isContractLoading || isUomsLoading || isSheetGroupsLoading || isStatusesLoading || isProjectLoading) {
     return <div className="p-6">Loading...</div>;
   }
   
@@ -163,7 +178,7 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
             </div>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => router.back()} leftIcon="arrow_back">Back</Button>
-              <Button variant="primary" leftIcon="save" onClick={handleSave} isLoading={saveSheet.isPending}>Save Changes</Button>
+              <Button variant="primary" leftIcon="save" onClick={handleSave} isLoading={updateContractMutation.isPending}>Save Changes</Button>
             </div>
           </div>
 

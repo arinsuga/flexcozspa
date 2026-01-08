@@ -99,6 +99,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         return strVal !== '' && strVal !== 'null' && strVal !== 'undefined' && strVal !== '0' && strVal !== '0.00';
       };
 
+      const isEditMode = contractId !== 'new' && !!contractId;
+
       return rawData
         .map((row: any, index: number) => {
           if (!Array.isArray(row)) return null;
@@ -113,41 +115,52 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             // total is calculated, not stored
           ] = row;
 
-          // Skip empty rows - strictly check for content
-          if (!hasValue(sheet_code) && !hasValue(description) && !hasValue(qty) && !hasValue(price)) {
+          // Requirement 4 & 5: trim or remove data if one of this field is blank or no value:
+          // project_id, contract_id (if edit mode), sheet_code, sheet_name, uom_name
+          if (!projectId || !hasValue(sheet_code) || !hasValue(description) || !hasValue(uom_name)) {
             return null;
           }
+          if (isEditMode && !contractId) {
+             return null;
+          }
 
-          const qtyNum = parseFloat(qty) || 0;
-          const priceNum = parseFloat(price) || 0;
+          const qtyNum = hasValue(qty) ? parseFloat(qty) : 0;
+          const priceNum = hasValue(price) ? parseFloat(price) : 0;
           const grossAmt = qtyNum * priceNum;
+
+          // Requirement 2: sheet_type logic
+          const hasMetrics = hasValue(qty) || hasValue(price) || grossAmt > 0;
+          const sheetType = hasMetrics ? 1 : 0;
 
           // Find UOM ID from name
           const uom = uoms.find((u) => u.uom_name === uom_name);
 
+          // Find original sheet to preserve some fields
+          const originalSheet = data.find(s => s.id === (id ? parseInt(id) : null));
+
           const sheet: Partial<ContractSheet> = {
             id: id ? parseInt(id) : undefined,
-            project_id: projectId,
-            contract_id: typeof contractId === 'string' ? parseInt(contractId) : contractId,
-            sheet_dt: new Date().toISOString(),
-            sheet_type: 0,
+            project_id: parseInt(projectId as unknown as string),
+            contract_id: isEditMode ? (typeof contractId === 'string' ? parseInt(contractId) : contractId as number) : undefined,
+            sheet_dt: originalSheet?.sheet_dt || new Date().toISOString(),
+            sheet_type: sheetType,
             sheetgroup_type: 0,
-            sheetgroup_id: sheetgroupId,
-            sheetheader_id: null,
-            sheet_code: sheet_code || '',
-            sheet_name: description || '',
-            sheet_description: description || '',
-            sheet_notes: '',
-            sheet_qty: qty?.toString() || '0',
-            sheet_price: price?.toString() || '0',
-            sheet_grossamt: grossAmt.toFixed(2),
-            sheet_discountrate: '0.00',
-            sheet_discountvalue: '0.00',
-            sheet_taxrate: '11.00',
-            sheet_taxvalue: (grossAmt * 0.11).toFixed(2),
-            sheet_netamt: (grossAmt * 1.11).toFixed(2),
-            uom_id: uom?.id || 1,
-            uom_name: uom_name || '',
+            sheetgroup_id: parseInt(sheetgroupId as unknown as string),
+            sheetheader_id: originalSheet?.sheetheader_id ? parseInt(originalSheet.sheetheader_id as unknown as string) : null,
+            sheet_code: sheet_code ? String(sheet_code) : '',
+            sheet_name: description ? String(description) : '',
+            sheet_description: description ? String(description) : '',
+            sheet_notes: originalSheet?.sheet_notes ? String(originalSheet.sheet_notes) : '',
+            sheet_qty: hasValue(qty) ? parseFloat(qty) : 0,
+            sheet_price: hasValue(price) ? parseFloat(price) : 0,
+            sheet_grossamt: parseFloat(grossAmt.toFixed(2)),
+            sheet_discountrate: originalSheet?.sheet_discountrate ? parseFloat(originalSheet.sheet_discountrate as unknown as string) : 0.00,
+            sheet_discountvalue: originalSheet?.sheet_discountvalue ? parseFloat(originalSheet.sheet_discountvalue as unknown as string) : 0.00,
+            sheet_taxrate: originalSheet?.sheet_taxrate ? parseFloat(originalSheet.sheet_taxrate as unknown as string) : 11.00,
+            sheet_taxvalue: parseFloat((grossAmt * 0.11).toFixed(2)),
+            sheet_netamt: parseFloat((grossAmt * 1.11).toFixed(2)),
+            uom_id: uom?.id ? parseInt(uom.id as unknown as string) : (originalSheet?.uom_id ? parseInt(originalSheet.uom_id as unknown as string) : 1),
+            uom_name: uom_name ? String(uom_name) : (uom?.uom_name || ''),
             sheetgroup_seqno: index + 1,
             sheet_seqno: index + 1,
           };
@@ -165,12 +178,96 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       sheet.id,
       sheet.sheet_code,
       sheet.sheet_description,
-      parseFloat(sheet.sheet_qty),
+      sheet.sheet_qty,
       sheet.uom_name,
-      parseFloat(sheet.sheet_price),
-      parseFloat(sheet.sheet_grossamt), // Total (calculated)
+      sheet.sheet_price,
+      sheet.sheet_grossamt, // Total (calculated)
     ]);
   }, []);
+
+  const validateTable = useCallback((instance: any) => {
+    if (!instance || typeof instance.getData !== 'function') return;
+    const rawData = instance.getData();
+    if (!Array.isArray(rawData)) return;
+
+    const hasValue = (val: any) => {
+      if (val === null || val === undefined) return false;
+      const strVal = String(val).trim();
+      return strVal !== '' && strVal !== 'null' && strVal !== 'undefined' && strVal !== '0' && strVal !== '0.00';
+    };
+
+    const requiredCols = [1, 2, 4]; // Code, Description, Sat
+
+    rawData.forEach((row: any, y: number) => {
+      requiredCols.forEach((x) => {
+        const value = row[x];
+        const isValid = hasValue(value);
+        const color = isValid ? '' : 'red';
+        
+        if (typeof instance.setStyle === 'function') {
+          // JSS CE Style: setStyle(cell_name, property, value)
+          const cellName = String.fromCharCode(65 + x) + (y + 1);
+          instance.setStyle(cellName, 'color', color);
+        }
+      });
+    });
+  }, []);
+
+  const handleCellChange = useCallback((instance: any, cell: any, x: any, y: any, value: any) => {
+    console.log('JSS onchange triggered:', { x, y, value });
+    if (!instance || y === undefined) return;
+    
+    const nx = parseInt(x);
+    const ny = parseInt(y);
+    const qtyCol = 3;
+    const priceCol = 5;
+    const totalCol = 6;
+    const requiredCols = [1, 2, 4]; // Code, Description, Sat
+
+    // Visual Validation Feedback
+    if (requiredCols.includes(nx)) {
+      const hasValue = (val: any) => {
+        if (val === null || val === undefined) return false;
+        const strVal = String(val).trim();
+        return strVal !== '' && strVal !== 'null' && strVal !== 'undefined' && strVal !== '0' && strVal !== '0.00';
+      };
+      const isValid = hasValue(value);
+      const color = isValid ? '' : 'red';
+      if (typeof instance.setStyle === 'function') {
+        const cellName = String.fromCharCode(65 + nx) + (ny + 1);
+        instance.setStyle(cellName, 'color', color);
+      } else if (cell) {
+        cell.style.color = color;
+      }
+    }
+
+    if (nx === qtyCol || nx === priceCol) {
+      try {
+        const parseVal = (v: any) => {
+          if (v === null || v === undefined || v === '') return 0;
+          if (typeof v === 'string') {
+            const cleaned = v.replace(/[^0-9.-]/g, '');
+            return parseFloat(cleaned) || 0;
+          }
+          return parseFloat(v) || 0;
+        };
+
+        const vQty = (nx === qtyCol) ? value : instance.getValueFromCoords(qtyCol, ny);
+        const vPrice = (nx === priceCol) ? value : instance.getValueFromCoords(priceCol, ny);
+        
+        const qty = parseVal(vQty);
+        const price = parseVal(vPrice);
+        const total = qty * price;
+
+        if (typeof instance.setValueFromCoords === 'function') {
+          instance.setValueFromCoords(totalCol, ny, total, true, false);
+        }
+      } catch (e) {
+        console.warn('Calc error', e);
+      }
+    }
+    if (onchange) onchange(instance, cell, x, y, value);
+  }, [onchange]);
 
   useEffect(() => {
     const container = jRef.current;
@@ -210,50 +307,10 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       },
     ];
 
-    const handleChange = (instance: any, cell: any, x: any, y: any, value: any) => {
-      console.log('JSS onchange triggered:', { x, y, value });
-      if (!instance || y === undefined) return;
-      
-      const nx = parseInt(x);
-      const ny = parseInt(y);
-      const qtyCol = 3;
-      const priceCol = 5;
-      const totalCol = 6;
-
-      if (nx === qtyCol || nx === priceCol) {
-        try {
-          const parseVal = (v: any) => {
-            if (v === null || v === undefined || v === '') return 0;
-            if (typeof v === 'string') {
-              const cleaned = v.replace(/[^0-9.-]/g, '');
-              return parseFloat(cleaned) || 0;
-            }
-            return parseFloat(v) || 0;
-          };
-
-          const vQty = (nx === qtyCol) ? value : instance.getValueFromCoords(qtyCol, ny);
-          const vPrice = (nx === priceCol) ? value : instance.getValueFromCoords(priceCol, ny);
-          
-          const qty = parseVal(vQty);
-          const price = parseVal(vPrice);
-          const total = qty * price;
-
-          if (typeof instance.setValueFromCoords === 'function') {
-            // Updated to use triggerEvent = false (5th param) if supported, to avoid infinite loops
-            // if setValueFromCoords triggers another onchange.
-            instance.setValueFromCoords(totalCol, ny, total, true, false);
-          }
-        } catch (e) {
-          console.warn('Calc error', e);
-        }
-      }
-      if (onchange) onchange(instance, cell, x, y, value);
-    };
-
     // jspreadsheet-ce v5 stable initialization
     const options = {
       // Event at top level is often preferred in JSS CE
-      onchange: handleChange,
+      onchange: handleCellChange,
       worksheets: [{
         data: initialData,
         columns: columns,
@@ -262,7 +319,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         tableWidth: '100%',
         tableHeight: '600px',
         // Also keep it here for specific worksheet handling if version requires it
-        onchange: handleChange,
+        onchange: handleCellChange,
       }],
       allowComments: true,
       contextMenu: true,
@@ -277,6 +334,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       // @ts-expect-error - jspreadsheet-ce types can be tricky
       const el = jspreadsheet(container, options);
       jInstance.current = el;
+      // Initial validation
+      validateTable(getJInstance());
     } catch (err) {
       console.error('JSS Init error:', err);
     }
@@ -292,7 +351,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         jInstance.current = null;
       }
     };
-  }, [onchange]); // Re-init only when critical options change
+  }, [onchange, validateTable, handleCellChange, transformToSheetData]); // Re-init only when critical options change
 
   // Watch for external data changes
   useEffect(() => {
@@ -303,9 +362,10 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       
       if (JSON.stringify(currentData) !== JSON.stringify(newData)) {
         instance.setData(newData);
+        validateTable(instance);
       }
     }
-  }, [data, transformToSheetData]);
+  }, [data, transformToSheetData, validateTable]);
 
   return (
     <>

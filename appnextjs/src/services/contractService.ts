@@ -2,6 +2,8 @@ import { appApi } from './api';
 import { ContractStatus } from './contractStatusService';
 import { Project } from './projectService';
 
+import { ContractSheet } from './contractSheetService';
+
 export interface Contract {
   id: number;
   project_id: number;
@@ -22,6 +24,7 @@ export interface Contract {
   updated_at: string;
   contract_status?: ContractStatus;
   project?: Project;
+  contract_sheets?: ContractSheet[];
 }
 
 export const contractService = {

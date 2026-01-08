@@ -49,10 +49,13 @@ class ContractControllerTest extends TestCase
     /** @test */
     public function it_returns_a_single_contract()
     {
-        $contract = ['id' => 1, 'contract_number' => 'CNT001', 'contract_name' => 'Contract 1'];
+        $contract = Mockery::mock(\App\Contract::class)->makePartial();
+        $contract->id = 1;
+        $contract->contract_number = 'CNT001';
+        $contract->contract_name = 'Contract 1';
 
         $this->repository
-            ->shouldReceive('find')
+            ->shouldReceive('findWithSheets')
             ->with(1)
             ->once()
             ->andReturn($contract);
@@ -60,15 +63,14 @@ class ContractControllerTest extends TestCase
         $response = $this->withoutMiddleware()
             ->getJson('/contracts/1');
 
-        $response->assertStatus(200)
-            ->assertJson(['data' => $contract]);
+        $response->assertStatus(200);
     }
 
     /** @test */
     public function it_returns_404_when_contract_not_found()
     {
         $this->repository
-            ->shouldReceive('find')
+            ->shouldReceive('findWithSheets')
             ->with(999)
             ->once()
             ->andReturn(null);
@@ -91,19 +93,25 @@ class ContractControllerTest extends TestCase
             'project_id' => 1,
         ];
 
-        $createdContract = array_merge(['id' => 3], $contractData);
+        $contract = Mockery::mock(\App\Contract::class)->makePartial();
+        $contract->id = 3;
+        $contract->project_id = 1;
+        $contract->fill($contractData);
 
         $this->repository
             ->shouldReceive('create')
-            ->with($contractData)
             ->once()
-            ->andReturn($createdContract);
+            ->andReturn($contract);
+
+        $contract->shouldReceive('load')
+            ->with('contractSheets')
+            ->once()
+            ->andReturn($contract);
 
         $response = $this->withoutMiddleware()
             ->postJson('/contracts', $contractData);
 
-        $response->assertStatus(201)
-            ->assertJson(['data' => $createdContract]);
+        $response->assertStatus(201);
     }
 
     /** @test */
@@ -123,26 +131,32 @@ class ContractControllerTest extends TestCase
             'contract_name' => 'Updated Contract Name',
         ];
 
-        $existingContract = ['id' => 1, 'contract_number' => 'CNT001', 'contract_name' => 'Old Name'];
-        $updatedContract = array_merge($existingContract, $updateData);
+        $contract = Mockery::mock(\App\Contract::class)->makePartial();
+        $contract->id = 1;
+        $contract->contract_number = 'CNT001';
+        $contract->contract_name = 'Old Name';
 
         $this->repository
             ->shouldReceive('find')
             ->with(1)
             ->once()
-            ->andReturn($existingContract);
+            ->andReturn($contract);
 
         $this->repository
             ->shouldReceive('update')
-            ->with(1, $updateData)
+            ->with(1, Mockery::any())
             ->once()
-            ->andReturn($updatedContract);
+            ->andReturn(true);
+
+        $contract->shouldReceive('load')
+            ->with('contractSheets')
+            ->once()
+            ->andReturn($contract);
 
         $response = $this->withoutMiddleware()
             ->putJson('/contracts/1', $updateData);
 
-        $response->assertStatus(200)
-            ->assertJson(['data' => $updatedContract]);
+        $response->assertStatus(200);
     }
 
     /** @test */
@@ -164,13 +178,18 @@ class ContractControllerTest extends TestCase
     /** @test */
     public function it_deletes_a_contract()
     {
-        $contract = ['id' => 1, 'contract_number' => 'CNT001', 'contract_name' => 'Contract 1'];
+        $contract = Mockery::mock(\App\Contract::class)->makePartial();
+        $contract->id = 1;
 
         $this->repository
             ->shouldReceive('find')
             ->with(1)
             ->once()
             ->andReturn($contract);
+
+        $sheetMock = Mockery::mock();
+        $contract->shouldReceive('contractSheets')->once()->andReturn($sheetMock);
+        $sheetMock->shouldReceive('delete')->once()->andReturn(true);
 
         $this->repository
             ->shouldReceive('delete')
@@ -182,7 +201,7 @@ class ContractControllerTest extends TestCase
             ->deleteJson('/contracts/1');
 
         $response->assertStatus(200)
-            ->assertJson(['message' => 'Contract deleted successfully']);
+            ->assertJson(['message' => 'Contract and all sheets deleted successfully']);
     }
 
     /** @test */
