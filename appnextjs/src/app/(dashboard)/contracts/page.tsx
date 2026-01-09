@@ -2,20 +2,45 @@
 
 import { useContracts, useContractMutations } from '@/hooks/useContracts';
 import { useProjects } from '@/hooks/useProjects';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Button from '@/components/common/Button';
 import ContractModal from '@/components/features/contracts/ContractModal';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Contract } from '@/services/contractService';
-import Link from 'next/link';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { useRouter } from 'next/navigation';
 import { Project } from '@/services/projectService';
+import Input from '@/components/common/Input';
+import SelectInput from '@/components/common/SelectInput';
+import Pagination from '@/components/common/Pagination';
 import axios from 'axios';
 
 export default function ContractsPage() {
   const router = useRouter();
-  const { data: contractsResponse, isLoading, error } = useContracts();
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchColumn, setSearchColumn] = useState('');
+
+  const handleSearch = () => {
+    setSearchQuery(searchInput);
+    setPage(1);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const { data: contractsResponse, isLoading, error } = useContracts({
+    page,
+    per_page: 10,
+    search_query: searchQuery,
+    search_column: searchColumn,
+    sort_by: 'id',
+    sort_order: 'desc'
+  });
   const { data: projectsResponse } = useProjects();
   const { createContract, updateContract, deleteContract } = useContractMutations();
 
@@ -23,6 +48,8 @@ export default function ContractsPage() {
   const contracts = Array.isArray(contractsResponse) 
     ? contractsResponse 
     : contractsResponse?.data || [];
+    
+  const meta = contractsResponse && !Array.isArray(contractsResponse) ? contractsResponse : { current_page: 1, last_page: 1 };
 
   const projects = Array.isArray(projectsResponse)
     ? projectsResponse
@@ -42,17 +69,11 @@ export default function ContractsPage() {
   const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
 
   const handleCreate = () => {
-    setEditingContract(undefined);
-    setFormErrors({});
-    setAppError(null);
-    setIsModalOpen(true);
+    router.push('/contracts/new');
   };
 
   const handleEdit = (contract: Contract) => {
-    setEditingContract(contract);
-    setFormErrors({});
-    setAppError(null);
-    setIsModalOpen(true);
+    router.push(`/contracts/${contract.id}`);
   };
 
   const handleDeleteClick = (contract: Contract) => {
@@ -136,51 +157,85 @@ export default function ContractsPage() {
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+            <div className="w-full sm:w-48">
+                <SelectInput
+                    options={[
+                        {value: '', label: 'All Columns'},
+                        {value: 'contract_name', label: 'Contract Name'},
+                        {value: 'contract_number', label: 'Contract No'},
+                        {value: 'contract_pic', label: 'PIC'},
+                        {value: 'project_number', label: 'Project Number'},
+                        {value: 'project_name', label: 'Project Name'},
+                    ]}
+                    value={searchColumn}
+                    onChange={(val) => setSearchColumn(val as string)}
+                    placeholder="Search By"
+                    className="z-30" 
+                />
+            </div>
+            <div className="flex-1 flex gap-2">
+                <Input
+                    placeholder="Search contracts..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                />
+                <Button onClick={handleSearch} iconOnly={false} leftIcon="search">
+                    Search
+                </Button>
+            </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden flex flex-col h-[600px]">
+        <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project No</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contract No</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Dates</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">PIC</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project No</th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project Name</th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contract No</th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Dates</th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">PIC</th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {contracts?.map((contract: Contract) => (
-              <tr key={contract.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+              <tr 
+                key={contract.id} 
+                onClick={() => router.push(`/contracts/${contract.id}`)}
+                className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+              >
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                     {projectMap[contract.project_id]?.project_number || '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">
+                <td className="px-3 py-4 text-sm text-gray-900 dark:text-gray-100 font-medium">
                     {projectMap[contract.project_id]?.project_name || '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
-                    <Link href={`/contracts/${contract.id}`} className="hover:underline">
-                        {contract.contract_number}
-                    </Link>
+                <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-primary">
+                    {contract.contract_number}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{contract.contract_name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {contract.contract_amount ? `$${parseFloat(contract.contract_amount).toLocaleString()}` : '-'}
+                <td className="px-3 py-4 text-sm text-gray-900 dark:text-gray-100">{contract.contract_name}</td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {contract.contract_amount ? `${parseFloat(contract.contract_amount).toLocaleString()}` : '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-[150px]">
                    {contract.contract_startdt ? new Date(contract.contract_startdt).toLocaleDateString() : 'N/A'} - {contract.contract_enddt ? new Date(contract.contract_enddt).toLocaleDateString() : 'N/A'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                    {contract.contract_pic}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                    {contract.contract_status?.name || 'N/A'}
                 </td>
-                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                  <div className="flex justify-center gap-3">
+                 <td className="px-3 py-4 whitespace-nowrap text-center text-sm font-medium" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex flex-col items-center gap-2">
                     <button 
                       onClick={() => handleEdit(contract)}
                       className="text-primary hover:text-indigo-900"
@@ -209,7 +264,15 @@ export default function ContractsPage() {
           </tbody>
         </table>
       </div>
-    </div>
+      </div>
+
+      <div className="mt-4">
+         <Pagination
+            currentPage={meta.current_page || 1}
+            lastPage={meta.last_page || 1}
+            onPageChange={setPage}
+         />
+      </div>
 
       <ContractModal
         isOpen={isModalOpen}

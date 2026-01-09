@@ -1,10 +1,12 @@
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  iconOnly?: boolean;
 }
 
 export default function Button({ 
@@ -13,8 +15,10 @@ export default function Button({
   size = 'md', 
   isLoading = false, 
   leftIcon,
+  rightIcon,
   children, 
   disabled,
+  iconOnly = false,
   ...props 
 }: ButtonProps) {
   
@@ -24,7 +28,8 @@ export default function Button({
     primary: "bg-primary text-white hover:bg-[#4A8CA5] focus:ring-primary",
     secondary: "bg-secondary text-gray-900 hover:bg-[#EAC058] focus:ring-secondary",
     danger: "bg-error text-white hover:bg-[#DA5858] focus:ring-error",
-    ghost: "bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+    ghost: "bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800",
+    outline: "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-primary dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
   };
 
   const sizes = {
@@ -33,9 +38,11 @@ export default function Button({
     lg: "h-12 px-6 text-base gap-2.5"
   };
 
+  const iconOnlyStyles = iconOnly ? "px-2" : "";
+
   return (
     <button 
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${baseStyles} ${variants[variant] || variants.primary} ${sizes[size]} ${iconOnlyStyles} ${className}`}
       disabled={isLoading || disabled}
       {...props}
     >
@@ -45,6 +52,9 @@ export default function Button({
          <span className="material-icons text-[1.2em]">{leftIcon}</span>
       ) : null}
       {children}
+      {!isLoading && rightIcon ? (
+         <span className="material-icons text-[1.2em]">{rightIcon}</span>
+      ) : null}
     </button>
   );
 }

@@ -32,7 +32,7 @@ const menuItems: MenuItem[] = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { isSidebarOpen, closeSidebar } = useUIStore();
+  const { isSidebarOpen, closeSidebar, isDesktopSidebarOpen } = useUIStore();
   const [openMenus, setOpenMenus] = useState<string[]>([]);
 
   // Automatically open sub-menus if a child item is active
@@ -64,9 +64,11 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 z-50 h-[100dvh] w-64 bg-sidebar border-r border-gray-200 transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static dark:bg-gray-900 dark:border-gray-800
+        fixed top-0 left-0 z-50 h-[100dvh] bg-sidebar border-r border-gray-200 transition-all duration-300 ease-in-out
+        w-64
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:static lg:translate-x-0 dark:bg-gray-900 dark:border-gray-800
+        ${isDesktopSidebarOpen ? 'lg:w-64' : 'lg:w-0 lg:overflow-hidden lg:border-none lg:opacity-0'}
       `}>
         <div className="flex h-16 items-center justify-center border-b border-gray-200 dark:border-gray-800 px-6">
           <img src="/logo.png" alt="Flexcoz" className="h-8" />

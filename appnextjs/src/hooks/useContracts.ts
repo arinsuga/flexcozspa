@@ -12,7 +12,7 @@ export const useContract = (id: string | number) => {
   return useQuery({
     queryKey: ['contract', id],
     queryFn: () => contractService.getById(id),
-    enabled: !!id,
+    enabled: !!id && id !== 'new',
   });
 };
 

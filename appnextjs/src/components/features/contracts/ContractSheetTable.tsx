@@ -280,12 +280,12 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     // Use Array.from to avoid shared references between rows
     const initialData = data && data.length > 0 
       ? transformToSheetData(data)
-      : Array.from({ length: 100 }, () => [null, '', '', 0, 1, 0, 0]);
+      : Array.from({ length: 100 }, () => [null, '', '', null, 1, null, null]);
 
     const columns = [
       { type: 'hidden', name: 'id', title: 'ID', width: 0 },
       { type: 'text', name: 'sheet_code', title: 'Code', width: 150, align: 'left' },
-      { type: 'text', name: 'description', title: 'Description', width: 650, align: 'left' },
+      { type: 'text', name: 'description', title: 'Description', width: 650, align: 'left', wordWrap: true },
       { type: 'numeric', name: 'qty', title: 'Vol', width: 120, mask: '#,##0.00', align: 'right' },
       { 
         type: 'text', 

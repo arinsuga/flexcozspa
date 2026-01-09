@@ -12,16 +12,17 @@ import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import { useSheetGroupsByType } from '@/hooks/useSheetGroups';
 import { ContractSheet } from '@/services/contractSheetService';
 import { SheetGroup } from '@/services/sheetGroupService';
+import { Contract } from '@/services/contractService';
 
 interface ContractDetailClientProps {
   id: string;
+  initialData?: Partial<Contract>;
+  mode?: 'create' | 'edit' | 'view';
+  onBack?: () => void;
+  readOnlyInfo?: boolean;
 }
 
-// Hardcoded STATUS_MAP removed in favor of dynamic fetching
-
-// Hardcoded WORK_TABS removed in favor of dynamic fetching from sheetGroupService
-
-export default function ContractDetailClient({ id }: ContractDetailClientProps) {
+export default function ContractDetailClient({ id, initialData, mode = 'view', onBack, readOnlyInfo = false }: ContractDetailClientProps) {
   const router = useRouter();
   const { data: contractData, isLoading: isContractLoading } = useContract(id);
   const { data: uomsData, isLoading: isUomsLoading } = useQuery({
@@ -30,11 +31,18 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
   });
   const { data: sheetGroupsData, isLoading: isSheetGroupsLoading } = useSheetGroupsByType(0);
   const { data: statusesData, isLoading: isStatusesLoading } = useContractStatuses();
-  const { updateContract: updateContractMutation } = useContractMutations();
+  const { updateContract: updateContractMutation, createContract: createContractMutation } = useContractMutations();
   
-  // Extract contract from response - handle different API response structures
-  const contract = contractData?.data || contractData;
-  
+  // Resolve contract data: prefer initialData (for create mode) or fetched data
+  const fetchedContract = contractData?.data || contractData;
+  const [contract, setContract] = useState<Partial<Contract> | null>(initialData || null);
+
+  useEffect(() => {
+    if (fetchedContract && !initialData) {
+      setContract(fetchedContract);
+    }
+  }, [fetchedContract, initialData]);
+
   const { data: projectData, isLoading: isProjectLoading } = useProject(contract?.project_id);
   const project = projectData?.data || projectData;
 
@@ -45,14 +53,6 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
   const statuses = useMemo(() => {
     return Array.isArray(statusesData) ? statusesData : (statusesData?.data || []);
   }, [statusesData]);
-
-  const statusMap = useMemo(() => {
-    const map: Record<number, string> = {};
-    statuses.forEach((s: any) => {
-      map[s.id] = s.name;
-    });
-    return map;
-  }, [statuses]);
 
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
   const [localSheets, setLocalSheets] = useState<ContractSheet[]>([]);
@@ -91,7 +91,7 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
         const updatedRows = currentTabRows.map((row: Partial<ContractSheet>) => ({
           ...row,
           sheetgroup_id: currentSheetGroupId,
-          contract_id: typeof id === 'string' ? parseInt(id) : id,
+          contract_id: (typeof id === 'string' && id !== 'new') ? parseInt(id) : undefined,
           project_id: contract?.project_id
         })) as ContractSheet[];
         return [...otherRows, ...updatedRows];
@@ -111,8 +111,12 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
     return localSheets.filter((s: ContractSheet) => s.sheetgroup_id === activeTabId);
   }, [localSheets, activeTabId]);
 
+  const handleHeaderChange = (field: keyof Contract, value: any) => {
+    setContract(prev => prev ? ({ ...prev, [field]: value }) : null);
+  };
+
   const handleSave = async () => {
-    if (activeTabId === null) return;
+    if (activeTabId === null || !contract) return;
     
     // Latest data from current tab
     const currentTabRows: Partial<ContractSheet>[] = sheetRef.current?.getSheetData() || [];
@@ -124,13 +128,12 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
       ...currentTabRows.map((row: Partial<ContractSheet>) => ({
         ...row,
         sheetgroup_id: currentSheetGroupId,
-        contract_id: typeof id === 'string' ? parseInt(id) : id,
-        project_id: contract?.project_id
+        contract_id: (typeof id === 'string' && id !== 'new') ? parseInt(id) : undefined,
+        project_id: contract.project_id
       }))
     ];
 
     // Sort sheets by sheetgroup_id sequentially (A-I)
-    // sheetgroup_id 1: PREPARATION, 2: DEMOLISH, etc.
     const sortedSheets = [...allRowsToSave].sort((a, b) => {
       if (a.sheetgroup_id !== b.sheetgroup_id) {
         return (a.sheetgroup_id || 0) - (b.sheetgroup_id || 0);
@@ -138,34 +141,44 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
       return (a.sheet_seqno || 0) - (b.sheet_seqno || 0);
     });
 
+    const payload = {
+       ...contract,
+       project_id: contract.project_id ? Number(contract.project_id) : 0,
+       contractstatus_id: contract.contractstatus_id ? Number(contract.contractstatus_id) : 1,
+       contract_sheets: sortedSheets as ContractSheet[]
+    };
+
     try {
-      // One-shot persistence: update contract with nested sheets
-      // Ensure top-level contract fields are also correctly typed
-      await updateContractMutation.mutateAsync({ 
-        id, 
-        data: { 
-          ...contract,
-          project_id: parseInt(contract.project_id as unknown as string),
-          contractstatus_id: contract.contractstatus_id ? parseInt(contract.contractstatus_id as unknown as string) : null,
-          contract_sheets: sortedSheets as ContractSheet[] 
-        } 
-      });
-      alert('Saved successfully!');
-      // After save, we reset initialization to refresh from API
-      setHasInitialized(false);
+      if (mode === 'create' || id === 'new') {
+         await createContractMutation.mutateAsync(payload);
+         alert('Contract created successfully!');
+         router.push('/contracts');
+      } else {
+         await updateContractMutation.mutateAsync({ 
+           id, 
+           data: payload
+         });
+         alert('Saved successfully!');
+         // Re-sync to ensure we have latest IDs etc if needed, though usually we might stay or reload
+         setHasInitialized(false); 
+      }
     } catch (error) {
       console.error('Save failed', error);
       alert('Failed to save.');
     }
   };
 
-  if (isContractLoading || isUomsLoading || isSheetGroupsLoading || isStatusesLoading || isProjectLoading) {
+  // Loading states
+  if ((isContractLoading && id !== 'new') || isUomsLoading || isSheetGroupsLoading || isStatusesLoading || (isProjectLoading && contract?.project_id)) {
     return <div className="p-6">Loading...</div>;
   }
   
-  if (!contract) {
+  if (!contract && id !== 'new') {
     return <div className="p-6 text-error">Contract not found</div>;
   }
+
+  // Safe defaults for render
+  const safeContract = contract || {};
 
   return (
     <div className="space-y-6">
@@ -174,15 +187,25 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 h-fit md:col-span-2 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-2 dark:border-gray-700">
             <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Contract Sheet</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                {mode === 'create' ? 'New Contract Sheet' : 'Contract Sheet'}
+              </h3>
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => router.back()} leftIcon="arrow_back">Back</Button>
-              <Button variant="primary" leftIcon="save" onClick={handleSave} isLoading={updateContractMutation.isPending}>Save Changes</Button>
+              <Button variant="ghost" onClick={onBack || (() => router.back())} leftIcon="arrow_back">Back</Button>
+              <Button 
+                variant="primary" 
+                leftIcon="save" 
+                onClick={handleSave} 
+                isLoading={updateContractMutation.isPending || createContractMutation.isPending}
+              >
+                {mode === 'create' ? 'Save Contract' : 'Save Changes'}
+              </Button>
             </div>
           </div>
 
           <div className="grid grid-cols-4 gap-3 text-md">
+            {/* Read-only Project Info */}
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Project Number</label>
               <div className="font-medium">{project?.project_number || 'N/A'}</div>
@@ -191,45 +214,107 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Project Name</label>
               <div className="font-medium">{project?.project_name || 'N/A'}</div>
             </div>
+
+            {/* Editable Fields */}
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Contract Number</label>
-              <div className="font-medium">{contract.contract_number}</div>
+              <input 
+                type="text" 
+                value={safeContract.contract_number || ''} 
+                onChange={(e) => handleHeaderChange('contract_number', e.target.value)}
+                disabled={readOnlyInfo}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
             </div>
             <div>
-              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Status</label>
-              <div className="font-medium">{statusMap[contract.contractstatus_id] || 'Unknown'}</div>
+               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Status</label>
+               <select
+                  value={safeContract.contractstatus_id || 1}
+                  onChange={(e) => handleHeaderChange('contractstatus_id', Number(e.target.value))}
+                  disabled={readOnlyInfo}
+                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+               >
+                  {statuses.map((s: any) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+               </select>
             </div>
+
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Start Date</label>
-              <div className="font-medium">{contract.contract_startdt ? new Date(contract.contract_startdt).toLocaleDateString() : 'N/A'}</div>
+              <input 
+                type="date"
+                value={safeContract.contract_startdt ? safeContract.contract_startdt.split('T')[0] : ''}
+                onChange={(e) => handleHeaderChange('contract_startdt', e.target.value)}
+                disabled={readOnlyInfo}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
             </div>
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">End Date</label>
-              <div className="font-medium">{contract.contract_enddt ? new Date(contract.contract_enddt).toLocaleDateString() : 'N/A'}</div>
+              <input 
+                type="date"
+                value={safeContract.contract_enddt ? safeContract.contract_enddt.split('T')[0] : ''}
+                onChange={(e) => handleHeaderChange('contract_enddt', e.target.value)}
+                disabled={readOnlyInfo}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
             </div>
+
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Amount</label>
-              <div className="font-medium text-primary">
-                {contract.contract_amount ? `${parseFloat(contract.contract_amount).toLocaleString()}` : 'N/A'}
-              </div>
+              <input 
+                type="number"
+                value={safeContract.contract_amount || ''}
+                onChange={(e) => handleHeaderChange('contract_amount', e.target.value)}
+                disabled={readOnlyInfo}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 font-medium text-primary ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
             </div>
-            <div>
-              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Progress</label>
-              <div className="font-medium">{contract.contract_progress ? `${contract.contract_progress}%` : '0%'}</div>
+
+             <div>
+              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Progress %</label>
+              <input 
+                type="number"
+                min="0" max="100"
+                value={safeContract.contract_progress || '0'}
+                onChange={(e) => handleHeaderChange('contract_progress', e.target.value)}
+                disabled={readOnlyInfo}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
             </div>
+
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">PIC</label>
-              <div className="font-medium">{contract.contract_pic || 'N/A'}</div>
+               <input 
+                type="text"
+                value={safeContract.contract_pic || ''}
+                onChange={(e) => handleHeaderChange('contract_pic', e.target.value)}
+                disabled={readOnlyInfo}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
             </div>
+            
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Payment</label>
-              <div className="font-medium">
-                {contract.contract_payment ? `${parseFloat(contract.contract_payment).toLocaleString()}` : 'N/A'}
-              </div>
+              <input 
+                type="number"
+                value={safeContract.contract_payment || ''}
+                onChange={(e) => handleHeaderChange('contract_payment', e.target.value)}
+                disabled={readOnlyInfo}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
             </div>
+
             <div className="col-span-2">
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Description</label>
-              <div className="mt-1">{contract.contract_description || 'No description provided.'}</div>
+              <textarea
+                rows={2}
+                value={safeContract.contract_description || ''}
+                onChange={(e) => handleHeaderChange('contract_description', e.target.value)}
+                disabled={readOnlyInfo}
+                 className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
             </div>
           </div>
 
@@ -263,7 +348,7 @@ export default function ContractDetailClient({ id }: ContractDetailClientProps) 
               data={filteredSheets} 
               uoms={uoms}
               contractId={id}
-              projectId={contract.project_id}
+              projectId={safeContract.project_id || 0}
               sheetgroupId={activeTabId}
             />
           )}

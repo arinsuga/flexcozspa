@@ -8,4 +8,5 @@ interface ContractRepositoryInterface extends DataRepositoryInterface
 {
     function getContractByCode($code);
     function findWithSheets($id);
+    function getAllPaginated($params);
 }

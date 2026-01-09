@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Contract } from '@/services/contractService';
 import { useProjects } from '@/hooks/useProjects';
 import { Project } from '@/services/projectService';
@@ -14,9 +14,10 @@ interface ContractFormProps {
   initialData?: Partial<Contract>;
   onSubmit: (data: Partial<Contract>) => void;
   isLoading?: boolean;
+  submitLabel?: string;
 }
 
-export default function ContractForm({ initialData, onSubmit, isLoading }: ContractFormProps) {
+export default function ContractForm({ initialData, onSubmit, isLoading, submitLabel }: ContractFormProps) {
   const { data: projectsData } = useProjects();
   const projects = (projectsData?.data || []) as Project[];
   
@@ -60,6 +61,22 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 p-6 shadow sm:rounded-lg">
+      <div className="flex justify-end gap-3">
+        <Link
+          href="/contracts"
+          className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
+        >
+          Cancel
+        </Link>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+        >
+          {isLoading ? 'Saving...' : (submitLabel || 'Save')}
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
         <div className="sm:col-span-3">
           <label htmlFor="contract_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -95,7 +112,7 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
           </div>
         </div>
 
-        <div className="sm:col-span-6">
+        <div className="sm:col-span-3">
           <label htmlFor="contract_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Description
           </label>
@@ -110,12 +127,12 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
           </div>
         </div>
         
-        <div className="sm:col-span-3">
+        <div className="sm:col-span-2">
            <label htmlFor="contract_amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
-           <input type="number" name="contract_amount" id="contract_amount" value={formData.contract_amount || ''} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+           <input type="number" name="contract_amount" id="contract_amount" value={formData.contract_amount || ''} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white text-right" />
         </div>
         
-        <div className="sm:col-span-6">
+        <div className="sm:col-span-2">
            <SelectInput
              label="Project Name"
              name="project_id"
@@ -130,22 +147,7 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
            />
         </div>
 
-        <div className="sm:col-span-3">
-           <SelectInput
-             label="Status"
-             name="contractstatus_id"
-             required
-             options={statuses.map(status => ({
-               value: status.id,
-               label: status.name
-             }))}
-             value={formData.contractstatus_id}
-             onChange={(value) => setFormData(prev => ({ ...prev, contractstatus_id: value ? Number(value) : 0 }))}
-             placeholder="Select Status"
-           />
-        </div>
-
-        <div className="sm:col-span-6">
+        <div className="sm:col-span-2">
            <label htmlFor="contract_pic" className="block text-sm font-medium text-gray-700 dark:text-gray-300">PIC</label>
            <input type="text" name="contract_pic" id="contract_pic" value={formData.contract_pic || ''} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
         </div>
@@ -154,16 +156,23 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Payment & Progress</h3>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div className="sm:col-span-1">
-                    <label htmlFor="contract_progress" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Progress</label>
-                    <input type="number" name="contract_progress" id="contract_progress" min="0" max="100" value={formData.contract_progress || ''} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                    <label htmlFor="contract_progress" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Progress ({formData.contract_progress || 0}%)
+                    </label>
+                    <input 
+                      type="range" 
+                      name="contract_progress" 
+                      id="contract_progress" 
+                      min="0" 
+                      max="100" 
+                      value={formData.contract_progress || '0'} 
+                      onChange={handleChange} 
+                      className="mt-1 block w-full" 
+                    />
                  </div>
                  <div className="sm:col-span-1">
                     <label htmlFor="contract_payment" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Amount</label>
                     <input type="number" name="contract_payment" id="contract_payment" value={formData.contract_payment || ''} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-                 </div>
-                 <div className="sm:col-span-1">
-                    <label htmlFor="contract_payment_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Status</label>
-                    <input type="text" name="contract_payment_status" id="contract_payment_status" value={formData.contract_payment_status || ''} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                  </div>
                   <div className="sm:col-span-1">
                     <label htmlFor="contract_payment_dt" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Date</label>
@@ -183,21 +192,7 @@ export default function ContractForm({ initialData, onSubmit, isLoading }: Contr
         </div>
       </div>
 
-      <div className="flex justify-end gap-3">
-        <Link
-          href="/contracts"
-          className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
-        >
-          Cancel
-        </Link>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
-        >
-          {isLoading ? 'Saving...' : 'Save'}
-        </button>
-      </div>
+
     </form>
   );
 }

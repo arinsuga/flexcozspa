@@ -10,7 +10,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 
 export default function Header() {
   const router = useRouter();
-  const { toggleSidebar } = useUIStore();
+  const { toggleSidebar, toggleDesktopSidebar } = useUIStore();
   const { user, clearAuth } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -42,8 +42,14 @@ export default function Header() {
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-header px-4 shadow-sm lg:px-8 dark:bg-gray-900 dark:border-gray-800">
          <div className="flex items-center gap-4">
             <button 
-              onClick={toggleSidebar}
-              className="p-2 -ml-2 text-gray-600 rounded-md lg:hidden hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+              onClick={() => {
+                if (window.innerWidth >= 1024) {
+                  toggleDesktopSidebar();
+                } else {
+                  toggleSidebar();
+                }
+              }}
+              className="p-2 -ml-2 text-gray-600 rounded-md hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
             >
               <span className="material-icons">menu</span>
             </button>

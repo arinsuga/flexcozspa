@@ -1,23 +1,32 @@
 import { useQuery } from '@tanstack/react-query';
-import { contractService } from '@/services/contractService';
-import { orderService } from '@/services/orderService';
-import { projectService } from '@/services/projectService';
+import { contractService, Contract } from '@/services/contractService';
+import { orderService, Order } from '@/services/orderService';
+import { projectService, Project } from '@/services/projectService';
 
 export const useDashboardStats = () => {
   return useQuery({
     queryKey: ['dashboardStats'],
     queryFn: async () => {
       const [contracts, orders, projects] = await Promise.all([
-        contractService.getAll(),
-        orderService.getAll(),
-        projectService.getAll(),
+        contractService.getAll() as Promise<Contract[]>,
+        orderService.getAll() as Promise<Order[]>,
+        projectService.getAll() as Promise<Project[]>,
       ]);
 
+      // Calculate Active Contract Value (sum of contract_amount for active contracts)
+      // Note: contract_amount is string "100,000.00", need to parse.
+      const totalActiveContractValue = contracts.reduce((acc: number, c: Contract) => {
+        // contract_amount can be null/undefined in some cases? 
+        // Interface says string, but let's be safe.
+        const amountStr = c.contract_amount || '0'; 
+        const amount = parseFloat(amountStr.replace(/,/g, ''));
+        return acc + (isNaN(amount) ? 0 : amount);
+      }, 0);
+
       return {
-        activeContracts: contracts.length,
-        pendingOrders: orders.filter((o: any) => o.status === 'pending').length,
-        openProjects: projects.filter((p: any) => p.status === 'active').length,
-        totalContractsValue: contracts.reduce((acc: number, c: any) => acc + (c.amount || 0), 0),
+        activeContractsValue: totalActiveContractValue,
+        ordersCount: orders.length, 
+        projectsCount: projects.filter((p: Project) => p.is_active === 1).length,
       };
     },
   });

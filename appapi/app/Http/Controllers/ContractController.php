@@ -15,10 +15,10 @@ class ContractController extends Controller
         $this->middleware('authjwt');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $contracts = $this->repository->all();
-        return response()->json(['data' => $contracts], 200);
+        $contracts = $this->repository->getAllPaginated($request->all());
+        return response()->json($contracts, 200);
     }
 
     public function show($id)

@@ -24,6 +24,10 @@ export interface Vendor {
   vendor_notes?: string;
   created_at?: string;
   updated_at?: string;
+  vendortype?: {
+    id: number;
+    vendortype_name: string;
+  };
 }
 
 export const vendorService = {

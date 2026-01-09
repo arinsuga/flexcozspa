@@ -11,6 +11,9 @@ export interface Order {
   orderstatus_id: string;
   created_at?: string;
   updated_at?: string;
+  status?: { name: string; id: number };
+  project?: { project_name: string; id: number };
+  contract?: { contract_name: string; id: number };
 }
 
 export const orderService = {

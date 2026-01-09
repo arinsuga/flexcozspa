@@ -1,39 +1,50 @@
 'use client';
 
 import { useProjects, useProjectMutations } from '@/hooks/useProjects';
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Button from '@/components/common/Button';
 import ProjectModal from '@/components/features/projects/ProjectModal';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Project } from '@/services/projectService';
 import SelectInput from '@/components/common/SelectInput';
+import Input from '@/components/common/Input';
+import Pagination from '@/components/common/Pagination';
 
 export default function ProjectsPage() {
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchColumn, setSearchColumn] = useState('');
 
-  // Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1); // Reset to page 1 on search
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
+  const handleSearch = () => {
+    setSearchQuery(searchInput);
+    setPage(1);
+  };
 
-  const { data: projectsData, isLoading, error } = useProjects({
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const { data: projectsResponse, isLoading, error } = useProjects({
     page,
-    search: debouncedSearch,
-    status: statusFilter,
+    per_page: 10,
+    search_query: searchQuery,
+    search_column: searchColumn,
+    sort_by: 'id',
+    sort_order: 'desc'
   });
   
   const { createProject, updateProject, deleteProject } = useProjectMutations();
   
-  // Extract the projects array from the API response
-  const projects = projectsData?.data || [];
-  const meta = projectsData?.meta;
+  // Handle both direct array and paginated response formats
+  // Note: projectsResponse structure might depend on how useProjects is implemented, assuming standard API response
+  const projects = Array.isArray(projectsResponse) 
+    ? projectsResponse 
+    : projectsResponse?.data || [];
+    
+  const meta = projectsResponse && !Array.isArray(projectsResponse) ? projectsResponse : { current_page: 1, last_page: 1 };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | undefined>(undefined);
@@ -89,6 +100,7 @@ export default function ProjectsPage() {
     }
   };
 
+  if (isLoading) return <div className="p-4 text-center">Loading projects...</div>;
   if (error) return <div className="p-4 text-error">Error loading projects</div>;
 
   return (
@@ -127,99 +139,109 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-        <div className="flex-1">
-            <input
-                type="text"
-                placeholder="Search projects..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white px-3 py-2 border"
-            />
-        </div>
-        <div className="w-full sm:w-48">
-            <SelectInput
-                name="status_filter"
-                options={[
-                  { value: '', label: 'All Statuses' },
-                  { value: 'active', label: 'Active' },
-                  { value: 'completed', label: 'Completed' },
-                  { value: 'on_hold', label: 'On Hold' }
-                ]}
-                value={statusFilter}
-                onChange={(value) => {
-                  setStatusFilter(value as string);
-                  setPage(1);
-                }}
-                placeholder="All Statuses"
-            />
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+            <div className="w-full sm:w-48">
+                <SelectInput
+                    options={[
+                        {value: '', label: 'All Columns'},
+                        {value: 'project_name', label: 'Project Name'},
+                        {value: 'project_number', label: 'Project No'},
+                    ]}
+                    value={searchColumn}
+                    onChange={(val) => setSearchColumn(val as string)}
+                    placeholder="Search By"
+                    className="z-30" 
+                />
+            </div>
+            <div className="flex-1 flex gap-2">
+                <Input
+                    placeholder="Search projects..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                />
+                <Button onClick={handleSearch} iconOnly={false} leftIcon="search">
+                    Search
+                </Button>
+            </div>
         </div>
       </div>
 
-      {isLoading ? (
-          <div className="p-12 text-center text-gray-500">Loading projects...</div>
-      ) : (
-      <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden flex flex-col h-[600px]">
+        <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project No</th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project Name</th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Dates</th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {projects?.map((project: Project) => (
-              <div key={project.id} className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 hover:shadow-md transition-shadow flex flex-col h-full">
-                 <div className="flex justify-between items-start mb-2">
-                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{project.project_name}</h3>
-                     <span className={`px-2 py-1 text-xs rounded-full 
+              <tr 
+                key={project.id} 
+                className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                onClick={() => handleEdit(project)}
+              >
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">
+                    {project.project_number}
+                </td>
+                <td className="px-3 py-4 text-sm text-gray-900 dark:text-gray-100">
+                    {project.project_name}
+                </td>
+                <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
+                   {project.project_startdt || 'N/A'} - {project.project_enddt || 'N/A'}
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm">
+                    <span className={`px-2 py-1 text-xs rounded-full 
                         ${project.is_active === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
                           'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
                          {project.is_active === 1 ? 'Active' : 'Inactive'}
-                     </span>
-                 </div>
-                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">
-                     {project.project_description || 'No description'}
-                 </p>
-                 <div className="text-xs text-gray-500 mb-4 space-y-1">
-                     <div className="flex justify-start gap-2"><span>Start:</span> <span>{project.project_startdt || 'N/A'}</span></div>
-                     <div className="flex justify-start gap-2"><span>End:</span> <span>{project.project_enddt || 'N/A'}</span></div>
-                 </div>
-                 <div className="flex justify-end gap-2 border-t pt-4 dark:border-gray-700 mt-auto">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(project)}>Edit</Button>
-                      <Button variant="ghost" size="sm" className="text-error hover:text-red-700 hover:bg-red-50" onClick={() => handleDeleteClick(project)}>Delete</Button>
-                 </div>
-              </div>
+                    </span>
+                </td>
+                 <td className="px-3 py-4 whitespace-nowrap text-center text-sm font-medium" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex justify-center gap-2">
+                    <button 
+                      onClick={() => handleEdit(project)}
+                      className="text-primary hover:text-indigo-900"
+                      title="Edit"
+                    >
+                      <span className="material-icons">edit</span>
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteClick(project)}
+                      className="text-error hover:text-red-900"
+                      title="Delete"
+                    >
+                      <span className="material-icons">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
             ))}
-             {projects?.length === 0 && (
-                 <div className="col-span-full text-center py-12 text-gray-500 bg-white dark:bg-gray-800 rounded-lg">
-                     No projects found.
-                 </div>
-             )}
-          </div>
+            {projects?.length === 0 && (
+                <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                        No projects found.
+                    </td>
+                </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      </div>
 
-          {/* Pagination */}
-          {meta && (
-            <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Showing {meta.from} to {meta.to} of {meta.total} results
-                </div>
-                <div className="flex gap-2">
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        disabled={meta.current_page === 1}
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                    >
-                        Previous
-                    </Button>
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        disabled={meta.current_page === meta.last_page}
-                        onClick={() => setPage(p => p + 1)}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div>
-          )}
-      </>
-      )}
+      <div className="mt-4">
+         <Pagination
+            currentPage={meta.current_page || 1}
+            lastPage={meta.last_page || 1}
+            onPageChange={setPage}
+         />
+      </div>
 
       <ProjectModal
         isOpen={isModalOpen}
