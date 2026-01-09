@@ -142,7 +142,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             id: id ? parseInt(id) : undefined,
             project_id: parseInt(projectId as unknown as string),
             contract_id: isEditMode ? (typeof contractId === 'string' ? parseInt(contractId) : contractId as number) : undefined,
-            sheet_dt: originalSheet?.sheet_dt || new Date().toISOString(),
+            sheet_dt: originalSheet?.sheet_dt || null,
             sheet_type: sheetType,
             sheetgroup_type: 0,
             sheetgroup_id: parseInt(sheetgroupId as unknown as string),

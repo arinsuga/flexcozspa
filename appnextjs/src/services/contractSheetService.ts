@@ -4,7 +4,7 @@ export interface ContractSheet {
   id: number;
   project_id: number;
   contract_id: number;
-  sheet_dt: string;
+  sheet_dt: string | null;
   sheet_type: number;
   sheetgroup_type: number;
   sheetgroup_id: number;
