@@ -15,10 +15,10 @@ class SheetGroupController extends Controller
         $this->middleware('authjwt');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $sheetgroups = $this->repository->getSheetGroupsByActive();
-        return response()->json(['data' => $sheetgroups], 200);
+        $sheetgroups = $this->repository->getAllPaginated($request->all());
+        return response()->json($sheetgroups, 200);
     }
 
     public function show($id)

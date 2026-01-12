@@ -15,10 +15,10 @@ class RefftypeController extends Controller
         $this->middleware('authjwt');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $refftypes = $this->repository->getRefftypesByActive();
-        return response()->json(['data' => $refftypes], 200);
+        $refftypes = $this->repository->getAllPaginated($request->all());
+        return response()->json($refftypes, 200);
     }
 
     public function show($id)

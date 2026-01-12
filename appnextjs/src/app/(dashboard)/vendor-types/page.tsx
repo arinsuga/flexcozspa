@@ -12,8 +12,42 @@ import SelectInput from '@/components/common/SelectInput';
 import Pagination from '@/components/common/Pagination';
 
 export default function VendorTypesPage() {
-  const { data: vendorTypes, isLoading, error } = useVendorTypes();
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchColumn, setSearchColumn] = useState('');
+
+  const handleSearch = () => {
+    setSearchQuery(searchInput);
+    setPage(1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const { data: vendorTypesResponse, isLoading, error } = useVendorTypes({
+    page,
+    per_page: 10,
+    search_query: searchQuery,
+    search_column: searchColumn,
+    sort_by: 'id',
+    sort_order: 'desc'
+  });
   const { createVendorType, updateVendorType, deleteVendorType } = useVendorTypeMutations();
+
+  // Handle both direct array and paginated response formats
+  const vendorTypes = vendorTypesResponse?.data && Array.isArray(vendorTypesResponse.data)
+    ? vendorTypesResponse.data
+    : Array.isArray(vendorTypesResponse)
+      ? vendorTypesResponse
+      : [];
+    
+  const meta = vendorTypesResponse?.current_page 
+    ? vendorTypesResponse 
+    : { current_page: 1, last_page: 1 };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVendorType, setEditingVendorType] = useState<VendorType | undefined>(undefined);
@@ -73,7 +107,7 @@ export default function VendorTypesPage() {
     }
   };
 
-  if (isLoading) return <div className="p-4">Loading Vendor Types...</div>;
+  if (isLoading) return <TableSkeleton cols={5} rows={8} />;
   if (error) return <div className="p-4 text-error">Error loading Vendor Types</div>;
 
   return (
@@ -112,7 +146,37 @@ export default function VendorTypesPage() {
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+            <div className="w-full sm:w-48">
+                <SelectInput
+                    options={[
+                        {value: '', label: 'All Columns'},
+                        {value: 'vendortype_code', label: 'Code'},
+                        {value: 'vendortype_name', label: 'Name'},
+                    ]}
+                    value={searchColumn}
+                    onChange={(val) => setSearchColumn(val as string)}
+                    placeholder="Search By"
+                    className="z-30" 
+                />
+            </div>
+            <div className="flex-1 flex gap-2">
+                <Input
+                    placeholder="Search vendor types..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                />
+                <Button onClick={handleSearch} iconOnly={false} leftIcon="search">
+                    Search
+                </Button>
+            </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden flex flex-col h-[600px]">
+        <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
@@ -124,7 +188,7 @@ export default function VendorTypesPage() {
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {vendorTypes?.data?.map((vt: VendorType) => (
+            {vendorTypes?.map((vt: VendorType) => (
               <tr key={vt.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{vt.vendortype_code}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{vt.vendortype_name}</td>
@@ -150,7 +214,7 @@ export default function VendorTypesPage() {
                 </td>
               </tr>
             ))}
-             {vendorTypes?.data?.length === 0 && (
+             {vendorTypes?.length === 0 && (
                 <tr>
                     <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                         No Vendor Types found.
@@ -159,6 +223,15 @@ export default function VendorTypesPage() {
             )}
           </tbody>
         </table>
+      </div>
+      </div>
+
+      <div className="mt-4">
+         <Pagination
+            currentPage={meta.current_page || 1}
+            lastPage={meta.last_page || 1}
+            onPageChange={setPage}
+         />
       </div>
 
       <Modal

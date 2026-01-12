@@ -8,4 +8,5 @@ interface UomRepositoryInterface extends DataRepositoryInterface
 {
     function getUomsByActive();
     function getUomByCode($code);
+    function getAllPaginated($params);
 }

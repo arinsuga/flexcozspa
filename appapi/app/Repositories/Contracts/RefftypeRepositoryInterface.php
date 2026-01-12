@@ -9,4 +9,5 @@ interface RefftypeRepositoryInterface extends DataRepositoryInterface
 
     function getRefftypesByActive();
     function getRefftypeByCode($code);
+    function getAllPaginated($params);
 }

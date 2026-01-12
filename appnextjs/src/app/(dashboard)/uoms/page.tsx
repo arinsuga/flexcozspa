@@ -12,8 +12,38 @@ import SelectInput from '@/components/common/SelectInput';
 import Pagination from '@/components/common/Pagination';
 
 export default function UOMPage() {
-  const { data: uoms, isLoading, error } = useUOMs();
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchColumn, setSearchColumn] = useState('');
+
+  const handleSearch = () => {
+    setSearchQuery(searchInput);
+    setPage(1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const { data: uomsResponse, isLoading, error } = useUOMs({
+    page,
+    per_page: 10,
+    search_query: searchQuery,
+    search_column: searchColumn,
+    sort_by: 'id',
+    sort_order: 'desc'
+  });
   const { createUOM, updateUOM, deleteUOM } = useUOMMutations();
+
+  // Handle both direct array and paginated response formats
+  const uoms = Array.isArray(uomsResponse) 
+    ? uomsResponse 
+    : uomsResponse?.data || [];
+    
+  const meta = uomsResponse && !Array.isArray(uomsResponse) ? uomsResponse : { current_page: 1, last_page: 1 };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUOM, setEditingUOM] = useState<UOM | undefined>(undefined);
@@ -73,7 +103,7 @@ export default function UOMPage() {
     }
   };
 
-  if (isLoading) return <div className="p-4">Loading UOMs...</div>;
+  if (isLoading) return <TableSkeleton cols={4} rows={8} />;
   if (error) return <div className="p-4 text-error">Error loading UOMs</div>;
 
   return (
@@ -112,7 +142,37 @@ export default function UOMPage() {
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+            <div className="w-full sm:w-48">
+                <SelectInput
+                    options={[
+                        {value: '', label: 'All Columns'},
+                        {value: 'uom_code', label: 'Symbol'},
+                        {value: 'uom_name', label: 'Name'},
+                    ]}
+                    value={searchColumn}
+                    onChange={(val) => setSearchColumn(val as string)}
+                    placeholder="Search By"
+                    className="z-30" 
+                />
+            </div>
+            <div className="flex-1 flex gap-2">
+                <Input
+                    placeholder="Search UOMs..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                />
+                <Button onClick={handleSearch} iconOnly={false} leftIcon="search">
+                    Search
+                </Button>
+            </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden flex flex-col h-[600px]">
+        <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
@@ -123,20 +183,20 @@ export default function UOMPage() {
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {uoms?.data?.map((uom: UOM) => (
-              <tr key={uom.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{uom.uom_name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{uom.uom_code || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{uom.uom_description || '-'}</td>
+            {uoms?.map((u: UOM) => (
+              <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{u.uom_name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{u.uom_code || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{u.uom_description || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button 
-                    onClick={() => handleEdit(uom)}
+                    onClick={() => handleEdit(u)}
                     className="text-primary hover:text-indigo-900 mr-4"
                   >
                     Edit
                   </button>
                   <button 
-                    onClick={() => handleDeleteClick(uom)}
+                    onClick={() => handleDeleteClick(u)}
                     className="text-error hover:text-red-900"
                   >
                     Delete
@@ -144,7 +204,7 @@ export default function UOMPage() {
                 </td>
               </tr>
             ))}
-             {uoms?.data?.length === 0 && (
+             {uoms?.length === 0 && (
                 <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                         No UOMs found.
@@ -153,6 +213,15 @@ export default function UOMPage() {
             )}
           </tbody>
         </table>
+      </div>
+      </div>
+
+      <div className="mt-4">
+         <Pagination
+            currentPage={meta.current_page || 1}
+            lastPage={meta.last_page || 1}
+            onPageChange={setPage}
+         />
       </div>
 
       <Modal

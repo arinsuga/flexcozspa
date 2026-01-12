@@ -15,10 +15,10 @@ class VendorTypeController extends Controller
         $this->middleware('authjwt');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $vendortypes = $this->repository->getVendorTypesByActive();
-        return response()->json(['data' => $vendortypes], 200);
+        $vendortypes = $this->repository->getAllPaginated($request->all());
+        return response()->json($vendortypes, 200);
     }
 
     public function show($id)

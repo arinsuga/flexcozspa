@@ -15,10 +15,10 @@ class VendorController extends Controller
         $this->middleware('authjwt');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $vendors = $this->repository->getVendorsByActive();
-        return response()->json(['data' => $vendors], 200);
+        $vendors = $this->repository->getAllPaginated($request->all());
+        return response()->json($vendors, 200);
     }
 
     public function show($id)

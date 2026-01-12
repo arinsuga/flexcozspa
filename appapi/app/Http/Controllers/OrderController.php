@@ -15,10 +15,10 @@ class OrderController extends Controller
         $this->middleware('authjwt');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $orders = $this->repository->all();
-        return response()->json(['data' => $orders], 200);
+        $orders = $this->repository->getAllPaginated($request->all());
+        return response()->json($orders, 200);
     }
 
     public function show($id)

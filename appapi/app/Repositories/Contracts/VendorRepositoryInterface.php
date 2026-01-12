@@ -9,4 +9,5 @@ interface VendorRepositoryInterface extends DataRepositoryInterface
     function getVendorsByType($vendorTypeId);
     function getVendorsByActive();
     function getVendorByCode($code);
+    function getAllPaginated($params);
 }

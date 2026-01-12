@@ -15,10 +15,10 @@ class ProjectController extends Controller
         $this->middleware('authjwt');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $projects = $this->repository->getProjectsByActive();
-        return response()->json(['data' => $projects], 200);
+        $projects = $this->repository->getAllPaginated($request->all());
+        return response()->json($projects, 200);
     }
 
     public function show($id)

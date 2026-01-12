@@ -15,10 +15,10 @@ class UomController extends Controller
         $this->middleware('authjwt');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $uoms = $this->repository->getUomsByActive();
-        return response()->json(['data' => $uoms], 200);
+        $uoms = $this->repository->getAllPaginated($request->all());
+        return response()->json($uoms, 200);
     }
 
     public function show($id)

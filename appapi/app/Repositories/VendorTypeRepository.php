@@ -21,7 +21,7 @@ class VendorTypeRepository extends EloquentRepository implements VendorTypeRepos
     }
     public function getAllPaginated($params)
     {
-        $query = $this->data->query();
+        $query = $this->data->newQuery();
 
         // Search Logic
         if (!empty($params['search_query'])) {

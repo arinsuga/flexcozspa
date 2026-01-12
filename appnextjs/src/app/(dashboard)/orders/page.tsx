@@ -13,13 +13,42 @@ import Input from '@/components/common/Input';
 import Pagination from '@/components/common/Pagination';
 
 export default function OrdersPage() {
-  const { data: ordersResponse, isLoading, error } = useOrders();
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchColumn, setSearchColumn] = useState('');
+
+  const handleSearch = () => {
+    setSearchQuery(searchInput);
+    setPage(1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const { data: ordersResponse, isLoading, error } = useOrders({
+    page,
+    per_page: 10,
+    search_query: searchQuery,
+    search_column: searchColumn,
+    sort_by: 'id',
+    sort_order: 'desc'
+  });
   const { createOrder, updateOrder, deleteOrder } = useOrderMutations();
 
   // Handle both direct array and paginated response formats
-  const orders = Array.isArray(ordersResponse) 
+  const orders = ordersResponse?.data && Array.isArray(ordersResponse.data)
+    ? ordersResponse.data
+    : Array.isArray(ordersResponse)
+      ? ordersResponse
+      : [];
+    
+  const meta = ordersResponse?.current_page 
     ? ordersResponse 
-    : ordersResponse?.data || [];
+    : { current_page: 1, last_page: 1 };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | undefined>(undefined);
@@ -75,11 +104,11 @@ export default function OrdersPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-      switch(status) {
-          case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-          case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-          case 'in_progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+  const getStatusColor = (status: string | number) => {
+      switch(String(status)) {
+          case '1': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+          case '2': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+          case '0': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
           default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
       }
   };
@@ -122,7 +151,37 @@ export default function OrdersPage() {
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+            <div className="w-full sm:w-48">
+                <SelectInput
+                    options={[
+                        {value: '', label: 'All Columns'},
+                        {value: 'order_number', label: 'Order No'},
+                        {value: 'order_description', label: 'Description'},
+                    ]}
+                    value={searchColumn}
+                    onChange={(val) => setSearchColumn(val as string)}
+                    placeholder="Search By"
+                    className="z-30" 
+                />
+            </div>
+            <div className="flex-1 flex gap-2">
+                <Input
+                    placeholder="Search orders..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                />
+                <Button onClick={handleSearch} iconOnly={false} leftIcon="search">
+                    Search
+                </Button>
+            </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden flex flex-col h-[600px]">
+        <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
@@ -178,6 +237,15 @@ export default function OrdersPage() {
             )}
           </tbody>
         </table>
+      </div>
+      </div>
+
+      <div className="mt-4">
+         <Pagination
+            currentPage={meta.current_page || 1}
+            lastPage={meta.last_page || 1}
+            onPageChange={setPage}
+         />
       </div>
 
       <OrderModal

@@ -12,8 +12,42 @@ import SelectInput from '@/components/common/SelectInput';
 import Pagination from '@/components/common/Pagination';
 
 export default function ReffTypesPage() {
-  const { data: refftypes, isLoading, error } = useReffTypes();
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchColumn, setSearchColumn] = useState('');
+
+  const handleSearch = () => {
+    setSearchQuery(searchInput);
+    setPage(1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const { data: refftypesResponse, isLoading, error } = useReffTypes({
+    page,
+    per_page: 10,
+    search_query: searchQuery,
+    search_column: searchColumn,
+    sort_by: 'id',
+    sort_order: 'desc'
+  });
   const { createReffType, updateReffType, deleteReffType } = useReffTypeMutations();
+
+  // Handle both direct array and paginated response formats
+  const refftypes = refftypesResponse?.data && Array.isArray(refftypesResponse.data)
+    ? refftypesResponse.data
+    : Array.isArray(refftypesResponse)
+      ? refftypesResponse
+      : [];
+    
+  const meta = refftypesResponse?.current_page 
+    ? refftypesResponse 
+    : { current_page: 1, last_page: 1 };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingReffType, setEditingReffType] = useState<ReffType | undefined>(undefined);
@@ -73,7 +107,7 @@ export default function ReffTypesPage() {
     }
   };
 
-  if (isLoading) return <div className="p-4">Loading Reference Types...</div>;
+  if (isLoading) return <TableSkeleton cols={4} rows={8} />;
   if (error) return <div className="p-4 text-error">Error loading Reference Types</div>;
 
   return (
@@ -112,7 +146,37 @@ export default function ReffTypesPage() {
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+            <div className="w-full sm:w-48">
+                <SelectInput
+                    options={[
+                        {value: '', label: 'All Columns'},
+                        {value: 'refftype_code', label: 'Code'},
+                        {value: 'refftype_name', label: 'Name'},
+                    ]}
+                    value={searchColumn}
+                    onChange={(val) => setSearchColumn(val as string)}
+                    placeholder="Search By"
+                    className="z-30" 
+                />
+            </div>
+            <div className="flex-1 flex gap-2">
+                <Input
+                    placeholder="Search reference types..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                />
+                <Button onClick={handleSearch} iconOnly={false} leftIcon="search">
+                    Search
+                </Button>
+            </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden flex flex-col h-[600px]">
+        <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
@@ -123,20 +187,20 @@ export default function ReffTypesPage() {
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {refftypes?.data?.map((refftype: ReffType) => (
-              <tr key={refftype.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{refftype.refftype_name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{refftype.refftype_code || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{refftype.refftype_description || '-'}</td>
+            {refftypes?.map((rt: ReffType) => (
+              <tr key={rt.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{rt.refftype_name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{rt.refftype_code || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{rt.refftype_description || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button 
-                    onClick={() => handleEdit(refftype)}
+                    onClick={() => handleEdit(rt)}
                     className="text-primary hover:text-indigo-900 mr-4"
                   >
                     Edit
                   </button>
                   <button 
-                    onClick={() => handleDeleteClick(refftype)}
+                    onClick={() => handleDeleteClick(rt)}
                     className="text-error hover:text-red-900"
                   >
                     Delete
@@ -144,7 +208,7 @@ export default function ReffTypesPage() {
                 </td>
               </tr>
             ))}
-             {refftypes?.data?.length === 0 && (
+             {refftypes?.length === 0 && (
                 <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                         No reference types found.
@@ -153,6 +217,15 @@ export default function ReffTypesPage() {
             )}
           </tbody>
         </table>
+      </div>
+      </div>
+
+      <div className="mt-4">
+         <Pagination
+            currentPage={meta.current_page || 1}
+            lastPage={meta.last_page || 1}
+            onPageChange={setPage}
+         />
       </div>
 
       <Modal

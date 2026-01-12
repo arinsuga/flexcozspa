@@ -9,4 +9,5 @@ interface SheetGroupRepositoryInterface extends DataRepositoryInterface
     function getSheetGroupsByType($type);
     function getSheetGroupsByActive();
     function getSheetGroupByCode($code);
+    function getAllPaginated($params);
 }

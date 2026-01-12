@@ -7,12 +7,47 @@ import Modal from '@/components/common/Modal';
 import Input from '@/components/common/Input';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { SheetGroup } from '@/services/sheetGroupService';
+import { TableSkeleton } from '@/components/common/Skeleton';
 import SelectInput from '@/components/common/SelectInput';
 import Pagination from '@/components/common/Pagination';
 
 export default function SheetGroupsPage() {
-  const { data: sheetgroups, isLoading, error } = useSheetGroups();
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchColumn, setSearchColumn] = useState('');
+
+  const handleSearch = () => {
+    setSearchQuery(searchInput);
+    setPage(1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const { data: sheetgroupsResponse, isLoading, error } = useSheetGroups({
+    page,
+    per_page: 10,
+    search_query: searchQuery,
+    search_column: searchColumn,
+    sort_by: 'id',
+    sort_order: 'desc'
+  });
   const { createSheetGroup, updateSheetGroup, deleteSheetGroup } = useSheetGroupMutations();
+
+  // Handle both direct array and paginated response formats
+  const sheetgroups = sheetgroupsResponse?.data && Array.isArray(sheetgroupsResponse.data)
+    ? sheetgroupsResponse.data
+    : Array.isArray(sheetgroupsResponse)
+      ? sheetgroupsResponse
+      : [];
+    
+  const meta = sheetgroupsResponse?.current_page 
+    ? sheetgroupsResponse 
+    : { current_page: 1, last_page: 1 };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSheetGroup, setEditingSheetGroup] = useState<SheetGroup | undefined>(undefined);
@@ -78,12 +113,12 @@ export default function SheetGroupsPage() {
     return type === 0 ? 'Work' : 'Cost';
   };
 
-  const filteredSheetGroups = sheetgroups?.data?.filter((sg: SheetGroup) => {
+  const filteredSheetGroups = sheetgroups?.filter((sg: SheetGroup) => {
     if (filterType === 'all') return true;
     return sg.sheetgroup_type === parseInt(filterType);
   }) || [];
 
-  if (isLoading) return <div className="p-4">Loading Sheet Groups...</div>;
+  if (isLoading) return <TableSkeleton cols={5} rows={8} />;
   if (error) return <div className="p-4 text-error">Error loading Sheet Groups</div>;
 
   return (
@@ -122,6 +157,35 @@ export default function SheetGroupsPage() {
         </Button>
       </div>
 
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+            <div className="w-full sm:w-48">
+                <SelectInput
+                    options={[
+                        {value: '', label: 'All Columns'},
+                        {value: 'sheetgroup_code', label: 'Code'},
+                        {value: 'sheetgroup_name', label: 'Name'},
+                    ]}
+                    value={searchColumn}
+                    onChange={(val) => setSearchColumn(val as string)}
+                    placeholder="Search By"
+                    className="z-30" 
+                />
+            </div>
+            <div className="flex-1 flex gap-2">
+                <Input
+                    placeholder="Search sheet groups..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                />
+                <Button onClick={handleSearch} iconOnly={false} leftIcon="search">
+                    Search
+                </Button>
+            </div>
+        </div>
+      </div>
+
       {/* Filter by Type */}
       <div className="flex gap-2">
         <Button 
@@ -147,7 +211,8 @@ export default function SheetGroupsPage() {
         </Button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden flex flex-col h-[600px]">
+        <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
@@ -198,6 +263,15 @@ export default function SheetGroupsPage() {
             )}
           </tbody>
         </table>
+      </div>
+      </div>
+
+      <div className="mt-4">
+         <Pagination
+            currentPage={meta.current_page || 1}
+            lastPage={meta.last_page || 1}
+            onPageChange={setPage}
+         />
       </div>
 
       <Modal

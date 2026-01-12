@@ -1,7 +1,6 @@
 'use client';
 
 import { useContracts, useContractMutations } from '@/hooks/useContracts';
-import { useProjects } from '@/hooks/useProjects';
 import React, { useState } from 'react';
 import Button from '@/components/common/Button';
 import ContractModal from '@/components/features/contracts/ContractModal';
@@ -9,7 +8,6 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Contract } from '@/services/contractService';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { useRouter } from 'next/navigation';
-import { Project } from '@/services/projectService';
 import Input from '@/components/common/Input';
 import SelectInput from '@/components/common/SelectInput';
 import Pagination from '@/components/common/Pagination';
@@ -27,7 +25,7 @@ export default function ContractsPage() {
     setPage(1);
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
@@ -41,7 +39,6 @@ export default function ContractsPage() {
     sort_by: 'id',
     sort_order: 'desc'
   });
-  const { data: projectsResponse } = useProjects();
   const { createContract, updateContract, deleteContract } = useContractMutations();
 
   // Handle both direct array and paginated response formats
@@ -51,17 +48,8 @@ export default function ContractsPage() {
     
   const meta = contractsResponse && !Array.isArray(contractsResponse) ? contractsResponse : { current_page: 1, last_page: 1 };
 
-  const projects = Array.isArray(projectsResponse)
-    ? projectsResponse
-    : projectsResponse?.data || [];
-
-  const projectMap = projects.reduce((acc: Record<number, Project>, project: Project) => {
-    acc[project.id] = project;
-    return acc;
-  }, {});
-
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingContract, setEditingContract] = useState<Contract | undefined>(undefined);
+  const [editingContract] = useState<Contract | undefined>(undefined);
   const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
   const [appError, setAppError] = useState<string | null>(null);
   
@@ -213,10 +201,10 @@ export default function ContractsPage() {
                 className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
               >
                 <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                    {projectMap[contract.project_id]?.project_number || '-'}
+                    {contract.project?.project_number || '-'}
                 </td>
                 <td className="px-3 py-4 text-sm text-gray-900 dark:text-gray-100 font-medium">
-                    {projectMap[contract.project_id]?.project_name || '-'}
+                    {contract.project?.project_name || '-'}
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-primary">
                     {contract.contract_number}

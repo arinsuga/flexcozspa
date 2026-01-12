@@ -8,4 +8,5 @@ interface VendorTypeRepositoryInterface extends DataRepositoryInterface
 {
     function getVendorTypesByActive();
     function getVendorTypeByCode($code);
+    function getAllPaginated($params);
 }
