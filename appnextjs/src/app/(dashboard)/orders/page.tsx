@@ -3,16 +3,17 @@
 import { useOrders, useOrderMutations } from '@/hooks/useOrders';
 import React, { useState } from 'react';
 import Button from '@/components/common/Button';
-import OrderModal from '@/components/features/orders/OrderModal';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Order } from '@/services/orderService';
-import Link from 'next/link';
 import { TableSkeleton } from '@/components/common/Skeleton';
-import SelectInput from '@/components/common/SelectInput';
+import { useRouter } from 'next/navigation';
 import Input from '@/components/common/Input';
+import SelectInput from '@/components/common/SelectInput';
 import Pagination from '@/components/common/Pagination';
+import axios from 'axios';
 
 export default function OrdersPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,7 +24,7 @@ export default function OrdersPage() {
     setPage(1);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
@@ -37,7 +38,7 @@ export default function OrdersPage() {
     sort_by: 'id',
     sort_order: 'desc'
   });
-  const { createOrder, updateOrder, deleteOrder } = useOrderMutations();
+  const { deleteOrder } = useOrderMutations();
 
   // Handle both direct array and paginated response formats
   const orders = ordersResponse?.data && Array.isArray(ordersResponse.data)
@@ -50,26 +51,17 @@ export default function OrdersPage() {
     ? ordersResponse 
     : { current_page: 1, last_page: 1 };
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingOrder, setEditingOrder] = useState<Order | undefined>(undefined);
-  const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
   const [appError, setAppError] = useState<string | null>(null);
   
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
 
   const handleCreate = () => {
-    setEditingOrder(undefined);
-    setFormErrors({});
-    setAppError(null);
-    setIsModalOpen(true);
+    router.push('/orders/new');
   };
 
   const handleEdit = (order: Order) => {
-    setEditingOrder(order);
-    setFormErrors({});
-    setAppError(null);
-    setIsModalOpen(true);
+    router.push(`/orders/${order.id}`);
   };
 
   const handleDeleteClick = (order: Order) => {
@@ -77,30 +69,17 @@ export default function OrdersPage() {
     setIsDeleteOpen(true);
   };
 
-  const handleSubmit = async (data: Partial<Order>) => {
-    try {
-      if (editingOrder) {
-        await updateOrder.mutateAsync({ id: editingOrder.id, data });
-      } else {
-        await createOrder.mutateAsync(data);
-      }
-      setIsModalOpen(false);
-    } catch (error: any) {
-      if (error.response?.status === 422) {
-        setFormErrors(error.response.data.errors);
-      } else {
-        console.error('App Error:', error);
-        setAppError("An application error occurred. Please try again later.");
-        setIsModalOpen(false);
-      }
-    }
-  };
-
   const handleConfirmDelete = async () => {
     if (orderToDelete) {
-      await deleteOrder.mutateAsync(orderToDelete.id);
-      setIsDeleteOpen(false);
-      setOrderToDelete(null);
+        try {
+            await deleteOrder.mutateAsync(orderToDelete.id);
+            setIsDeleteOpen(false);
+            setOrderToDelete(null);
+        } catch (err: unknown) {
+             console.error('App Error:', err);
+             setAppError("An unexpected error occurred. Please try again later.");
+             setIsDeleteOpen(false);
+        }
     }
   };
 
@@ -113,7 +92,7 @@ export default function OrdersPage() {
       }
   };
 
-  if (isLoading) return <TableSkeleton cols={5} rows={8} />;
+  if (isLoading) return <TableSkeleton cols={9} rows={8} />;
   if (error) return <div className="p-4 text-error">Error loading orders</div>;
 
   return (
@@ -159,6 +138,10 @@ export default function OrdersPage() {
                         {value: '', label: 'All Columns'},
                         {value: 'order_number', label: 'Order No'},
                         {value: 'order_description', label: 'Description'},
+                        {value: 'project_number', label: 'Project Number'},
+                        {value: 'project_name', label: 'Project Name'},
+                        {value: 'contract_number', label: 'Contract Number'},
+                        {value: 'contract_name', label: 'Contract Name'},
                     ]}
                     value={searchColumn}
                     onChange={(val) => setSearchColumn(val as string)}
@@ -185,20 +168,38 @@ export default function OrdersPage() {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project No</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contract No</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contract Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Order No</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {orders?.map((order: Order) => (
-              <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <tr 
+                key={order.id} 
+                onClick={() => router.push(`/orders/${order.id}`)}
+                className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+              >
+                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {order.project?.project_number || '-'}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 font-medium">
+                    {order.project?.project_name || '-'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                    {order.contract?.contract_number || '-'}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                    {order.contract?.contract_name || '-'}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
-                    <Link href={`/orders/${order.id}`} className="hover:underline">
-                        {order.order_number}
-                    </Link>
+                    {order.order_number}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{order.order_description}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -212,25 +213,29 @@ export default function OrdersPage() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                    {order.order_dt ? order.order_dt.split('T')[0] : 'N/A'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button 
-                    onClick={() => handleEdit(order)}
-                    className="text-primary hover:text-indigo-900 mr-4"
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteClick(order)}
-                    className="text-error hover:text-red-900"
-                  >
-                    Delete
-                  </button>
+                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex flex-col items-center gap-2">
+                        <button 
+                            onClick={() => handleEdit(order)}
+                            className="text-primary hover:text-indigo-900"
+                            title="Edit"
+                        >
+                            <span className="material-icons">edit</span>
+                        </button>
+                        <button 
+                            onClick={() => handleDeleteClick(order)}
+                            className="text-error hover:text-red-900"
+                            title="Delete"
+                        >
+                            <span className="material-icons">delete</span>
+                        </button>
+                    </div>
                 </td>
               </tr>
             ))}
             {orders?.length === 0 && (
                 <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={9} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                         No orders found. Create one to get started.
                     </td>
                 </tr>
@@ -247,15 +252,6 @@ export default function OrdersPage() {
             onPageChange={setPage}
          />
       </div>
-
-      <OrderModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleSubmit}
-        initialData={editingOrder}
-        isLoading={createOrder.isPending || updateOrder.isPending}
-        errors={formErrors}
-      />
 
       <ConfirmDialog
         isOpen={isDeleteOpen}

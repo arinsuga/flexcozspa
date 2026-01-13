@@ -42,10 +42,34 @@ class OrderRepository extends EloquentRepository implements OrderRepositoryInter
             
             if (in_array($column, $allowedColumns)) {
                  $query->where($column, 'like', $search);
+            } elseif ($column == 'project_number') {
+                $query->whereHas('project', function($q) use ($search) {
+                    $q->where('project_number', 'like', $search);
+                });
+            } elseif ($column == 'project_name') {
+                $query->whereHas('project', function($q) use ($search) {
+                    $q->where('project_name', 'like', $search);
+                });
+            } elseif ($column == 'contract_number') {
+                $query->whereHas('contract', function($q) use ($search) {
+                    $q->where('contract_number', 'like', $search);
+                });
+            } elseif ($column == 'contract_name') {
+                $query->whereHas('contract', function($q) use ($search) {
+                    $q->where('contract_name', 'like', $search);
+                });
             } else {
                  $query->where(function($q) use ($search) {
                      $q->where('order_description', 'like', $search)
-                       ->orWhere('order_number', 'like', $search);
+                       ->orWhere('order_number', 'like', $search)
+                       ->orWhereHas('project', function($q) use ($search) {
+                           $q->where('project_number', 'like', $search)
+                             ->orWhere('project_name', 'like', $search);
+                       })
+                       ->orWhereHas('contract', function($q) use ($search) {
+                           $q->where('contract_number', 'like', $search)
+                             ->orWhere('contract_name', 'like', $search);
+                       });
                  });
             }
         }
