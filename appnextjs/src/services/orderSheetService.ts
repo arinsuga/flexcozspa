@@ -3,11 +3,26 @@ import { appApi } from './api';
 export interface OrderSheet {
   id: number;
   order_id: number;
-  item_name: string;
-  description?: string;
-  qty: number;
-  unit_price: number;
-  total_price: number;
+  sheet_code: string;
+  sheet_refftypeid?: number;
+  sheet_reffno?: string;
+  sheet_reffnodate?: string;
+  vendor_id?: number;
+  vendor_name?: string;
+  sheet_description?: string;
+  sheet_qty: number;
+  uom_name?: string;
+  sheet_price: number;
+  sheet_grossamt: number;
+  sheet_netamt: number;
+  project?: any;
+  contract?: any;
+  contractsheet?: any;
+  order?: any;
+  sheetgroup?: any;
+  vendortype?: any;
+  vendor?: any;
+  uom?: any;
 }
 
 export const orderSheetService = {

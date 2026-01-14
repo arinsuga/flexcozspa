@@ -1,35 +1,50 @@
 'use client';
 
+import React, { useState } from 'react';
 import OrderForm from '@/components/features/orders/OrderForm';
-import { useOrderMutations } from '@/hooks/useOrders';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import OrderDetailClient from '../[id]/OrderDetailClient';
 import { Order } from '@/services/orderService';
+import Stepper from '@/components/common/Stepper';
 
 export default function NewOrderPage() {
-  const { createOrder } = useOrderMutations();
-  const router = useRouter();
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [step, setStep] = useState(1);
+  const [orderData, setOrderData] = useState<Partial<Order>>({});
 
-  const handleSubmit = (data: Partial<Order>) => {
-    createOrder.mutate(data, {
-      onSuccess: () => {
-        router.push('/orders');
-      },
-      onError: (error: any) => {
-        if (error.response?.status === 422) {
-          setErrors(error.response.data.errors);
-        }
-      }
-    });
+  const handleFormSubmit = (data: Partial<Order>) => {
+    setOrderData(prev => ({ ...prev, ...data }));
+    setStep(2);
   };
+
+  const steps = ['Order Details', 'Order Sheet'];
 
   return (
     <div className="space-y-6">
-      <div className="sm:flex sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">New Order</h1>
-      </div>
-      <OrderForm onSubmit={handleSubmit} isLoading={createOrder.isPending} errors={errors} />
+      <Stepper steps={steps} currentStep={step} />
+      
+      {step === 1 && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-gray-800 p-6 shadow sm:rounded-lg">
+             <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Step 1: Order Details</h2>
+             <OrderForm 
+                onSubmit={handleFormSubmit} 
+                submitLabel="Next Step" 
+                initialData={orderData} 
+             />
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+         <div className="space-y-6">
+            <OrderDetailClient 
+              id="new" 
+              initialData={orderData} 
+              mode="create" 
+              onBack={() => setStep(1)}
+              readOnlyInfo={true}
+            />
+         </div>
+      )}
     </div>
   );
 }

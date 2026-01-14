@@ -33,7 +33,7 @@ export default function ContractModal({
   const projects = (projectsData?.data || []) as Project[];
   
   const { data: statusData } = useContractStatuses();
-  const statuses = (statusData || []) as ContractStatus[];
+  const statuses = Array.isArray(statusData) ? statusData : (statusData?.data || []);
 
   // Get current date in YYYY-MM-DD format
   const getCurrentDate = () => {
@@ -164,7 +164,7 @@ export default function ContractModal({
               label="Status"
               name="contractstatus_id"
               required
-              options={statuses.map(status => ({
+              options={statuses.map((status: ContractStatus) => ({
                 value: status.id,
                 label: status.name
               }))}

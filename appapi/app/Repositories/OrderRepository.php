@@ -12,12 +12,19 @@ class OrderRepository extends EloquentRepository implements OrderRepositoryInter
 
     public function getByProject($projectId)
     {
-        return $this->data->where('project_id', $projectId)->get();
+        return $this->data->with(['status', 'project', 'contract', 'ordersheets'])
+            ->where('project_id', $projectId)->get();
     }
 
     public function getByContract($contractId)
     {
-        return $this->data->where('contract_id', $contractId)->get();
+        return $this->data->with(['status', 'project', 'contract', 'ordersheets'])
+            ->where('contract_id', $contractId)->get();
+    }
+
+    public function find($id)
+    {
+        return $this->data->with(['status', 'project', 'contract', 'ordersheets'])->find($id);
     }
 
     public function update($id, $data)
@@ -31,7 +38,7 @@ class OrderRepository extends EloquentRepository implements OrderRepositoryInter
     }
     public function getAllPaginated($params)
     {
-        $query = $this->data->with(['status', 'project', 'contract']);
+        $query = $this->data->with(['status', 'project', 'contract', 'ordersheets']);
 
         // Search Logic
         if (!empty($params['search_query'])) {

@@ -43,7 +43,7 @@ export default function ContractDetailClient({ id, initialData, mode = 'view', o
     }
   }, [fetchedContract, initialData]);
 
-  const { data: projectData, isLoading: isProjectLoading } = useProject(contract?.project_id);
+  const { data: projectData, isLoading: isProjectLoading } = useProject(contract?.project_id ?? '');
   const project = projectData?.data || projectData;
 
   const sheetGroups = useMemo(() => {

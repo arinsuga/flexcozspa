@@ -14,35 +14,35 @@ class ContractstatusesTableSeeder extends Seeder
     {
         $statuses = [
             [
-                'id' => 1,
+                'id' => 0,
                 'name' => 'Open',
                 'description' => 'Contract is open and active',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'id' => 2,
+                'id' => 1,
                 'name' => 'Approved',
                 'description' => 'Contract has been approved',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'id' => 3,
+                'id' => 2,
                 'name' => 'Closed',
                 'description' => 'Contract has been closed',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'id' => 4,
+                'id' => 3,
                 'name' => 'Canceled/Rejected',
                 'description' => 'Contract has been canceled or rejected',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'id' => 5,
+                'id' => 4,
                 'name' => 'Pending',
                 'description' => 'Contract is pending approval',
                 'created_at' => now(),

@@ -123,6 +123,53 @@ const wsStyleDark = `
         html.dark .selected .highlight-bottom { border-bottom: 1px solid #5A9CB5 !important; }
         html.dark .selected .highlight-left { border-left: 1px solid #5A9CB5 !important; }
         html.dark .selected .highlight-right { border-right: 1px solid #5A9CB5 !important; }
+        
+        /* JSuites Dropdown / Autocomplete Menu Dark Mode (Common in JSpreadsheet) */
+        html.dark .jdropdown-content {
+          background-color: #1f2937 !important;
+          border-color: #374151 !important;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        html.dark .jdropdown-item {
+          background-color: #1f2937 !important;
+          color: #f3f4f6 !important;
+          border-bottom: 1px solid #374151 !important;
+        }
+
+        html.dark .jdropdown-item:hover,
+        html.dark .jdropdown-item.jdropdown-selected {
+          background-color: #374151 !important;
+          color: #ffffff !important;
+        }
+        
+        /* Ensure text in items is readable */
+        html.dark .jdropdown-item * {
+             color: #f3f4f6 !important;
+        }
+
+        /* Calendar Dark Mode (if used) */
+        html.dark .jcalendar {
+          background-color: #1f2937 !important;
+          color: #f3f4f6 !important;
+          border-color: #374151 !important;
+        }
+        html.dark .jcalendar-content {
+            background-color: #1f2937 !important;
+        }
+        html.dark .jcalendar-table td {
+            color: #f3f4f6 !important;
+        }
+        html.dark .jcalendar-table td:hover,
+        html.dark .jcalendar-table td.jcalendar-selected {
+            background-color: #374151 !important;
+            color: #fff !important;
+        }
+        html.dark .jcalendar-controls, 
+        html.dark .jcalendar-header {
+             background-color: #374151 !important;
+             color: #fff !important;
+        }
 
         `;
 

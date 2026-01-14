@@ -1,5 +1,10 @@
 import { appApi } from './api';
 
+export interface OrderStatus {
+  id: number;
+  name: string;
+}
+
 export interface Order {
   id: number;
   project_id: number;
@@ -8,16 +13,17 @@ export interface Order {
   order_number: string;
   order_description: string;
   order_pic: string;
-  orderstatus_id: string;
+  orderstatus_id: number;
   created_at?: string;
   updated_at?: string;
-  status?: { name: string; id: number };
+  status?: OrderStatus;
   project?: { project_name: string; project_number: string; id: number };
   contract?: { contract_name: string; contract_number: string; id: number };
+  ordersheets?: unknown[];
 }
 
 export const orderService = {
-  getAll: async (params?: any) => {
+  getAll: async (params?: Record<string, unknown>) => {
     const response = await appApi.get('orders', { params });
     return response.data;
   },
