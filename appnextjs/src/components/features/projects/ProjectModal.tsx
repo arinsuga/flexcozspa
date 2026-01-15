@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import Modal from '@/components/common/Modal';
 import Input from '@/components/common/Input';
+import Textarea from '@/components/common/Textarea';
 import Button from '@/components/common/Button';
 import { Project } from '@/services/projectService';
-import SelectInput from '@/components/common/SelectInput';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -48,7 +48,7 @@ export default function ProjectModal({
     }
   }, [initialData, isOpen]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -64,6 +64,7 @@ export default function ProjectModal({
         project_enddt: formData.project_enddt || null,
         project_description: formData.project_description || null,
         project_number: formData.project_number || null,
+        projectstatus_id: formData.projectstatus_id || 1, // Default to 1 (Approved)
     };
     onSubmit(payload);
   };
@@ -93,23 +94,13 @@ export default function ProjectModal({
           error={errors?.project_number?.[0]}
         />
         
-        <Input
+        <Textarea
           label="Description"
           name="project_description"
           value={formData.project_description || ''}
           onChange={handleChange}
+          rows={3}
           error={errors?.project_description?.[0]}
-        />
-
-        <SelectInput
-            label="Status"
-            name="is_active"
-            options={[
-              { value: 1, label: 'Active' },
-              { value: 0, label: 'Inactive' }
-            ]}
-            value={formData.is_active}
-            onChange={(value) => setFormData(prev => ({ ...prev, is_active: value as number }))}
         />
 
         <div className="grid grid-cols-2 gap-4">

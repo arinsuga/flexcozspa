@@ -179,7 +179,6 @@ export default function VendorsPage() {
               <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
               <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Vendor Type</th>
               <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contact</th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
               <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -203,13 +202,6 @@ export default function VendorsPage() {
                     <div className="truncate max-w-[200px]">{vendor.vendor_email}</div>
                     <div className="text-xs text-gray-400">{vendor.vendor_phone}</div>
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm">
-                   <span className={`px-2 py-1 text-xs rounded-full
-                     ${vendor.is_active === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}
-                   `}>
-                        {vendor.is_active === 1 ? 'Active' : 'Inactive'}
-                    </span>
-                </td>
                 <td className="px-3 py-4 whitespace-nowrap text-center text-sm font-medium" onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-center gap-2">
                     <button 
@@ -232,7 +224,7 @@ export default function VendorsPage() {
             ))}
              {vendors?.length === 0 && (
                 <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                         No vendors found.
                     </td>
                 </tr>

@@ -88,9 +88,16 @@ export default function ReffTypesPage() {
         await createReffType.mutateAsync(formData);
       }
       setIsModalOpen(false);
-    } catch (error: any) {
-      if (error.response?.status === 422) {
-        setFormErrors(error.response.data.errors);
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response: { status: number; data: { errors: Record<string, string[]> } } };
+        if (axiosError.response.status === 422) {
+          setFormErrors(axiosError.response.data.errors);
+        } else {
+          console.error('App Error:', error);
+          setAppError("An application error occurred. Please try again later.");
+          setIsModalOpen(false);
+        }
       } else {
         console.error('App Error:', error);
         setAppError("An application error occurred. Please try again later.");
@@ -183,6 +190,7 @@ export default function ReffTypesPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -192,25 +200,34 @@ export default function ReffTypesPage() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{rt.refftype_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{rt.refftype_code || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{rt.refftype_description || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${!!rt.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {!!rt.is_active ? 'active' : 'inactive'}
+                  </span>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button 
-                    onClick={() => handleEdit(rt)}
-                    className="text-primary hover:text-indigo-900 mr-4"
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteClick(rt)}
-                    className="text-error hover:text-red-900"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex items-center justify-end gap-4">
+                    <button 
+                      onClick={() => handleEdit(rt)}
+                      className="text-primary hover:text-indigo-900"
+                      title="Edit"
+                    >
+                      <span className="material-icons">edit</span>
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteClick(rt)}
+                      className="text-error hover:text-red-900"
+                      title="Delete"
+                    >
+                      <span className="material-icons">delete</span>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
              {refftypes?.length === 0 && (
                 <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                         No reference types found.
                     </td>
                 </tr>

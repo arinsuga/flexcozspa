@@ -12,6 +12,11 @@ export interface Project {
   project_address?: string | null;
   project_latitude?: string | null;
   project_longitude?: string | null;
+  projectstatus_id: number;
+  project_status?: {
+    id: number;
+    name: string;
+  };
   is_active: number;
   created_at?: string;
   updated_at?: string;

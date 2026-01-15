@@ -81,9 +81,9 @@ export default function ProjectsPage() {
         await createProject.mutateAsync(data);
       }
       setIsModalOpen(false);
-    } catch (error: any) {
-        if (error.response?.status === 422) {
-            setFormErrors(error.response.data.errors);
+    } catch (error: unknown) {
+        if (error instanceof Error && (error as any).response?.status === 422) {
+            setFormErrors((error as any).response.data.errors);
         } else {
             console.error('App Error:', error);
             setAppError("An application error occurred. Please try again later.");
@@ -198,9 +198,9 @@ export default function ProjectsPage() {
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm">
                     <span className={`px-2 py-1 text-xs rounded-full 
-                        ${project.is_active === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
+                        ${project.project_status?.id === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
                           'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
-                         {project.is_active === 1 ? 'Active' : 'Inactive'}
+                         {project.project_status?.name || 'Unknown'}
                     </span>
                 </td>
                  <td className="px-3 py-4 whitespace-nowrap text-center text-sm font-medium" onClick={(e) => e.stopPropagation()}>

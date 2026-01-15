@@ -33,11 +33,14 @@ class CreateContractsheetsTable extends Migration
             $table->decimal('sheet_qty', 10, 2)->nullable();
             $table->decimal('sheet_price', 10, 2)->nullable();
             $table->decimal('sheet_grossamt', 10, 2)->nullable();
+            $table->decimal('sheet_grossamt2', 10, 2)->nullable();
             $table->decimal('sheet_discountrate', 10, 2)->nullable();
             $table->decimal('sheet_discountvalue', 10, 2)->nullable();
             $table->decimal('sheet_taxrate', 10, 2)->nullable();
             $table->decimal('sheet_taxvalue', 10, 2)->nullable();
             $table->decimal('sheet_netamt', 10, 2)->nullable();
+            $table->decimal('sheet_netamt2', 10, 2)->nullable();
+            $table->decimal('sheet_realamt', 10, 2)->nullable();
 
             $table->bigInteger('uom_id')->nullable();
             $table->string('uom_name')->nullable();

@@ -16,11 +16,14 @@ export interface ContractSheet {
   sheet_qty: number;
   sheet_price: number;
   sheet_grossamt: number;
+  sheet_grossamt2?: number;
   sheet_discountrate: number;
   sheet_discountvalue: number;
   sheet_taxrate: number;
   sheet_taxvalue: number;
   sheet_netamt: number;
+  sheet_netamt2?: number;
+  sheet_realamt?: number;
   uom_id: number;
   uom_name: string;
   sheetgroup_seqno: number;

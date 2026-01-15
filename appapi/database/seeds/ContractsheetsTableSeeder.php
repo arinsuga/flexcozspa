@@ -35,6 +35,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 1650000.00,
                 'sheet_netamt' => 16650000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 16650000.00,
                 'uom_id' => 22, // LOT
                 'uom_name' => 'Lot',
                 'sheetgroup_seqno' => 1,
@@ -63,6 +66,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 137500.00,
                 'sheet_netamt' => 1387500.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 1387500.00,
                 'uom_id' => 11, // M3
                 'uom_name' => 'Cubic Meter',
                 'sheetgroup_seqno' => 1,
@@ -90,6 +96,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 754600.00,
                 'sheet_netamt' => 7614600.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 7614600.00,
                 'uom_id' => 1, // PCS
                 'uom_name' => 'Pieces',
                 'sheetgroup_seqno' => 1,
@@ -117,6 +126,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 748000.00,
                 'sheet_netamt' => 7548000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 7548000.00,
                 'uom_id' => 11, // M3
                 'uom_name' => 'Cubic Meter',
                 'sheetgroup_seqno' => 1,
@@ -146,6 +158,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 4950000.00,
                 'sheet_netamt' => 49950000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 49950000.00,
                 'uom_id' => 22, // LOT
                 'uom_name' => 'Lot',
                 'sheetgroup_seqno' => 1,
@@ -174,6 +189,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 6402000.00,
                 'sheet_netamt' => 64602000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 64602000.00,
                 'uom_id' => 7, // TON
                 'uom_name' => 'Ton',
                 'sheetgroup_seqno' => 1,
@@ -201,6 +219,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 2612500.00,
                 'sheet_netamt' => 26362500.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 26362500.00,
                 'uom_id' => 11, // M3
                 'uom_name' => 'Cubic Meter',
                 'sheetgroup_seqno' => 1,
@@ -231,6 +252,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 880000.00,
                 'sheet_netamt' => 8880000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 8880000.00,
                 'uom_id' => 22, // LOT
                 'uom_name' => 'Lot',
                 'sheetgroup_seqno' => 2,
@@ -259,6 +283,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 130625.00,
                 'sheet_netamt' => 1318125.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 1318125.00,
                 'uom_id' => 23, // UNIT
                 'uom_name' => 'Unit',
                 'sheetgroup_seqno' => 2,
@@ -286,6 +313,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 458150.00,
                 'sheet_netamt' => 4623150.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 4623150.00,
                 'uom_id' => 14, // M
                 'uom_name' => 'Meter',
                 'sheetgroup_seqno' => 2,
@@ -316,6 +346,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 1925000.00,
                 'sheet_netamt' => 19425000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 19425000.00,
                 'uom_id' => 23, // UNIT
                 'uom_name' => 'Unit',
                 'sheetgroup_seqno' => 3,
@@ -344,6 +377,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 660000.00,
                 'sheet_netamt' => 6660000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 6660000.00,
                 'uom_id' => 23, // UNIT
                 'uom_name' => 'Unit',
                 'sheetgroup_seqno' => 3,
@@ -371,6 +407,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 990000.00,
                 'sheet_netamt' => 9990000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 9990000.00,
                 'uom_id' => 23, // UNIT
                 'uom_name' => 'Unit',
                 'sheetgroup_seqno' => 3,
@@ -400,6 +439,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 3025000.00,
                 'sheet_netamt' => 30525000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 30525000.00,
                 'uom_id' => 23, // UNIT
                 'uom_name' => 'Unit',
                 'sheetgroup_seqno' => 3,
@@ -428,6 +470,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 1100000.00,
                 'sheet_netamt' => 11100000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 11100000.00,
                 'uom_id' => 23, // UNIT
                 'uom_name' => 'Unit',
                 'sheetgroup_seqno' => 3,
@@ -455,6 +500,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 1540000.00,
                 'sheet_netamt' => 15540000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 15540000.00,
                 'uom_id' => 23, // UNIT
                 'uom_name' => 'Unit',
                 'sheetgroup_seqno' => 3,
@@ -485,6 +533,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 715000.00,
                 'sheet_netamt' => 7215000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 7215000.00,
                 'uom_id' => 22, // LOT
                 'uom_name' => 'Lot',
                 'sheetgroup_seqno' => 4,
@@ -513,6 +564,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 577500.00,
                 'sheet_netamt' => 5827500.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 5827500.00,
                 'uom_id' => 7, // TON
                 'uom_name' => 'Ton',
                 'sheetgroup_seqno' => 4,
@@ -540,6 +594,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 66000.00,
                 'sheet_netamt' => 666000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 666000.00,
                 'uom_id' => 11, // M3
                 'uom_name' => 'Cubic Meter',
                 'sheetgroup_seqno' => 4,
@@ -570,6 +627,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 550000.00,
                 'sheet_netamt' => 5550000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 5550000.00,
                 'uom_id' => 22, // LOT
                 'uom_name' => 'Lot',
                 'sheetgroup_seqno' => 5,
@@ -598,6 +658,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 123750.00,
                 'sheet_netamt' => 1248750.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 1248750.00,
                 'uom_id' => 1, // PCS
                 'uom_name' => 'Pieces',
                 'sheetgroup_seqno' => 5,
@@ -625,6 +688,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 103950.00,
                 'sheet_netamt' => 1048950.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 1048950.00,
                 'uom_id' => 1, // PCS
                 'uom_name' => 'Pieces',
                 'sheetgroup_seqno' => 5,
@@ -654,6 +720,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 660000.00,
                 'sheet_netamt' => 6660000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 6660000.00,
                 'uom_id' => 22, // LOT
                 'uom_name' => 'Lot',
                 'sheetgroup_seqno' => 5,
@@ -682,6 +751,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 365750.00,
                 'sheet_netamt' => 3690750.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 3690750.00,
                 'uom_id' => 1, // PCS
                 'uom_name' => 'Pieces',
                 'sheetgroup_seqno' => 5,
@@ -709,6 +781,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 198000.00,
                 'sheet_netamt' => 1998000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 1998000.00,
                 'uom_id' => 23, // UNIT
                 'uom_name' => 'Unit',
                 'sheetgroup_seqno' => 5,
@@ -739,6 +814,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 825000.00,
                 'sheet_netamt' => 8325000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 8325000.00,
                 'uom_id' => 14, // M
                 'uom_name' => 'Meter',
                 'sheetgroup_seqno' => 6,
@@ -767,6 +845,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 467500.00,
                 'sheet_netamt' => 4717500.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 4717500.00,
                 'uom_id' => 14, // M
                 'uom_name' => 'Meter',
                 'sheetgroup_seqno' => 6,
@@ -794,6 +875,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 99000.00,
                 'sheet_netamt' => 999000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 999000.00,
                 'uom_id' => 1, // PCS
                 'uom_name' => 'Pieces',
                 'sheetgroup_seqno' => 6,
@@ -823,6 +907,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 275000.00,
                 'sheet_netamt' => 2775000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 2775000.00,
                 'uom_id' => 22, // LOT
                 'uom_name' => 'Lot',
                 'sheetgroup_seqno' => 6,
@@ -851,6 +938,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 140250.00,
                 'sheet_netamt' => 1415250.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 1415250.00,
                 'uom_id' => 1, // PCS
                 'uom_name' => 'Pieces',
                 'sheetgroup_seqno' => 6,
@@ -878,6 +968,9 @@ class ContractsheetsTableSeeder extends Seeder
                 'sheet_taxrate' => 11.00,
                 'sheet_taxvalue' => 66000.00,
                 'sheet_netamt' => 666000.00,
+                'sheet_grossamt2' => 0.00,
+                'sheet_netamt2' => 0.00,
+                'sheet_realamt' => 666000.00,
                 'uom_id' => 17, // M2
                 'uom_name' => 'Square Meter',
                 'sheetgroup_seqno' => 6,

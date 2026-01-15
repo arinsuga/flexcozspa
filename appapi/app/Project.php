@@ -14,6 +14,13 @@ class Project extends Model
     protected $table = 'projects';
 
     /**
+     * The relations to eager load on every query.
+     *
+     * @var array
+     */
+    protected $with = ['projectStatus'];
+
+    /**
      * The attributes that should be mutated to dates.
      *
      * @var array

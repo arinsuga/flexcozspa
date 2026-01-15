@@ -199,18 +199,22 @@ export default function VendorTypesPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button 
-                    onClick={() => handleEdit(vt)}
-                    className="text-primary hover:text-indigo-900 mr-4"
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteClick(vt)}
-                    className="text-error hover:text-red-900"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex items-center justify-end gap-4">
+                    <button 
+                      onClick={() => handleEdit(vt)}
+                      className="text-primary hover:text-indigo-900"
+                      title="Edit"
+                    >
+                      <span className="material-icons">edit</span>
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteClick(vt)}
+                      className="text-error hover:text-red-900"
+                      title="Delete"
+                    >
+                      <span className="material-icons">delete</span>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

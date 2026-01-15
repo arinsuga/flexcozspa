@@ -38,7 +38,7 @@ class OrderRepository extends EloquentRepository implements OrderRepositoryInter
     }
     public function getAllPaginated($params)
     {
-        $query = $this->data->with(['status', 'project', 'contract', 'ordersheets']);
+        $query = $this->data->newQuery()->with(['status', 'project', 'contract', 'ordersheets']);
 
         // Search Logic
         if (!empty($params['search_query'])) {

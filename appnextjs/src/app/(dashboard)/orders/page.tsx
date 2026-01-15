@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import Input from '@/components/common/Input';
 import SelectInput from '@/components/common/SelectInput';
 import Pagination from '@/components/common/Pagination';
-import axios from 'axios';
+
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -50,6 +50,7 @@ export default function OrdersPage() {
   const meta = ordersResponse?.current_page 
     ? ordersResponse 
     : { current_page: 1, last_page: 1 };
+
 
   const [appError, setAppError] = useState<string | null>(null);
   
@@ -211,7 +212,7 @@ export default function OrdersPage() {
                    {order.order_dt ? order.order_dt.split('T')[0] : 'N/A'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex flex-col items-center gap-2">
+                    <div className="flex items-center justify-center gap-4">
                         <button 
                             onClick={() => handleEdit(order)}
                             className="text-primary hover:text-indigo-900"

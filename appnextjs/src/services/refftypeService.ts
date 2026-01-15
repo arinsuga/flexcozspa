@@ -5,10 +5,11 @@ export interface ReffType {
   refftype_name: string;
   refftype_description?: string;
   refftype_code?: string;
+  is_active: number | boolean;
 }
 
 export const refftypeService = {
-  getAll: async (params?: any) => {
+  getAll: async (params?: Record<string, unknown>) => {
     const response = await appApi.get('refftypes', { params });
     return response.data;
   },

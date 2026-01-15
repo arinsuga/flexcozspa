@@ -223,7 +223,7 @@ export default function ContractsPage() {
                    {contract.contract_status?.name || 'N/A'}
                 </td>
                  <td className="px-3 py-4 whitespace-nowrap text-center text-sm font-medium" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center justify-center gap-4">
                     <button 
                       onClick={() => handleEdit(contract)}
                       className="text-primary hover:text-indigo-900"
