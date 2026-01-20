@@ -110,3 +110,6 @@ Route::apiResource('uoms', 'UomController');
 
 // Reference Types API
 Route::apiResource('refftypes', 'RefftypeController');
+
+// Reports API
+Route::get('reports/order-recap', 'ReportController@orderRecap');

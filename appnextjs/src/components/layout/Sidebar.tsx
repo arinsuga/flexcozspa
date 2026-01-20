@@ -28,7 +28,15 @@ const menuItems: MenuItem[] = [
       { name: 'Sheet Group Management', path: '/sheet-groups', icon: 'view_module' },
     ]
   },
+  {
+    name: 'Reports',
+    icon: 'assessment',
+    subItems: [
+      { name: 'Order Recap', path: '/reports/order-recap', icon: 'summarize' },
+    ]
+  },
 ];
+
 
 export default function Sidebar() {
   const pathname = usePathname();
