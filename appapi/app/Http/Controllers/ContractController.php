@@ -38,6 +38,7 @@ class ContractController extends Controller
             'contract_number' => 'required|unique:contracts,contract_number',
             'contract_name' => 'required|string',
             'project_id' => 'required|exists:projects,id',
+            'contract_dt' => 'nullable|date',
             'contractstatus_id' => 'nullable|integer|exists:contractstatuses,id',
             'contract_sheets' => 'nullable|array',
         ]);
@@ -64,6 +65,7 @@ class ContractController extends Controller
         $validated = $request->validate([
             'contract_number' => 'unique:contracts,contract_number,' . $id,
             'contract_name' => 'string',
+            'contract_dt' => 'nullable|date',
             'contractstatus_id' => 'nullable|integer|exists:contractstatuses,id',
             'contract_sheets' => 'nullable|array',
         ]);
@@ -109,26 +111,32 @@ class ContractController extends Controller
         // 3. Process Headers first (to get IDs for items)
         foreach ($headers as &$headerData) {
             $headerId = $headerData['id'] ?? null;
+
+            // Map sheetheader_id if it references a newly created parent header (Rule: nested headers)
+            if (isset($headerData['sheetheader_id']) && isset($tempIdMap[$headerData['sheetheader_id']])) {
+                $headerData['sheetheader_id'] = $tempIdMap[$headerData['sheetheader_id']];
+            }
+
             $isNewHeader = !is_numeric($headerId);
-            
-            // Calculate header totals from items
-            $headerGrossAmt = 0;
-            $headerNetAmt = 0;
-            
             $headerTempId = $isNewHeader ? $headerId : null;
+            
+            // Calculate header totals recursively based on code pattern
+            $headerGrossAmt = 0;
+            $prefix = $headerData['sheet_code'] . '.';
 
             foreach ($items as $item) {
-                if ($item['sheetheader_id'] == ($headerTempId ?: $headerId)) {
+                $itemCode = $item['sheet_code'] ?? '';
+                if (substr($itemCode, 0, strlen($prefix)) === $prefix) {
                     $qty = $item['sheet_qty'] ?? 0;
                     $price = $item['sheet_price'] ?? 0;
-                    $gross = $qty * $price;
-                    $headerGrossAmt += $gross;
-                    $headerNetAmt += $gross; // Assuming net = gross for now, matching plan
+                    $headerGrossAmt += ($qty * $price);
                 }
             }
 
             $headerData['sheet_grossamt'] = $headerGrossAmt;
-            $headerData['sheet_netamt'] = $headerNetAmt;
+            $headerData['sheet_grossamt2'] = $headerGrossAmt;
+            $headerData['sheet_netamt'] = $headerGrossAmt;
+            $headerData['sheet_netamt2'] = $headerGrossAmt;
             $headerData['contract_id'] = $contract->id;
             $headerData['project_id'] = $contract->project_id;
 

@@ -13,16 +13,27 @@ import { useSheetGroupsByType } from '@/hooks/useSheetGroups';
 import { ContractSheet } from '@/services/contractSheetService';
 import { SheetGroup } from '@/services/sheetGroupService';
 import { Contract } from '@/services/contractService';
+import { formatNumeric, parseNumeric } from '@/utils/numberFormat';
 
 interface ContractDetailClientProps {
   id: string;
   initialData?: Partial<Contract>;
   mode?: 'create' | 'edit' | 'view';
   onBack?: () => void;
+  onSubmit?: (data: Partial<Contract>) => void;
+  submitLabel?: string;
   readOnlyInfo?: boolean;
 }
 
-export default function ContractDetailClient({ id, initialData, mode = 'view', onBack, readOnlyInfo = false }: ContractDetailClientProps) {
+export default function ContractDetailClient({ 
+  id, 
+  initialData, 
+  mode = 'view', 
+  onBack, 
+  onSubmit,
+  submitLabel,
+  readOnlyInfo = false 
+}: ContractDetailClientProps) {
   const router = useRouter();
   const { data: contractData, isLoading: isContractLoading } = useContract(id);
   const { data: uomsData, isLoading: isUomsLoading } = useQuery({
@@ -145,8 +156,15 @@ export default function ContractDetailClient({ id, initialData, mode = 'view', o
        ...contract,
        project_id: contract.project_id ? Number(contract.project_id) : 0,
        contractstatus_id: contract.contractstatus_id ? Number(contract.contractstatus_id) : 1,
+       contract_amount: parseNumeric(contract.contract_amount?.toString() || ''),
+       contract_payment: parseNumeric(contract.contract_payment?.toString() || ''),
        contract_sheets: sortedSheets as ContractSheet[]
     };
+
+    if (onSubmit) {
+      onSubmit(payload);
+      return;
+    }
 
     try {
       if (mode === 'create' || id === 'new') {
@@ -195,11 +213,11 @@ export default function ContractDetailClient({ id, initialData, mode = 'view', o
               <Button variant="ghost" onClick={onBack || (() => router.back())} leftIcon="arrow_back">Back</Button>
               <Button 
                 variant="primary" 
-                leftIcon="save" 
+                leftIcon={onSubmit ? 'arrow_forward' : 'save'} 
                 onClick={handleSave} 
                 isLoading={updateContractMutation.isPending || createContractMutation.isPending}
               >
-                {mode === 'create' ? 'Save Contract' : 'Save Changes'}
+                {submitLabel || (mode === 'create' ? 'Save Contract' : 'Save Changes')}
               </Button>
             </div>
           </div>
@@ -213,6 +231,16 @@ export default function ContractDetailClient({ id, initialData, mode = 'view', o
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Project Name</label>
               <div className="font-medium">{project?.project_name || 'N/A'}</div>
+            </div>
+            <div>
+              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Contract Date</label>
+              <input 
+                type="date" 
+                value={safeContract.contract_dt ? safeContract.contract_dt.split('T')[0] : ''} 
+                onChange={(e) => handleHeaderChange('contract_dt', e.target.value)}
+                disabled={readOnlyInfo}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
             </div>
 
             {/* Editable Fields */}
@@ -240,6 +268,30 @@ export default function ContractDetailClient({ id, initialData, mode = 'view', o
                </select>
             </div>
 
+
+            <div>
+              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Payment Date</label>
+              <input 
+                type="date"
+                value={safeContract.contract_payment_dt ? safeContract.contract_payment_dt.split('T')[0] : ''}
+                onChange={(e) => handleHeaderChange('contract_payment_dt', e.target.value)}
+                disabled={readOnlyInfo}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Payment Amount</label>
+              <input 
+                type="text"
+                value={safeContract.contract_payment || ''}
+                onChange={(e) => handleHeaderChange('contract_payment', e.target.value.replace(/[^0-9,.]/g, ''))}
+                onBlur={(e) => handleHeaderChange('contract_payment', formatNumeric(e.target.value))}
+                disabled={readOnlyInfo}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 text-right ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
+            </div>
+
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Start Date</label>
               <input 
@@ -262,17 +314,6 @@ export default function ContractDetailClient({ id, initialData, mode = 'view', o
             </div>
 
             <div>
-              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Amount</label>
-              <input 
-                type="number"
-                value={safeContract.contract_amount || ''}
-                onChange={(e) => handleHeaderChange('contract_amount', e.target.value)}
-                disabled={readOnlyInfo}
-                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 font-medium text-primary ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
-              />
-            </div>
-
-             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Progress %</label>
               <input 
                 type="number"
@@ -284,7 +325,18 @@ export default function ContractDetailClient({ id, initialData, mode = 'view', o
               />
             </div>
 
-            <div>
+            <div className="col-span-2 row-span-2">
+              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Description</label>
+              <textarea
+                rows={5}
+                value={safeContract.contract_description || ''}
+                onChange={(e) => handleHeaderChange('contract_description', e.target.value)}
+                disabled={readOnlyInfo}
+                 className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+              />
+            </div>
+
+            <div className="col-span-2">
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">PIC</label>
                <input 
                 type="text"
@@ -294,26 +346,16 @@ export default function ContractDetailClient({ id, initialData, mode = 'view', o
                 className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
               />
             </div>
-            
-            <div>
-              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Payment</label>
-              <input 
-                type="number"
-                value={safeContract.contract_payment || ''}
-                onChange={(e) => handleHeaderChange('contract_payment', e.target.value)}
-                disabled={readOnlyInfo}
-                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
-              />
-            </div>
 
             <div className="col-span-2">
-              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Description</label>
-              <textarea
-                rows={2}
-                value={safeContract.contract_description || ''}
-                onChange={(e) => handleHeaderChange('contract_description', e.target.value)}
+              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Amount</label>
+              <input 
+                type="text"
+                value={safeContract.contract_amount || ''}
+                onChange={(e) => handleHeaderChange('contract_amount', e.target.value.replace(/[^0-9,.]/g, ''))}
+                onBlur={(e) => handleHeaderChange('contract_amount', formatNumeric(e.target.value))}
                 disabled={readOnlyInfo}
-                 className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 font-medium text-primary text-right ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
               />
             </div>
           </div>

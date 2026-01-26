@@ -153,6 +153,7 @@ export default function ContractsPage() {
                         {value: '', label: 'All Columns'},
                         {value: 'contract_name', label: 'Contract Name'},
                         {value: 'contract_number', label: 'Contract No'},
+                        {value: 'contract_dt', label: 'Contract Date'},
                         {value: 'contract_pic', label: 'PIC'},
                         {value: 'project_number', label: 'Project Number'},
                         {value: 'project_name', label: 'Project Name'},

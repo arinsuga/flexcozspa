@@ -64,20 +64,14 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         
         // row structure: [id, code, description, qty, uom_id, price, total]
         const code = row[1];
-        const description = row[2];
-        const qty = row[3];
-        const uom_name = row[4];
-        const price = row[5];
         
         const hasValue = (val: any) => {
           if (val === null || val === undefined) return false;
           const strVal = String(val).trim();
-          return strVal !== '' && strVal !== 'null' && strVal !== 'undefined' && strVal !== '0' && strVal !== '0.00';
+          return strVal !== '' && strVal !== 'null' && strVal !== 'undefined';
         };
         
-        const isPartiallyEmpty = !hasValue(code) || !hasValue(description) || !hasValue(qty) || !hasValue(uom_name) || !hasValue(price);
-        
-        return !isPartiallyEmpty;
+        return hasValue(code);
       });
       
       const removedCount = rawData.length - cleanedData.length;
@@ -115,9 +109,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             // total is calculated, not stored
           ] = row;
 
-          // Requirement 4 & 5: trim or remove data if one of this field is blank or no value:
-          // project_id, contract_id (if edit mode), sheet_code, sheet_name, uom_name
-          if (!projectId || !hasValue(sheet_code) || !hasValue(description) || !hasValue(uom_name)) {
+          // Requirement 2: Include rows with at least a code
+          if (!projectId || !hasValue(sheet_code)) {
             return null;
           }
           if (isEditMode && !contractId) {
@@ -139,7 +132,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           const originalSheet = data.find(s => s.id === (id ? parseInt(id) : null));
 
           const sheet: Partial<ContractSheet> = {
-            id: id ? parseInt(id) : undefined,
+            id: id ? parseInt(id) : sheet_code,
             project_id: parseInt(projectId as unknown as string),
             contract_id: isEditMode ? (typeof contractId === 'string' ? parseInt(contractId) : contractId as number) : undefined,
             sheet_dt: originalSheet?.sheet_dt || null,
@@ -283,7 +276,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     // Use Array.from to avoid shared references between rows
     const initialData = data && data.length > 0 
       ? transformToSheetData(data)
-      : Array.from({ length: 100 }, () => [null, '', '', null, 1, null, null]);
+      : Array.from({ length: 100 }, () => [null, '', '', null, '', null, null]);
 
     const columns = [
       { type: 'hidden', name: 'id', title: 'ID', width: 0 },
