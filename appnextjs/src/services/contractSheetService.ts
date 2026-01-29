@@ -25,7 +25,7 @@ export interface ContractSheet {
   sheet_netamt2?: number;
   sheet_realamt?: number;
   uom_id: number;
-  uom_name: string;
+  uom_code: string;
   sheetgroup_seqno: number;
   sheet_seqno: number;
   created_at: string;

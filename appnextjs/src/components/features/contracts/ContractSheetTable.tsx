@@ -5,12 +5,12 @@ import jspreadsheet from 'jspreadsheet-ce';
 import 'jspreadsheet-ce/dist/jspreadsheet.css';
 import 'jsuites/dist/jsuites.css';
 import { ContractSheet } from '@/services/contractSheetService';
-import { UOM } from '@/services/uomService';
 import wsStyle from '@/utils/wsStyle';
+import { useUomNormalizations } from '@/hooks/useUomNormalizations';
+import { createUomNormalizer } from '@/utils/uomNormalizer';
 
 interface ContractSheetTableProps {
   data: ContractSheet[];
-  uoms: UOM[];
   contractId: number | string;
   projectId: number;
   sheetgroupId?: number;
@@ -18,9 +18,20 @@ interface ContractSheetTableProps {
 }
 
 const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
-  const { data, uoms, contractId, projectId, sheetgroupId = 1, onchange } = props;
+  const { data, contractId, projectId, sheetgroupId = 1, onchange } = props;
   const jRef = useRef<HTMLDivElement>(null);
   const jInstance = useRef<any>(null);
+
+  // Load UOM normalization config ONCE
+  const { data: normalizationConfig = [] } = useUomNormalizations();
+  const normalizerRef = useRef<any>(null);
+
+  // Build normalizer when config loads
+  useEffect(() => {
+    if (normalizationConfig.length > 0) {
+      normalizerRef.current = createUomNormalizer(normalizationConfig);
+    }
+  }, [normalizationConfig]);
 
 
   const getJInstance = () => {
@@ -104,7 +115,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             sheet_code,
             description,
             qty,
-            uom_name,
+            uom_code,
             price,
             // total is calculated, not stored
           ] = row;
@@ -124,9 +135,6 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           // Requirement 2: sheet_type logic
           const hasMetrics = hasValue(qty) || hasValue(price) || grossAmt > 0;
           const sheetType = hasMetrics ? 1 : 0;
-
-          // Find UOM ID from name
-          const uom = uoms.find((u) => u.uom_name === uom_name);
 
           // Find original sheet to preserve some fields
           const originalSheet = data.find(s => s.id === (id ? parseInt(id) : null));
@@ -148,15 +156,15 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             sheet_price: hasValue(price) ? parseFloat(price) : 0,
             sheet_grossamt: parseFloat(grossAmt.toFixed(2)),
             sheet_grossamt2: parseFloat(grossAmt.toFixed(2)),
-            sheet_discountrate: originalSheet?.sheet_discountrate ? parseFloat(originalSheet.sheet_discountrate as unknown as string) : 0.00,
-            sheet_discountvalue: originalSheet?.sheet_discountvalue ? parseFloat(originalSheet.sheet_discountvalue as unknown as string) : 0.00,
-            sheet_taxrate: originalSheet?.sheet_taxrate ? parseFloat(originalSheet.sheet_taxrate as unknown as string) : 11.00,
-            sheet_taxvalue: parseFloat((grossAmt * 0.11).toFixed(2)),
-            sheet_netamt: parseFloat((grossAmt * 1.11).toFixed(2)),
-            sheet_netamt2: parseFloat((grossAmt * 1.11).toFixed(2)),
-            sheet_realamt: parseFloat((grossAmt * 1.11).toFixed(2)),
-            uom_id: uom?.id ? parseInt(uom.id as unknown as string) : (originalSheet?.uom_id ? parseInt(originalSheet.uom_id as unknown as string) : 1),
-            uom_name: uom_name ? String(uom_name) : (uom?.uom_name || ''),
+            sheet_discountrate: 0.00,
+            sheet_discountvalue: 0.00,
+            sheet_taxrate: 0.00,
+            sheet_taxvalue: 0.00,
+            sheet_netamt: parseFloat(grossAmt.toFixed(2)),
+            sheet_netamt2: parseFloat(grossAmt.toFixed(2)),
+            sheet_realamt: parseFloat(grossAmt.toFixed(2)),
+            uom_id: originalSheet?.uom_id ? parseInt(originalSheet.uom_id as unknown as string) : 1,
+            uom_code: uom_code ? String(uom_code) : (originalSheet?.uom_code || ''),
             sheetgroup_seqno: index + 1,
             sheet_seqno: index + 1,
           };
@@ -175,7 +183,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       sheet.sheet_code,
       sheet.sheet_description,
       sheet.sheet_qty,
-      sheet.uom_name,
+      sheet.uom_code,
       sheet.sheet_price,
       sheet.sheet_grossamt, // Total (calculated)
     ]);
@@ -210,7 +218,6 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
   }, []);
 
   const handleCellChange = useCallback((instance: any, cell: any, x: any, y: any, value: any) => {
-    console.log('JSS onchange triggered:', { x, y, value });
     if (!instance || y === undefined) return;
     
     const nx = parseInt(x);
@@ -234,6 +241,23 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         instance.setStyle(cellName, 'color', color);
       } else if (cell) {
         cell.style.color = color;
+      }
+    }
+
+    // UOM Normalization (Column 4: Sat)
+    if (nx === 4 && value && normalizerRef.current) {
+      const normalized = normalizerRef.current.normalize(value);
+      if (normalized !== value) {
+        // Use a small timeout or check to prevent recursive loops if necessary
+        // but normalized === value check should handle it.
+        instance.setValueFromCoords(4, ny, normalized, true);
+        
+        // Visual feedback
+        const cellName = String.fromCharCode(65 + 4) + (ny + 1);
+        instance.setStyle(cellName, 'background-color', '#fef3c7');
+        setTimeout(() => {
+          instance.setStyle(cellName, 'background-color', '');
+        }, 1500);
       }
     }
 
@@ -285,7 +309,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       { type: 'numeric', name: 'qty', title: 'Vol', width: 120, mask: '#,##0.00', align: 'right' },
       { 
         type: 'text', 
-        name: 'uom_name', 
+        name: 'uom_code', 
         title: 'Sat', 
         width: 150,
         align: 'center'

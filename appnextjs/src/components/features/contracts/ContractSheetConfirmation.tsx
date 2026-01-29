@@ -248,7 +248,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
                         {isHeader ? '-' : (sheet.sheet_qty || '0')}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-xs text-center text-gray-500">
-                        {isHeader ? '-' : (sheet.uom_name || '-')}
+                        {isHeader ? '-' : (sheet.uom_code || '-')}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-700 dark:text-gray-300">
                         {isHeader ? '-' : (sheet.sheet_price ? formatNumeric(sheet.sheet_price.toString()) : '0')}

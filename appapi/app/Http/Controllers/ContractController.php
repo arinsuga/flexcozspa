@@ -137,6 +137,7 @@ class ContractController extends Controller
             $headerData['sheet_grossamt2'] = $headerGrossAmt;
             $headerData['sheet_netamt'] = $headerGrossAmt;
             $headerData['sheet_netamt2'] = $headerGrossAmt;
+            $headerData['sheet_realamt'] = $headerGrossAmt;
             $headerData['contract_id'] = $contract->id;
             $headerData['project_id'] = $contract->project_id;
 
@@ -166,6 +167,7 @@ class ContractController extends Controller
             $price = $itemData['sheet_price'] ?? 0;
             $itemData['sheet_grossamt'] = $qty * $price;
             $itemData['sheet_netamt'] = $qty * $price;
+            $itemData['sheet_realamt'] = $qty * $price;
             $itemData['contract_id'] = $contract->id;
             $itemData['project_id'] = $contract->project_id;
 

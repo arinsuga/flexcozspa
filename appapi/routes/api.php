@@ -108,6 +108,9 @@ Route::apiResource('vendortypes', 'VendorTypeController');
 // Units of Measure API
 Route::apiResource('uoms', 'UomController');
 
+// UOM Normalizations API
+Route::apiResource('uom-normalizations', 'UomNormalizationController');
+
 // Reference Types API
 Route::apiResource('refftypes', 'RefftypeController');
 

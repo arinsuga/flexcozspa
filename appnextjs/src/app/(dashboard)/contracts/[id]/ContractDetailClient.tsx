@@ -4,8 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useContract, useContractMutations } from '@/hooks/useContracts';
 import { useContractStatuses } from '@/hooks/useContractStatuses';
 import { useProject } from '@/hooks/useProjects';
-import { useQuery } from '@tanstack/react-query';
-import { uomService } from '@/services/uomService';
 import Button from '@/components/common/Button';
 import ContractSheetTable from '@/components/features/contracts/ContractSheetTable';
 import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
@@ -36,10 +34,6 @@ export default function ContractDetailClient({
 }: ContractDetailClientProps) {
   const router = useRouter();
   const { data: contractData, isLoading: isContractLoading } = useContract(id);
-  const { data: uomsData, isLoading: isUomsLoading } = useQuery({
-    queryKey: ['uoms'],
-    queryFn: () => uomService.getAll(),
-  });
   const { data: sheetGroupsData, isLoading: isSheetGroupsLoading } = useSheetGroupsByType(0);
   const { data: statusesData, isLoading: isStatusesLoading } = useContractStatuses();
   const { updateContract: updateContractMutation, createContract: createContractMutation } = useContractMutations();
@@ -86,9 +80,6 @@ export default function ContractDetailClient({
     }
   }, [sheetGroups, activeTabId]);
 
-  const uoms = useMemo(() => {
-    return Array.isArray(uomsData) ? uomsData : (uomsData?.data || []);
-  }, [uomsData]);
 
   // Sync current tab data to localSheets
   const syncCurrentTabToLocal = useCallback(() => {
@@ -187,7 +178,7 @@ export default function ContractDetailClient({
   };
 
   // Loading states
-  if ((isContractLoading && id !== 'new') || isUomsLoading || isSheetGroupsLoading || isStatusesLoading || (isProjectLoading && contract?.project_id)) {
+  if ((isContractLoading && id !== 'new') || isSheetGroupsLoading || isStatusesLoading || (isProjectLoading && contract?.project_id)) {
     return <div className="p-6">Loading...</div>;
   }
   
@@ -388,7 +379,6 @@ export default function ContractDetailClient({
               key={`sheet-tab-${activeTabId}`}
               ref={sheetRef} 
               data={filteredSheets} 
-              uoms={uoms}
               contractId={id}
               projectId={safeContract.project_id || 0}
               sheetgroupId={activeTabId}

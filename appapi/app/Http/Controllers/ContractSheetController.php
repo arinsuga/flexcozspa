@@ -64,7 +64,7 @@ class ContractSheetController extends Controller
             '*.sheet_netamt2' => 'nullable|numeric',
             '*.sheet_realamt' => 'nullable|numeric',
             '*.uom_id' => 'required|integer|exists:uoms,id',
-            '*.uom_name' => 'required|string|max:255',
+            '*.uom_code' => 'required|string|max:255',
             '*.sheetgroup_seqno' => 'nullable|integer',
             '*.sheet_seqno' => 'nullable|integer',
         ]);

@@ -24,7 +24,6 @@ const menuItems: MenuItem[] = [
     subItems: [
       { name: 'Vendor Type Management', path: '/vendor-types', icon: 'category' },
       { name: 'Reff Type Management', path: '/reff-types', icon: 'label' },
-      { name: 'UOM Management', path: '/uoms', icon: 'square_foot' },
       { name: 'Sheet Group Management', path: '/sheet-groups', icon: 'view_module' },
     ]
   },

@@ -73,7 +73,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
           // 5: vendor_name
           // 6: sheet_description
           // 7: sheet_qty
-          // 8: uom_name
+          // 8: uom_code
           // 9: sheet_price
           // 10: total (calc)
           // 11: vendor_id (hidden)
@@ -87,7 +87,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
             vendor_name,
             sheet_description,
             sheet_qty,
-            uom_name,
+            uom_code,
             sheet_price,
             total,
             vendor_id
@@ -112,7 +112,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
             vendor_name: vendor_name ? String(vendor_name) : '',
             sheet_description: sheet_description ? String(sheet_description) : '',
             sheet_qty: qtyNum,
-            uom_name: uom_name ? String(uom_name) : '',
+            uom_code: uom_code ? String(uom_code) : '',
             sheet_price: priceNum,
             sheet_grossamt: totalVal,
             sheet_netamt: totalVal,
@@ -134,7 +134,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
       item.vendor_name || (item.vendor?.vendor_name) || '',
       item.sheet_description || '',
       item.sheet_qty || null,
-      item.uom_name || (item.uom?.uom_name) || '',
+      item.uom_code || (item.uom?.uom_code) || '',
       item.sheet_price || null,
       (item.sheet_qty && item.sheet_price) ? (item.sheet_qty * item.sheet_price) : null,
       item.vendor_id || (item.vendor?.id) || null,
@@ -255,7 +255,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
       },
       { type: 'text', name: 'sheet_description', title: 'Description', width: 300, wordWrap: true },
       { type: 'numeric', name: 'sheet_qty', title: 'Vol', width: 80, mask: '#,##0.00', align: 'right' },
-      { type: 'text', name: 'uom_name', title: 'Sat', width: 60, align: 'center' },
+      { type: 'text', name: 'uom_code', title: 'Sat', width: 60, align: 'center' },
       { type: 'numeric', name: 'sheet_price', title: 'H.Satuan', width: 120, mask: '#,##0.00', align: 'right' },
       { 
         type: 'numeric', 

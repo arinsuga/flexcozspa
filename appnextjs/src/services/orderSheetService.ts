@@ -11,7 +11,7 @@ export interface OrderSheet {
   vendor_name?: string;
   sheet_description?: string;
   sheet_qty: number;
-  uom_name?: string;
+  uom_code?: string;
   sheet_price: number;
   sheet_grossamt: number;
   sheet_netamt: number;

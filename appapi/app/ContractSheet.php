@@ -47,7 +47,7 @@ class ContractSheet extends Model
         'sheet_netamt2',
         'sheet_realamt',
         'uom_id',
-        'uom_name',
+        'uom_code',
         'sheetgroup_seqno',
         'sheet_seqno',
     ];
@@ -76,12 +76,17 @@ class ContractSheet extends Model
         return $this->hasMany('App\Ordersheet', 'contractsheets_id');
     }
 
-    /**
-     * Get the uom associated with the contract sheet.
-     */
     public function uom()
     {
         return $this->belongsTo('App\Uom', 'uom_id');
+    }
+
+    /**
+     * Get the UOM normalization associated with the contract sheet.
+     */
+    public function uomNormalization()
+    {
+        return $this->belongsTo('App\UomNormalization', 'uom_code', 'uom_code');
     }
 
 }

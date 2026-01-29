@@ -317,5 +317,6 @@ class ProjectsTableSeeder extends Seeder
         ];
 
         DB::table('projects')->insert($projects);
+
     }
 }

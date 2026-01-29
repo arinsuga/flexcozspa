@@ -57,7 +57,7 @@ class OrdersheetsTableSeeder extends Seeder
                     'sheet_netamt' => $net,
 
                     'uom_id' => 1, // PCS
-                    'uom_name' => 'Pieces',
+                    'uom_code' => 'Pieces',
 
                     'sheet_payment_dt' => null,
                     'sheet_payment_status' => 'Pending',

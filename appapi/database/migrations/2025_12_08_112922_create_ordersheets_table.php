@@ -40,7 +40,7 @@ class CreateOrdersheetsTable extends Migration
             $table->decimal('sheet_netamt', 10, 2)->nullable();
 
             $table->bigInteger('uom_id')->nullable();
-            $table->string('uom_name')->nullable();
+            $table->string('uom_code')->nullable();
 
             $table->date('sheet_payment_dt')->nullable();
             $table->string('sheet_payment_status')->nullable();
