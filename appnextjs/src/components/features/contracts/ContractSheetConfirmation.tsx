@@ -185,13 +185,13 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-100 dark:bg-gray-900">
               <tr>
+                <th className="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase w-16">Seq</th>
                 <th className="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase">Parent</th>
                 <th className="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase">Code</th>
                 <th className="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase">Description</th>
-                <th className="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase w-16">Seq</th>
-                <th className="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase">Qty</th>
-                <th className="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase">UOM</th>
-                <th className="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase">Price</th>
+                <th className="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase">Vol</th>
+                <th className="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase">Sat</th>
+                <th className="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase">H.Satuan</th>
                 <th className="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase">Total</th>
               </tr>
             </thead>
@@ -217,6 +217,9 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
                         hover:bg-gray-50 dark:hover:bg-gray-700/50
                       `}
                     >
+                      <td className="px-4 py-2 whitespace-nowrap text-xs text-right text-gray-400 font-mono">
+                        {sheet.sheetgroup_seqno}
+                      </td>
                       <td className="px-4 py-2 whitespace-nowrap text-xs font-mono text-gray-400">
                         {sheet.parent_code || ''}
                       </td>
@@ -239,9 +242,6 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
                             Header
                           </span>
                         )}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-xs text-right text-gray-400 font-mono">
-                        {sheet.sheetgroup_seqno}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-700 dark:text-gray-300">
                         {isHeader ? '-' : (sheet.sheet_qty || '0')}
