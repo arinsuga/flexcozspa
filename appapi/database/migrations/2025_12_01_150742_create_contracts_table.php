@@ -28,8 +28,8 @@ class CreateContractsTable extends Migration
             $table->date('contract_enddt')->nullable();
 
             $table->date('contract_payment_dt')->nullable();
-            $table->decimal('contract_amount', 15, 2)->nullable();
-            $table->decimal('contract_payment', 15, 2)->nullable();
+            $table->decimal('contract_amount', 20, 2)->nullable();
+            $table->decimal('contract_payment', 20, 2)->nullable();
             $table->string('contract_payment_status')->nullable();
             $table->timestamps();
 

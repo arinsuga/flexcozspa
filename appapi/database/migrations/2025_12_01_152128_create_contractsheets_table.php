@@ -31,18 +31,18 @@ class CreateContractsheetsTable extends Migration
             $table->string('sheet_notes')->nullable();
 
             $table->decimal('sheet_qty', 10, 2)->nullable();
-            $table->decimal('sheet_price', 10, 2)->nullable();
-            $table->decimal('sheet_grossamt', 10, 2)->nullable();
-            $table->decimal('sheet_grossamt2', 10, 2)->nullable();
+            $table->decimal('sheet_price', 20, 2)->nullable();
+            $table->decimal('sheet_grossamt', 20, 2)->nullable();
+            $table->decimal('sheet_grossamt2', 20, 2)->nullable();
 
-            $table->decimal('sheet_discountrate', 10, 2)->nullable();
-            $table->decimal('sheet_discountvalue', 10, 2)->nullable();
-            $table->decimal('sheet_taxrate', 10, 2)->nullable();
-            $table->decimal('sheet_taxvalue', 10, 2)->nullable();
+            $table->decimal('sheet_discountrate', 5, 2)->nullable();
+            $table->decimal('sheet_discountvalue', 20, 2)->nullable();
+            $table->decimal('sheet_taxrate', 5, 2)->nullable();
+            $table->decimal('sheet_taxvalue', 20, 2)->nullable();
             
-            $table->decimal('sheet_netamt', 10, 2)->nullable();
-            $table->decimal('sheet_netamt2', 10, 2)->nullable();
-            $table->decimal('sheet_realamt', 10, 2)->nullable();
+            $table->decimal('sheet_netamt', 20, 2)->nullable();
+            $table->decimal('sheet_netamt2', 20, 2)->nullable();
+            $table->decimal('sheet_realamt', 20, 2)->nullable();
 
             $table->bigInteger('uom_id')->nullable();
             $table->string('uom_code')->nullable();

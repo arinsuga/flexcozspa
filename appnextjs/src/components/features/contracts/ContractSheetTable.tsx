@@ -8,6 +8,7 @@ import { ContractSheet } from '@/services/contractSheetService';
 import wsStyle from '@/utils/wsStyle';
 import { useUomNormalizations } from '@/hooks/useUomNormalizations';
 import { createUomNormalizer } from '@/utils/uomNormalizer';
+import { parseNumeric } from '@/utils/numberFormat';
 
 interface ContractSheetTableProps {
   data: ContractSheet[];
@@ -128,8 +129,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
              return null;
           }
 
-          const qtyNum = hasValue(qty) ? parseFloat(qty) : 0;
-          const priceNum = hasValue(price) ? parseFloat(price) : 0;
+          const qtyNum = parseNumeric(qty);
+          const priceNum = parseNumeric(price);
           const grossAmt = qtyNum * priceNum;
 
           // Requirement 2: sheet_type logic
@@ -152,8 +153,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             sheet_name: description ? String(description) : '',
             sheet_description: description ? String(description) : '',
             sheet_notes: originalSheet?.sheet_notes ? String(originalSheet.sheet_notes) : '',
-            sheet_qty: hasValue(qty) ? parseFloat(qty) : 0,
-            sheet_price: hasValue(price) ? parseFloat(price) : 0,
+            sheet_qty: qtyNum,
+            sheet_price: priceNum,
             sheet_grossamt: parseFloat(grossAmt.toFixed(2)),
             sheet_grossamt2: parseFloat(grossAmt.toFixed(2)),
             sheet_discountrate: 0.00,
@@ -263,20 +264,11 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
 
     if (nx === qtyCol || nx === priceCol) {
       try {
-        const parseVal = (v: any) => {
-          if (v === null || v === undefined || v === '') return 0;
-          if (typeof v === 'string') {
-            const cleaned = v.replace(/[^0-9.-]/g, '');
-            return parseFloat(cleaned) || 0;
-          }
-          return parseFloat(v) || 0;
-        };
-
         const vQty = (nx === qtyCol) ? value : instance.getValueFromCoords(qtyCol, ny);
         const vPrice = (nx === priceCol) ? value : instance.getValueFromCoords(priceCol, ny);
         
-        const qty = parseVal(vQty);
-        const price = parseVal(vPrice);
+        const qty = parseNumeric(vQty);
+        const price = parseNumeric(vPrice);
         const total = qty * price;
 
         if (typeof instance.setValueFromCoords === 'function') {

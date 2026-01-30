@@ -5,8 +5,8 @@
 export const formatNumeric = (value: string | number | undefined | null): string => {
   if (value === '' || value === undefined || value === null) return '';
   
-  // Remove existing commas before parsing
-  const cleanValue = typeof value === 'string' ? value.replace(/,/g, '') : value.toString();
+  // Robust cleaning: keep only digits, dots, and hyphens (removes commas, currency symbols, etc.)
+  const cleanValue = value.toString().replace(/[^0-9.-]/g, '');
   const numericValue = parseFloat(cleanValue);
   
   if (isNaN(numericValue)) return typeof value === 'string' ? value : '';
@@ -18,11 +18,17 @@ export const formatNumeric = (value: string | number | undefined | null): string
 };
 
 /**
- * Removes thousand separators (commas) from a string to make it a valid number string.
+ * Removes thousand separators (commas) from a value and returns a float number.
  */
-export const parseNumeric = (value: string): string => {
-  return value.replace(/,/g, '');
+export const parseNumeric = (value: string | number | undefined | null): number => {
+  if (value === undefined || value === null || value === '') return 0;
+  if (typeof value === 'number') return value;
+  
+  // Robust cleaning: keep only digits, dots, and hyphens (removes commas, currency symbols, etc.)
+  const cleanValue = value.toString().replace(/[^0-9.-]/g, '');
+  return parseFloat(cleanValue) || 0;
 };
+
 
 /**
  * Validates if the input key is allowed for numeric entry (numbers, comma, period).

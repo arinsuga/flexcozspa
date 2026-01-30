@@ -8,6 +8,7 @@ import wsStyle from '@/utils/wsStyle';
 import { useReffTypes } from '@/hooks/useReffTypes';
 import VendorSearchModal from '@/components/features/vendors/VendorSearchModal';
 import { Vendor } from '@/services/vendorService';
+import { parseNumeric } from '@/utils/numberFormat';
 
 interface OrderSheetTableProps {
   data: any[];
@@ -97,8 +98,8 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
             return null;
           }
 
-          const qtyNum = hasValue(sheet_qty) ? parseFloat(sheet_qty) : 0;
-          const priceNum = hasValue(sheet_price) ? parseFloat(sheet_price) : 0;
+          const qtyNum = parseNumeric(sheet_qty);
+          const priceNum = parseNumeric(sheet_price);
           const totalVal = qtyNum * priceNum;
 
           return {
@@ -152,20 +153,11 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
 
     if (nx === qtyCol || nx === priceCol) {
       try {
-        const parseVal = (v: any) => {
-          if (v === null || v === undefined || v === '') return 0;
-          if (typeof v === 'string') {
-            const cleaned = v.replace(/[^0-9.-]/g, '');
-            return parseFloat(cleaned) || 0;
-          }
-          return parseFloat(v) || 0;
-        };
-
         const vQty = (nx === qtyCol) ? value : instance.getValueFromCoords(qtyCol, ny);
         const vPrice = (nx === priceCol) ? value : instance.getValueFromCoords(priceCol, ny);
         
-        const qty = parseVal(vQty);
-        const price = parseVal(vPrice);
+        const qty = parseNumeric(vQty);
+        const price = parseNumeric(vPrice);
         const total = qty * price;
 
         if (typeof instance.setValueFromCoords === 'function') {

@@ -27,7 +27,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
   // Refined processing logic
   const processedSheets = useMemo(() => {
     // 1. Filter: sheet_code is not blank
-    let validRaw = [...rawSheets].filter(s => s.sheet_code && s.sheet_code.toString().trim() !== '');
+    const validRaw = [...rawSheets].filter(s => s.sheet_code && s.sheet_code.toString().trim() !== '');
     
     // Explicitly clean codes (Remove ALL spaces including middle ones)
     const cleanedSheets = validRaw.map(s => ({
@@ -53,9 +53,8 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
       const code = s.sheet_code!;
 
       // Rule: Parenting resolution based on dot count
-      const dotCount = (code.match(/\./g) || []).length;
       const lastDotIndex = code.lastIndexOf('.');
-      const parentCode = dotCount > 1 ? code.substring(0, lastDotIndex) : null;
+      const parentCode = lastDotIndex !== -1 ? code.substring(0, lastDotIndex) : null;
       const parent = parentCode ? codeMap.get(parentCode) : null;
       
       // Rule 3: Set sheet_type (0 if has child, 1 if local item)
@@ -96,8 +95,8 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
       if (item.sheet_type === 0) { // It's a header
         const prefix = item.sheet_code + '.';
         const subTotal = result.reduce((sum, other) => {
-          // Rule: sum upleaf items (sheet_type 1) that are descendants
-          if (other.sheet_type === 1 && other.sheet_code.startsWith(prefix)) {
+          // Rule: sum up items that are descendants
+          if (other.sheet_code.startsWith(prefix)) {
             return sum + (other.sheet_grossamt || 0);
           }
           return sum;
