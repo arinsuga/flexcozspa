@@ -81,4 +81,12 @@ class Contract extends Model
         return $this->hasMany('App\ContractSheet', 'contract_id');
     }
 
+    /**
+     * Summary of orders for this contract.
+     */
+    public function orderSummaries()
+    {
+        return $this->hasMany('App\ContractOrderSummary', 'contract_id');
+    }
+
 }

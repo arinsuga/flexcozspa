@@ -32,6 +32,24 @@ export interface ContractSheet {
   updated_at: string;
 }
 
+export interface ContractOrderSummary {
+  project_id: number;
+  project_number: string;
+  project_name: string;
+  contract_id: number;
+  contract_number: string;
+  contractsheet_id: number;
+  sheetgroup_type: number;
+  sheetgroup_id: number;
+  sheetgroup_code: string;
+  sheet_code: string;
+  sheet_name: string;
+  contract_amout: number; // Mapping backend 'contract_amout' typo
+  contract_amount: number; // For consistency
+  order_amount: number;
+  balance: number;
+}
+
 export const contractSheetService = {
   getByContractId: async (contractId: number | string) => {
     const response = await appApi.get(`contracts/${contractId}/sheets`);
@@ -67,5 +85,20 @@ export const contractSheetService = {
   
   delete: async (sheetId: number | string) => {
       return appApi.delete(`contractsheets/${sheetId}`);
+  },
+
+  getSummaryByContract: async (contractId: number | string) => {
+    const response = await appApi.get(`contractsheets/summary/${contractId}`);
+    return response.data;
+  },
+
+  getSummaryByContractAndSheet: async (contractId: number | string, sheetId: number | string) => {
+    const response = await appApi.get(`contractsheets/summary/${contractId}/${sheetId}`);
+    return response.data;
+  },
+
+  getSummaryByProjectAndContract: async (projectId: number | string, contractId: number | string) => {
+    const response = await appApi.get(`contractsheets/summary/project/${projectId}/contract/${contractId}`);
+    return response.data;
   }
 };

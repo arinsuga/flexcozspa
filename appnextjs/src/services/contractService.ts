@@ -2,7 +2,7 @@ import { appApi } from './api';
 import { ContractStatus } from './contractStatusService';
 import { Project } from './projectService';
 
-import { ContractSheet } from './contractSheetService';
+import { ContractSheet, ContractOrderSummary } from './contractSheetService';
 
 export interface Contract {
   id: number;
@@ -25,6 +25,7 @@ export interface Contract {
   contract_status?: ContractStatus;
   project?: Project;
   contract_sheets?: ContractSheet[];
+  order_summaries?: ContractOrderSummary[];
 }
 
 export const contractService = {

@@ -4,14 +4,19 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Repositories\Contracts\ContractSheetRepositoryInterface;
+use App\Repositories\Contracts\ContractOrderSummaryRepositoryInterface;
 
 class ContractSheetController extends Controller
 {
     protected $repository;
+    protected $summaryRepository;
 
-    public function __construct(ContractSheetRepositoryInterface $repository)
-    {
+    public function __construct(
+        ContractSheetRepositoryInterface $repository,
+        ContractOrderSummaryRepositoryInterface $summaryRepository
+    ) {
         $this->repository = $repository;
+        $this->summaryRepository = $summaryRepository;
         $this->middleware('authjwt');
     }
 
@@ -36,6 +41,27 @@ class ContractSheetController extends Controller
     {
         $contractsheets = $this->repository->getContractSheetsByContract($contractId);
         return response()->json(['data' => $contractsheets], 200);
+    }
+
+    public function getOrderSummaryByContract($contractId)
+    {
+        $summary = $this->summaryRepository->getSummaryByContract($contractId);
+        return response()->json(['data' => $summary], 200);
+    }
+
+    public function getOrderSummaryByContractAndSheet($contractId, $sheetId)
+    {
+        $summary = $this->summaryRepository->getSummaryByContractAndSheet($contractId, $sheetId);
+        if (!$summary) {
+            return response()->json(['error' => 'Summary not found'], 404);
+        }
+        return response()->json(['data' => $summary], 200);
+    }
+
+    public function getOrderSummaryByProjectAndContract($projectId, $contractId)
+    {
+        $summary = $this->summaryRepository->getSummaryByProjectAndContract($projectId, $contractId);
+        return response()->json(['data' => $summary], 200);
     }
 
     public function store(Request $request)

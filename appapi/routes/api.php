@@ -86,6 +86,9 @@ Route::apiResource('projectstatuses', 'ProjectStatusController')->only(['index',
 
 // Contract Sheets API
 Route::apiResource('contractsheets', 'ContractSheetController');
+Route::get('contractsheets/summary/project/{projectId}/contract/{contractId}', 'ContractSheetController@getOrderSummaryByProjectAndContract')->name('contractsheets.summary.by.project.and.contract');
+Route::get('contractsheets/summary/{contractId}', 'ContractSheetController@getOrderSummaryByContract')->name('contractsheets.summary.by.contract');
+Route::get('contractsheets/summary/{contractId}/{contractsheetId}', 'ContractSheetController@getOrderSummaryByContractAndSheet')->name('contractsheets.summary.by.contract.and.sheet');
 Route::get('contracts/{contractId}/sheets', 'ContractSheetController@getByContract')->name('contractsheets.by.contract');
 
 // Ordersheets API

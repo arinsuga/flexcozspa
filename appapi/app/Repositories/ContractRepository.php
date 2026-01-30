@@ -10,12 +10,12 @@ class ContractRepository extends EloquentRepository implements ContractRepositor
 {
     public function all()
     {
-        return $this->data->with(['contractStatus', 'project'])->get();
+        return $this->data->with(['contractStatus', 'project', 'orderSummaries'])->get();
     }
 
     public function getAllPaginated($params)
     {
-        $query = $this->data->with(['contractStatus', 'project']);
+        $query = $this->data->with(['contractStatus', 'project', 'orderSummaries']);
 
         // Search Logic
         if (!empty($params['search_query'])) {
@@ -60,16 +60,16 @@ class ContractRepository extends EloquentRepository implements ContractRepositor
 
     public function find($parId)
     {
-        return $this->data->with(['contractStatus', 'project'])->find($parId);
+        return $this->data->with(['contractStatus', 'project', 'orderSummaries'])->find($parId);
     }
 
     public function getContractByCode($code)
     {
-        return $this->data->with(['contractStatus', 'project'])->where('contract_code', $code)->first();
+        return $this->data->with(['contractStatus', 'project', 'orderSummaries'])->where('contract_code', $code)->first();
     }
 
     public function findWithSheets($id)
     {
-        return $this->data->with(['contractStatus', 'project', 'contractSheets'])->find($id);
+        return $this->data->with(['contractStatus', 'project', 'contractSheets', 'orderSummaries'])->find($id);
     }
 }

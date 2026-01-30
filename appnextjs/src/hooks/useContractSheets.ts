@@ -8,3 +8,11 @@ export const useContractSheets = (contractId: string | number) => {
     enabled: !!contractId,
   });
 };
+
+export const useContractOrderSummaryByProjectAndContract = (projectId: string | number, contractId: string | number) => {
+  return useQuery({
+    queryKey: ['contract-order-summary', projectId, contractId],
+    queryFn: () => contractSheetService.getSummaryByProjectAndContract(projectId, contractId),
+    enabled: !!projectId && !!contractId,
+  });
+};

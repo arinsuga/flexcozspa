@@ -19,6 +19,7 @@ use App\Repositories\Contracts\OrderStatusRepositoryInterface;
 use App\Repositories\Contracts\ContractStatusRepositoryInterface;
 use App\Repositories\Contracts\ProjectStatusRepositoryInterface;
 use App\Repositories\Contracts\UomNormalizationRepositoryInterface;
+use App\Repositories\Contracts\ContractOrderSummaryRepositoryInterface;
 
 // Repository Implementations
 use App\Repositories\ProjectRepository;
@@ -35,6 +36,7 @@ use App\Repositories\Eloquents\OrderStatusRepository;
 use App\Repositories\ContractStatusRepository;
 use App\Repositories\ProjectStatusRepository;
 use App\Repositories\UomNormalizationRepository;
+use App\Repositories\ContractOrderSummaryRepository;
 
 // Models
 use App\Project;
@@ -51,6 +53,7 @@ use App\OrderStatus;
 use App\ContractStatus;
 use App\ProjectStatus;
 use App\UomNormalization;
+use App\ContractOrderSummary;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -123,6 +126,11 @@ class RepositoryServiceProvider extends ServiceProvider
         // UomNormalization Repository Binding
         $this->app->bind(UomNormalizationRepositoryInterface::class, function ($app) {
             return new UomNormalizationRepository(new UomNormalization());
+        });
+
+        // ContractOrderSummary Repository Binding
+        $this->app->bind(ContractOrderSummaryRepositoryInterface::class, function ($app) {
+            return new ContractOrderSummaryRepository(new ContractOrderSummary());
         });
     }
 
