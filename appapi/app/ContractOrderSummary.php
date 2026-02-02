@@ -14,13 +14,6 @@ class ContractOrderSummary extends Model
 
     protected $appends = ['balance'];
 
-    /**
-     * Handle the typo 'contract_amout' from the view script.
-     */
-    public function getContractAmountAttribute()
-    {
-        return $this->attributes['contract_amout'] ?? 0;
-    }
 
     /**
      * Calculate balance: contract_amount - order_amount.

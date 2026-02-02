@@ -69,7 +69,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
       const errors: string[] = [];
       
       // Check for duplicated codes
-      const isDuplicate = cleanedSheets.filter(other => other.sheet_code === code).length > 1;
+      const isDuplicate = (cleanedSheets || []).filter(other => other.sheet_code === code).length > 1;
       if (isDuplicate) {
         errors.push(`Duplicate code detected: "${code}"`);
       }
@@ -116,7 +116,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
 
   const handleSaveClick = () => {
     // Only save if no validation errors (or let the user decide, but usually we block if invalid)
-    const hasErrors = processedSheets.some(s => s.validation_errors.length > 0);
+    const hasErrors = (processedSheets || []).some(s => (s.validation_errors?.length || 0) > 0);
     if (hasErrors) {
       alert('Please fix validation errors before saving.');
       return;
@@ -196,7 +196,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {processedSheets.length === 0 ? (
+              {(processedSheets?.length || 0) === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-10 text-center text-sm text-gray-400 italic">
                     No valid sheets found. Ensure rows have a "Code" entered in Step 2.
@@ -204,7 +204,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
                 </tr>
               ) : (
                 processedSheets.map((sheet: any, index: number) => {
-                  const hasErrors = sheet.validation_errors.length > 0;
+                  const hasErrors = (sheet.validation_errors?.length || 0) > 0;
                   const isHeader = sheet.sheet_type === 0;
 
                   return (

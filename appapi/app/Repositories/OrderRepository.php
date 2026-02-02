@@ -27,11 +27,45 @@ class OrderRepository extends EloquentRepository implements OrderRepositoryInter
         return $this->data->with(['status', 'project', 'contract', 'ordersheets'])->find($id);
     }
 
+    public function create($data)
+    {
+        $order = $this->data->create($data);
+        
+        if (isset($data['order_items']) && is_array($data['order_items'])) {
+            foreach ($data['order_items'] as $item) {
+                // Ensure link to parent order
+                $item['order_id'] = $order->id;
+                $item['order_number'] = $order->order_number;
+                $item['order_dt'] = $order->order_dt;
+                $item['project_id'] = $order->project_id;
+                $item['contract_id'] = $order->contract_id;
+                
+                $order->ordersheets()->create($item);
+            }
+        }
+
+        return $order->fresh(['status', 'project', 'contract', 'ordersheets']);
+    }
+
     public function update($id, $data)
     {
         $order = $this->find($id);
         if ($order) {
             $order->update($data);
+            
+            if (isset($data['order_items']) && is_array($data['order_items'])) {
+                // Delete existing ones and recreate for simplicity
+                $order->ordersheets()->delete();
+                foreach ($data['order_items'] as $item) {
+                    $item['order_id'] = $order->id;
+                    $item['order_number'] = $order->order_number;
+                    $item['order_dt'] = $order->order_dt;
+                    $item['project_id'] = $order->project_id;
+                    $item['contract_id'] = $order->contract_id;
+                    
+                    $order->ordersheets()->create($item);
+                }
+            }
             return $order->fresh();
         }
         return null;

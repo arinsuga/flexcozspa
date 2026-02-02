@@ -9,16 +9,19 @@ import OrderSheetTable from '@/components/features/orders/OrderSheetTable';
 import { useRef, useState, useMemo, useEffect } from 'react';
 import { Order } from '@/services/orderService';
 import { useOrderSheets } from '@/hooks/useOrderSheets';
+import { OrderSheet } from '@/services/orderSheetService';
 
 interface OrderDetailClientProps {
   id: string;
   initialData?: Partial<Order>;
   mode?: 'create' | 'edit' | 'view';
   onBack?: () => void;
+  onSubmit?: (data: Partial<Order>) => void;
+  submitLabel?: string;
   readOnlyInfo?: boolean;
 }
 
-export default function OrderDetailClient({ id, initialData, mode = 'view', onBack, readOnlyInfo = false }: OrderDetailClientProps) {
+export default function OrderDetailClient({ id, initialData, mode = 'view', onBack, onSubmit, submitLabel, readOnlyInfo = false }: OrderDetailClientProps) {
   const router = useRouter();
   const { data: orderResponse, isLoading: isOrderLoading } = useOrder(id);
   const { data: projectsData } = useProjects();
@@ -40,19 +43,25 @@ export default function OrderDetailClient({ id, initialData, mode = 'view', onBa
     }
   }, [fetchedOrder, order, initialData]);
 
-  const [localSheets, setLocalSheets] = useState<any[]>([]);
+  const [localSheets, setLocalSheets] = useState<OrderSheet[]>([]);
   const [hasInitializedSheets, setHasInitializedSheets] = useState(false);
   const sheetRef = useRef<any>(null);
 
+
   // Sync localSheets with API data once
   useEffect(() => {
-    if (sheetsData && !hasInitializedSheets) {
+    if (hasInitializedSheets) return;
+
+    const itemsFromProps = (initialData as any)?.order_items;
+    
+    if (Array.isArray(itemsFromProps)) {
+       setLocalSheets(itemsFromProps);
+       setHasInitializedSheets(true);
+    } else if (sheetsData && id !== 'new') {
        setLocalSheets(sheetsData);
        setHasInitializedSheets(true);
-    } else if (initialData && !hasInitializedSheets) {
-       setHasInitializedSheets(true);
     }
-  }, [sheetsData, initialData, hasInitializedSheets]);
+  }, [sheetsData, initialData, hasInitializedSheets, id]);
 
   const handleHeaderChange = (field: keyof Order, value: any) => {
     setOrder(prev => prev ? ({ ...prev, [field]: value }) : null);
@@ -61,15 +70,20 @@ export default function OrderDetailClient({ id, initialData, mode = 'view', onBa
   const handleSave = async () => {
     if (!order) return;
     
-    // Get latest data from table
-    const tableData = sheetRef.current?.getSheetData() || [];
+    // Latest data from the table
+    const allRowsToSave: Partial<OrderSheet>[] = sheetRef.current?.getSheetData() || [];
 
     const payload = {
        ...order,
        project_id: order.project_id ? Number(order.project_id) : undefined,
        contract_id: order.contract_id ? Number(order.contract_id) : undefined,
-       order_items: tableData // Assuming order_items is what the backend expects for bulk save
+       order_items: allRowsToSave // Transitioning to order_items for consistency
     };
+
+    if (onSubmit) {
+      onSubmit(payload);
+      return;
+    }
 
     try {
       if (mode === 'create' || id === 'new') {
@@ -112,11 +126,11 @@ export default function OrderDetailClient({ id, initialData, mode = 'view', onBa
             <Button variant="ghost" onClick={onBack || (() => router.back())} leftIcon="arrow_back">Back</Button>
             <Button 
               variant="primary" 
-              leftIcon="save" 
+              leftIcon={onSubmit ? 'arrow_forward' : 'save'} 
               onClick={handleSave} 
               isLoading={updateOrderMutation.isPending || createOrderMutation.isPending}
             >
-              {mode === 'create' ? 'Save Order' : 'Save Changes'}
+              {submitLabel || (mode === 'create' ? 'Save Order' : 'Save Changes')}
             </Button>
           </div>
         </div>
@@ -205,14 +219,14 @@ export default function OrderDetailClient({ id, initialData, mode = 'view', onBa
             </div>
         </div>
 
-        <div className="pt-4">
-             <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Order Items</h4>
-             <OrderSheetTable 
-               ref={sheetRef} 
-               data={localSheets} 
-               orderId={id} 
-               projectId={Number(safeOrder.project_id) || 0} 
-             />
+        <div className="pt-4 space-y-4">
+               <OrderSheetTable 
+                 ref={sheetRef} 
+                 data={localSheets} 
+                 orderId={id} 
+                 projectId={Number(safeOrder.project_id) || 0} 
+                 contractId={Number(safeOrder.contract_id) || 0}
+               />
         </div>
       </div>
     </div>

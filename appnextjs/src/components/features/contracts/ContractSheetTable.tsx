@@ -29,7 +29,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
 
   // Build normalizer when config loads
   useEffect(() => {
-    if (normalizationConfig.length > 0) {
+    if (Array.isArray(normalizationConfig) && normalizationConfig.length > 0) {
       normalizerRef.current = createUomNormalizer(normalizationConfig);
     }
   }, [normalizationConfig]);
@@ -86,7 +86,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         return hasValue(code);
       });
       
-      const removedCount = rawData.length - cleanedData.length;
+      const removedCount = (rawData?.length || 0) - (cleanedData?.length || 0);
       
       // For jspreadsheet-ce v5, to strictly shrink the table, we might need to reset dimensions
       // but setData usually works if we don't have minDimensions blocking it.
@@ -290,7 +290,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     jInstance.current = null;
 
     // Use Array.from to avoid shared references between rows
-    const initialData = data && data.length > 0 
+    const initialData = Array.isArray(data) && data.length > 0 
       ? transformToSheetData(data)
       : Array.from({ length: 100 }, () => [null, '', '', null, '', null, null]);
 
@@ -368,7 +368,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
   // Watch for external data changes
   useEffect(() => {
     const instance = getJInstance();
-    if (instance && typeof instance.getData === 'function' && data && data.length > 0) {
+    if (instance && typeof instance.getData === 'function' && Array.isArray(data) && data.length > 0) {
       const currentData = instance.getData();
       const newData = transformToSheetData(data);
       

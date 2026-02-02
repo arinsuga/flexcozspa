@@ -15,6 +15,11 @@ export interface OrderSheet {
   sheet_price: number;
   sheet_grossamt: number;
   sheet_netamt: number;
+  sheet_type?: number;
+  sheetgroup_id?: number;
+  sheetgroup_type?: number;
+  sheet_seqno?: number;
+  available_amount?: number;
   project?: any;
   contract?: any;
   contractsheet?: any;
@@ -23,6 +28,7 @@ export interface OrderSheet {
   vendortype?: any;
   vendor?: any;
   uom?: any;
+  validation_errors?: string[];
 }
 
 export const orderSheetService = {

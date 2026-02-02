@@ -37,7 +37,7 @@ const SheetComponent = forwardRef((props: SheetComponentProps, ref) => {
       worksheets: [{
         data: data,
         columns: columns,
-        minDimensions: [columns.length || 5, 10], 
+        minDimensions: [(columns?.length || 0) || 5, 10], 
         tableOverflow: true,
         tableWidth: '100%',
         tableHeight: '500px',
@@ -79,7 +79,7 @@ const SheetComponent = forwardRef((props: SheetComponentProps, ref) => {
 
   // Watch for data changes
   useEffect(() => {
-     if (jInstance.current && jInstance.current[0] && data && data.length > 0) {
+     if (jInstance.current && jInstance.current[0] && Array.isArray(data) && data.length > 0) {
          const currentData = jInstance.current[0].getJson();
          if (JSON.stringify(currentData) !== JSON.stringify(data)) {
             jInstance.current[0].setData(data);

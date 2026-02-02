@@ -9,11 +9,11 @@ export default function Stepper({ steps, currentStep }: StepperProps) {
   return (
     <div className="w-full py-4">
       <div className="flex items-center justify-center">
-        {steps.map((step, index) => {
+        {(Array.isArray(steps) ? steps : []).map((step, index) => {
           const stepNumber = index + 1;
           const isCompleted = stepNumber < currentStep;
           const isActive = stepNumber === currentStep;
-          const isLast = index === steps.length - 1;
+          const isLast = index === (steps?.length || 0) - 1;
 
           return (
             <React.Fragment key={step}>

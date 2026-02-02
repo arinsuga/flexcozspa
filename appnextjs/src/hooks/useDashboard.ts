@@ -25,8 +25,8 @@ export const useDashboardStats = () => {
 
       return {
         activeContractsValue: totalActiveContractValue,
-        ordersCount: orders.length, 
-        projectsCount: projects.filter((p: Project) => p.is_active === 1).length,
+        ordersCount: Array.isArray(orders) ? orders.length : 0, 
+        projectsCount: Array.isArray(projects) ? projects.filter((p: Project) => p.is_active === 1).length : 0,
       };
     },
   });

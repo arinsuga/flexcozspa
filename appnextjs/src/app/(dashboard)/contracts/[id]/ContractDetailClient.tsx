@@ -75,7 +75,7 @@ export default function ContractDetailClient({
 
   // Initialize activeTabId when sheetGroups are loaded
   useEffect(() => {
-    if (sheetGroups.length > 0 && activeTabId === null) {
+    if (Array.isArray(sheetGroups) && sheetGroups.length > 0 && activeTabId === null) {
       setActiveTabId(sheetGroups[0].id);
     }
   }, [sheetGroups, activeTabId]);
