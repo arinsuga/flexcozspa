@@ -115,7 +115,9 @@ export default function ContractDetailClient({
   // Filter localSheets based on current tab
   const filteredSheets = useMemo(() => {
     if (activeTabId === null) return [];
-    return localSheets.filter((s: ContractSheet) => s.sheetgroup_id === activeTabId);
+    return localSheets
+      .filter((s: ContractSheet) => s.sheetgroup_id === activeTabId)
+      .sort((a, b) => (a.sheet_seqno || 0) - (b.sheet_seqno || 0));
   }, [localSheets, activeTabId]);
 
   const handleHeaderChange = (field: keyof Contract, value: any) => {
@@ -140,10 +142,10 @@ export default function ContractDetailClient({
       }))
     ];
 
-    // Sort sheets by sheetgroup_id sequentially (A-I)
+    // Sort sheets by sheetgroup_seqno then sheet_seqno
     const sortedSheets = [...allRowsToSave].sort((a, b) => {
-      if (a.sheetgroup_id !== b.sheetgroup_id) {
-        return (a.sheetgroup_id || 0) - (b.sheetgroup_id || 0);
+      if (a.sheetgroup_seqno !== b.sheetgroup_seqno) {
+        return (a.sheetgroup_seqno || 0) - (b.sheetgroup_seqno || 0);
       }
       return (a.sheet_seqno || 0) - (b.sheet_seqno || 0);
     });

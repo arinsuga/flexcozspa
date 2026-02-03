@@ -36,8 +36,11 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
       sheet_code: s.sheet_code!.toString().replace(/\s+/g, '')
     }));
 
-    // 2. Sort by sequence number
+    // 2. Sort by sheetgroup_seqno then sheet_seqno
     cleanedSheets.sort((a, b) => {
+      if (a.sheetgroup_seqno !== b.sheetgroup_seqno) {
+        return (a.sheetgroup_seqno || 0) - (b.sheetgroup_seqno || 0);
+      }
       return (a.sheet_seqno || 0) - (b.sheet_seqno || 0);
     });
 
@@ -82,8 +85,8 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
         parent_code: parentCode,
         sheetheader_id: parent?.id || null, 
         sheet_type: hasChild ? 0 : 1,
-        sheetgroup_seqno: seqNo,
-        sheet_seqno: seqNo,
+        sheetgroup_seqno: s.sheetgroup_seqno || seqNo,
+        sheet_seqno: s.sheet_seqno || seqNo,
         validation_errors: errors
       };
     });
@@ -210,7 +213,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
               {(processedSheets?.length || 0) === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-10 text-center text-sm text-gray-400 italic">
-                    No valid sheets found. Ensure rows have a "Code" entered in Step 2.
+                    No valid sheets found. Ensure rows have a &quot;Code&quot; entered in Step 2.
                   </td>
                 </tr>
               ) : (

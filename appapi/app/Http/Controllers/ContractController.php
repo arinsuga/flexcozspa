@@ -158,7 +158,10 @@ class ContractController extends Controller
                     $tempIdMap[$headerTempId] = $newHeader->id;
                 }
             } else {
-                $contract->contractSheets()->where('id', $headerId)->update($filteredHeaderData);
+                $headerSheet = $contract->contractSheets()->find($headerId);
+                if ($headerSheet) {
+                    $headerSheet->update($filteredHeaderData);
+                }
             }
         }
 
@@ -193,7 +196,10 @@ class ContractController extends Controller
             if (!is_numeric($itemId)) {
                 $contract->contractSheets()->create($filteredItemData);
             } else {
-                $contract->contractSheets()->where('id', $itemId)->update($filteredItemData);
+                $itemSheet = $contract->contractSheets()->find($itemId);
+                if ($itemSheet) {
+                    $itemSheet->update($filteredItemData);
+                }
             }
         }
     }

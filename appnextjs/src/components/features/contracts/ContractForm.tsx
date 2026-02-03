@@ -8,8 +8,8 @@ import Link from 'next/link';
 import SelectInput from '@/components/common/SelectInput';
 import Input from '@/components/common/Input';
 import Textarea from '@/components/common/Textarea';
-import { useContractStatuses } from '@/hooks/useContractStatuses';
-import { ContractStatus } from '@/services/contractStatusService';
+// import { useContractStatuses } from '@/hooks/useContractStatuses';
+// import { ContractStatus } from '@/services/contractStatusService';
 import { formatNumeric, parseNumeric } from '@/utils/numberFormat';
 
 interface ContractFormProps {
@@ -23,8 +23,7 @@ export default function ContractForm({ initialData, onSubmit, isLoading, submitL
   const { data: projectsData } = useProjects();
   const projects = (projectsData?.data || []) as Project[];
   
-  const { data: statusData } = useContractStatuses();
-  const statuses = (statusData || []) as ContractStatus[];
+
 
   // Get current date in YYYY-MM-DD format
   const getCurrentDate = () => {
@@ -165,20 +164,7 @@ export default function ContractForm({ initialData, onSubmit, isLoading, submitL
            />
         </div>
 
-        <div className="sm:col-span-3">
-           <SelectInput
-             label="Status *"
-             name="contractstatus_id"
-             required
-             options={statuses.map(status => ({
-               value: status.id,
-               label: status.name
-             }))}
-             value={formData.contractstatus_id}
-             onChange={(value) => setFormData(prev => ({ ...prev, contractstatus_id: value as number }))}
-             placeholder="Select Status"
-           />
-        </div>
+
 
         <div className="sm:col-span-3">
           <Input

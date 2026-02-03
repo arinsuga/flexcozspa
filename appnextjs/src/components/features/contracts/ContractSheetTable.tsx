@@ -167,7 +167,6 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             sheet_realamt: parseFloat(grossAmt.toFixed(2)),
             uom_id: originalSheet?.uom_id ? parseInt(originalSheet.uom_id as unknown as string) : 1,
             uom_code: uom_code ? String(uom_code) : (originalSheet?.uom_code || ''),
-            sheetgroup_seqno: index + 1,
             sheet_seqno: index + 1,
           };
 
@@ -184,9 +183,9 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       sheet.id,
       sheet.sheet_code,
       sheet.sheet_description,
-      sheet.sheet_qty,
+      sheet.sheet_type === 0 ? null : sheet.sheet_qty,
       sheet.uom_code,
-      sheet.sheet_price,
+      sheet.sheet_type === 0 ? null : sheet.sheet_price,
       sheet.sheet_grossamt, // Total (calculated)
     ]);
   }, []);

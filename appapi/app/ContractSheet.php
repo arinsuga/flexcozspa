@@ -12,6 +12,25 @@ class ContractSheet extends Model
     protected $table = 'contractsheets';
 
     /**
+     * The "booting" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($model) {
+            if ($model->sheetgroup_id) {
+                $sheetGroup = \App\SheetGroup::find($model->sheetgroup_id);
+                if ($sheetGroup) {
+                    $model->sheetgroup_seqno = $sheetGroup->sheetgroup_seqno;
+                }
+            }
+        });
+    }
+
+    /**
      * The attributes that should be cast to native types.
      */
     protected $dates = [

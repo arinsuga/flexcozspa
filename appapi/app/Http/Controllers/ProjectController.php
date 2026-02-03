@@ -37,7 +37,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'project_number' => 'required|unique:projects,project_number',
             'project_name' => 'required|string',
-            'projectstatus_id' => 'nullable|integer|exists:projectstatuses,id',
+            'projectstatus_id' => 'nullable|integer',
         ]);
 
         $project = $this->repository->create($request->all());
@@ -55,7 +55,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'project_number' => 'unique:projects,project_number,' . $id,
             'project_name' => 'string',
-            'projectstatus_id' => 'nullable|integer|exists:projectstatuses,id',
+            'projectstatus_id' => 'nullable|integer',
         ]);
 
         $updated = $this->repository->update($id, $request->all());

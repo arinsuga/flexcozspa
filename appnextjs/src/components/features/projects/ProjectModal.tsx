@@ -58,6 +58,7 @@ export default function ProjectModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('ProjectModal handleSubmit triggered');
     const payload = {
         ...formData,
         project_startdt: formData.project_startdt || null,
@@ -66,6 +67,7 @@ export default function ProjectModal({
         project_number: formData.project_number || null,
         projectstatus_id: formData.projectstatus_id || 1, // Default to 1 (Approved)
     };
+    console.log('ProjectModal payload:', payload);
     onSubmit(payload);
   };
 
@@ -91,6 +93,7 @@ export default function ProjectModal({
           name="project_number"
           value={formData.project_number || ''}
           onChange={handleChange}
+          required
           error={errors?.project_number?.[0]}
         />
         
@@ -121,6 +124,10 @@ export default function ProjectModal({
               error={errors?.project_enddt?.[0]}
             />
         </div>
+
+        {errors?.projectstatus_id && (
+          <p className="text-sm text-error">{errors.projectstatus_id[0]}</p>
+        )}
 
         <div className="flex justify-end gap-3 mt-6">
             <Button variant="ghost" type="button" onClick={onClose}>

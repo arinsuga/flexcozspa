@@ -149,7 +149,7 @@ class ContractSheetControllerTest extends TestCase
             'sheetgroup_id' => 1,
             'sheetgroup_type' => 1,
             'uom_id' => 1,
-            'uom_name' => 'Kilogram',
+            'uom_code' => 'PCS',
         ];
 
         $createdContractSheet = array_merge(['id' => 3], $contractSheetData);
@@ -190,7 +190,7 @@ class ContractSheetControllerTest extends TestCase
             ->postJson('/contractsheets', [[]]); 
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['0.project_id', '0.contract_id', '0.sheetgroup_id', '0.uom_id', '0.uom_name']);
+            ->assertJsonValidationErrors(['0.project_id', '0.contract_id', '0.sheetgroup_id', '0.uom_id', '0.uom_code']);
     }
 
     /** @test */

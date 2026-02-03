@@ -23,7 +23,7 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
   const project = projectData?.data || projectData;
   const { data: contractData } = useContract(order.contract_id || '');
   const contract = contractData?.data || contractData;
-  const { data: summaryDataResponse } = useContractOrderSummary(order.contract_id || 0);
+  const { data: summaryDataResponse } = useContractOrderSummary(order.contract_id || 0, order.id);
 
   const summaryData = useMemo(() => {
     const raw = summaryDataResponse?.data || summaryDataResponse;
@@ -57,7 +57,11 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
       const seqNo = index + 1;
       const errors: string[] = [];
       const grossAmt = Number(s.sheet_grossamt) || 0;
-      const availableAmt = Number(s.available_amount) || 0;
+      
+      // 4. Existence check in contract
+      const contractMatch = summaryData.find((cs: ContractOrderSummary) => cs.sheet_code === code);
+      
+      const availableAmt = contractMatch ? Number(contractMatch.available_amount) : (Number(s.available_amount) || 0);
       const qty = Number(s.sheet_qty) || 0;
       const vendorId = s.vendor_id;
       
@@ -80,8 +84,7 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
         errors.push(`Duplicate code detected: "${code}"`);
       }
 
-      // 4. Existence check in contract
-      const contractMatch = summaryData.find((cs: ContractOrderSummary) => cs.sheet_code === code);
+      // 4. Existence check in contract moved up
       if (!contractMatch) {
         errors.push(`Code "${code}" not found in contract summary`);
       }
@@ -101,6 +104,7 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
         sheet_netamt: grossAmt,
         sheetgroup_seqno: seqNo,
         sheet_seqno: seqNo,
+        available_amount: availableAmt,
         validation_errors: errors
       };
     });
