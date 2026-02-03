@@ -61,7 +61,7 @@ export default function ContractsPage() {
   };
 
   const handleEdit = (contract: Contract) => {
-    router.push(`/contracts/${contract.id}`);
+    router.push(`/contracts/${contract.id}?mode=edit`);
   };
 
   const handleDeleteClick = (contract: Contract) => {
@@ -198,7 +198,7 @@ export default function ContractsPage() {
             {contracts?.map((contract: Contract) => (
               <tr 
                 key={contract.id} 
-                onClick={() => router.push(`/contracts/${contract.id}`)}
+                onClick={() => router.push(`/contracts/${contract.id}?mode=view`)}
                 className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
               >
                 <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">

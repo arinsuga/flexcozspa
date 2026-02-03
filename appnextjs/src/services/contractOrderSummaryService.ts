@@ -26,6 +26,11 @@ export const contractOrderSummaryService = {
     return response.data;
   },
 
+  getByContractExcludingOrder: async (contractId: number | string, orderId: number | string) => {
+    const response = await appApi.get(`contractsheets/summary/${contractId}/exclude-order/${orderId}`);
+    return response.data;
+  },
+
   getByContractAndSheet: async (contractId: number | string, sheetId: number | string) => {
     const response = await appApi.get(`contractsheets/summary/${contractId}/${sheetId}`);
     return response.data;

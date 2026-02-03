@@ -9,12 +9,27 @@ import { OrderSheet } from '@/services/orderSheetService';
 import Stepper from '@/components/common/Stepper';
 import { useOrderMutations } from '@/hooks/useOrders';
 import { useRouter } from 'next/navigation';
+import InfoDialog from '@/components/common/InfoDialog';
 
 export default function NewOrderPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [orderData, setOrderData] = useState<Partial<Order>>({});
   const { createOrder } = useOrderMutations();
+
+  // Info dialog state
+  const [infoDialog, setInfoDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'success' | 'error' | 'info';
+    onClose?: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'info',
+  });
 
   const handleStep1Submit = (data: Partial<Order>) => {
     setOrderData(prev => ({ ...prev, ...data }));
@@ -33,11 +48,24 @@ export default function NewOrderPage() {
         order_items: processedSheets
       };
       await createOrder.mutateAsync(payload);
-      alert('Order created successfully!');
-      router.push('/orders');
+      setInfoDialog({
+        isOpen: true,
+        title: 'Success',
+        message: 'Order created successfully!',
+        variant: 'success',
+        onClose: () => {
+          setInfoDialog(prev => ({ ...prev, isOpen: false }));
+          router.push('/orders');
+        }
+      });
     } catch (error) {
       console.error('Final save failed', error);
-      alert('Failed to save order.');
+      setInfoDialog({
+        isOpen: true,
+        title: 'Error',
+        message: 'Failed to save order. Please try again.',
+        variant: 'error',
+      });
     }
   };
 
@@ -84,6 +112,14 @@ export default function NewOrderPage() {
           />
         </div>
       )}
+      
+      <InfoDialog
+        isOpen={infoDialog.isOpen}
+        onClose={infoDialog.onClose || (() => setInfoDialog(prev => ({ ...prev, isOpen: false })))}
+        title={infoDialog.title}
+        message={infoDialog.message}
+        variant={infoDialog.variant}
+      />
     </div>
   );
 }

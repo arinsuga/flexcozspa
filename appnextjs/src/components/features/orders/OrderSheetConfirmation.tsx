@@ -11,13 +11,14 @@ import { useContractOrderSummary } from '@/hooks/useContractOrderSummary';
 import { ContractOrderSummary } from '@/services/contractOrderSummaryService';
 
 interface OrderSheetConfirmationProps {
-  order: Partial<Order> & { order_items?: Partial<OrderSheet>[] };
+  order: Partial<Order> & { order_items?: Partial<OrderSheet>[]; ordersheets?: Partial<OrderSheet>[] };
   onBack: () => void;
   onSave: (processedSheets: OrderSheet[]) => void;
   isLoading: boolean;
+  mode?: 'edit' | 'view';
 }
 
-export default function OrderSheetConfirmation({ order, onBack, onSave, isLoading }: OrderSheetConfirmationProps) {
+export default function OrderSheetConfirmation({ order, onBack, onSave, isLoading, mode = 'edit' }: OrderSheetConfirmationProps) {
   const { data: projectData } = useProject(order.project_id || '');
   const project = projectData?.data || projectData;
   const { data: contractData } = useContract(order.contract_id || '');
@@ -31,7 +32,7 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
   
   // Refined processing logic
   const processedSheets = useMemo(() => {
-    const rawSheets = order.order_items || [];
+    const rawSheets = order.order_items || order.ordersheets || [];
     const safeRawSheets: Partial<OrderSheet>[] = Array.isArray(rawSheets) ? rawSheets : [];
 
     // 1. Filter: sheet_code is not blank
@@ -86,7 +87,7 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
       }
 
       // 5. Amount validation
-      if (grossAmt > availableAmt) {
+      if (grossAmt > availableAmt && mode === 'edit') {
         errors.push(`Amount exceeds available contract balance (${formatNumeric(availableAmt.toString())})`);
       }
 
@@ -103,7 +104,7 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
         validation_errors: errors
       };
     });
-  }, [order.order_items, order.order_dt, summaryData]); 
+  }, [order.order_items, order.ordersheets, order.order_dt, summaryData, mode]); 
 
   const handleSaveClick = () => {
     const sheets = processedSheets || [];
@@ -121,21 +122,33 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
   };
 
   return (
-    <div className="space-y-6 bg-white dark:bg-gray-800 p-6 shadow sm:rounded-lg">
-      <div className="flex justify-between items-center border-b pb-4 dark:border-gray-700">
-        <div>
-           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Step 3: Order Sheet Confirmation</h2>
-           <p className="text-sm text-gray-500 mt-1">Review and validate your order sheet structure before saving.</p>
+    <div className={`space-y-6 bg-white dark:bg-gray-800 p-6 shadow sm:rounded-lg ${mode === 'view' ? 'border-t-4 border-primary' : ''}`}>
+      {mode === 'edit' ? (
+        <div className="flex justify-between items-center border-b pb-4 dark:border-gray-700">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Step 3: Order Sheet Confirmation</h2>
+            <p className="text-sm text-gray-500 mt-1">Review and validate your order sheet structure before saving.</p>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={onBack} leftIcon="arrow_back" disabled={isLoading}>
+              Back
+            </Button>
+            <Button variant="primary" onClick={handleSaveClick} leftIcon="save" isLoading={isLoading}>
+              Save Data
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <Button variant="ghost" onClick={onBack} leftIcon="arrow_back" disabled={isLoading}>
-            Back
-          </Button>
-          <Button variant="primary" onClick={handleSaveClick} leftIcon="save" isLoading={isLoading}>
-            Save Data
+      ) : (
+        <div className="flex justify-between items-center border-b pb-4 dark:border-gray-700">
+           <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Order Summary</h2>
+            <p className="text-sm text-gray-500 mt-1">Read-only view of the order and its items.</p>
+          </div>
+          <Button variant="ghost" onClick={onBack} leftIcon="arrow_back">
+            Back to List
           </Button>
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border dark:border-gray-700">
         <div>
@@ -219,7 +232,7 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
                   </td>
                 </tr>
               ) : (
-                processedSheets.map((sheet: any, index: number) => {
+                processedSheets.map((sheet: Partial<OrderSheet>, index: number) => {
                   const hasErrors = (sheet.validation_errors?.length || 0) > 0;
 
                   return (

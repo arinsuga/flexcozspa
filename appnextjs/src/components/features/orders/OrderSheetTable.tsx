@@ -27,10 +27,11 @@ interface OrderSheetTableProps {
   projectId: number;
   contractId: number;
   onchange?: (instance: any, cell: HTMLElement, x: string | number, y: string | number, value: any) => void;
+  readOnly?: boolean;
 }
 
 const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
-  const { data, orderId, projectId, contractId, onchange } = props;
+  const { data, orderId, projectId, contractId, onchange, readOnly = false } = props;
   const jRef = useRef<HTMLDivElement>(null);
   const jInstance = useRef<any>(null);
   
@@ -40,7 +41,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
   const [itemTargetCoords, setItemTargetCoords] = useState<{ x: number, y: number } | null>(null);
 
   const { data: reffTypes } = useReffTypes();
-  const { data: summaryDataResponse } = useContractOrderSummary(contractId);
+  const { data: summaryDataResponse } = useContractOrderSummary(contractId, orderId);
   
   const summaryData = useMemo(() => {
     const raw = summaryDataResponse?.data || summaryDataResponse;
@@ -165,27 +166,36 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
 
   const transformToSheetData = useCallback((items: any[]) => {
     if (!Array.isArray(items)) return [];
-    return items.map((item) => [
-      item.id || null,
-      item.sheet_code || '',
-      item.sheet_refftypeid || '',
-      item.sheet_reffno || '',
-      item.sheet_reffnodate ? item.sheet_reffnodate.split('T')[0] : '',
-      item.vendor_name || (item.vendor?.vendor_name) || '',
-      item.sheet_description || '',
-      item.available_amount || null, // Index 7
-      item.sheet_qty || null,        // Index 8
-      item.uom_code || (item.uom?.uom_code) || '',
-      item.sheet_price || null,
-      (item.sheet_qty && item.sheet_price) ? (item.sheet_qty * item.sheet_price) : null,
-      item.vendor_id || (item.vendor?.id) || null,
-      item.contractsheets_id || null,
-      item.contract_amount || null,
-      item.order_amount || null,
-      item.sheetgroup_id || null,
-      item.sheetgroup_type || null,
-    ]);
-  }, []);
+    
+    return items.map((item) => {
+      // Find matching summary item to get latest available_amount if not provided in item
+      const match = summaryDataRef.current.find(s => s.sheet_code === item.sheet_code);
+      const availableAmt = item.available_amount !== undefined && item.available_amount !== null 
+        ? item.available_amount 
+        : (match ? match.available_amount : null);
+
+      return [
+        item.id || null,
+        item.sheet_code || '',
+        item.sheet_refftypeid || '',
+        item.sheet_reffno || '',
+        item.sheet_reffnodate ? item.sheet_reffnodate.split('T')[0] : '',
+        item.vendor_name || (item.vendor?.vendor_name) || '',
+        item.sheet_description || (match?.sheet_name) || '',
+        availableAmt, // Index 7
+        item.sheet_qty || null,        // Index 8
+        item.uom_code || (item.uom?.uom_code) || (match?.uom_code) || '',
+        item.sheet_price || null,
+        (item.sheet_qty && item.sheet_price) ? (item.sheet_qty * item.sheet_price) : null,
+        item.vendor_id || (item.vendor?.id) || null,
+        item.contractsheets_id || (match?.contractsheet_id) || null,
+        item.contract_amount || (match?.contract_amount) || null,
+        item.order_amount || (match?.order_amount) || null,
+        item.sheetgroup_id || (match?.sheetgroup_id) || null,
+        item.sheetgroup_type || (match?.sheetgroup_type) || null,
+      ];
+    });
+  }, []); // summaryDataRef is used to keep it stable
 
 
   const handleCellChange = useCallback((instance: any, cell: any, x: any, y: any, value: any) => {
@@ -499,18 +509,18 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
           return cell;
         }
       },
-      { type: 'text', name: 'sheet_description', title: 'Description', width: 300, wordWrap: true, align: 'left' },
-      { type: 'numeric', name: 'available_amount', title: 'Available Amt', width: 120, mask: '#,##0.00', readOnly: true, align: 'right', background: '#fef3c7' },
-      { type: 'numeric', name: 'sheet_qty', title: 'Vol', width: 80, mask: '#,##0.00', align: 'right' },
-      { type: 'text', name: 'uom_code', title: 'Sat', width: 60, align: 'center', readOnly: true },
-      { type: 'numeric', name: 'sheet_price', title: 'H.Satuan', width: 120, mask: '#,##0.00', align: 'right' },
+      { type: 'text', name: 'sheet_description', title: 'Description', width: 300, wordWrap: true, align: 'left', readOnly: readOnly || false }, // Added readOnly
+      { type: 'numeric', name: 'available_amount', title: 'Available Amt', width: 120, mask: '#,##0.00', readOnly: true, align: 'right', background: '#fef3c7' }, // Always read-only
+      { type: 'numeric', name: 'sheet_qty', title: 'Vol', width: 80, mask: '#,##0.00', align: 'right', readOnly: readOnly || false }, // Added readOnly
+      { type: 'text', name: 'uom_code', title: 'Sat', width: 60, align: 'center', readOnly: true }, // Always read-only
+      { type: 'numeric', name: 'sheet_price', title: 'H.Satuan', width: 120, mask: '#,##0.00', align: 'right', readOnly: readOnly || false }, // Added readOnly
       { 
         type: 'numeric', 
         name: 'total', 
         title: 'Total', 
         width: 130, 
         mask: '#,##0.00', 
-        readOnly: true, 
+        readOnly: true, // Always read-only
         align: 'right',
         background: '#f3f4f6', 
       },
@@ -559,13 +569,15 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
         tableOverflow: true,
         tableWidth: '100%',
         tableHeight: '450px',
+        allowInsertRow: !readOnly, // Added
+        allowDeleteRow: !readOnly, // Added
         onchange: handleCellChange,
       }],
       ondeleterow: (instance: any) => {
         validateAllCodes(getJInstance());
       },
       allowComments: true,
-      contextMenu: true,
+      contextMenu: readOnly ? () => false : true, // Modified
       search: true,
       pagination: 20,
       copyCompatibility: false, 
@@ -605,7 +617,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
         instance.setData(newData);
       }
     }
-  }, [data, transformToSheetData]);
+  }, [data, summaryData, transformToSheetData]);
 
   return (
     <>

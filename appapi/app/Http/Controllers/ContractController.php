@@ -141,16 +141,24 @@ class ContractController extends Controller
             $headerData['contract_id'] = $contract->id;
             $headerData['project_id'] = $contract->project_id;
 
+            // Filter data to only include valid DB columns
+            $filteredHeaderData = collect($headerData)->only([
+                'project_id', 'contract_id', 'sheet_dt', 'sheet_type', 'sheetgroup_type',
+                'sheetgroup_id', 'sheetheader_id', 'sheet_code', 'sheet_name',
+                'sheet_description', 'sheet_notes', 'sheet_qty', 'sheet_price',
+                'sheet_grossamt', 'sheet_discountrate', 'sheet_discountvalue',
+                'sheet_taxrate', 'sheet_taxvalue', 'sheet_netamt', 'sheet_grossamt2',
+                'sheet_netamt2', 'sheet_realamt', 'uom_id', 'uom_code',
+                'sheetgroup_seqno', 'sheet_seqno'
+            ])->toArray();
+
             if ($isNewHeader) {
-                unset($headerData['id']);
-                $newHeader = $contract->contractSheets()->create($headerData);
+                $newHeader = $contract->contractSheets()->create($filteredHeaderData);
                 if ($headerTempId) {
                     $tempIdMap[$headerTempId] = $newHeader->id;
                 }
             } else {
-                $contract->contractSheets()->where('id', $headerId)->update(
-                    collect($headerData)->except(['id'])->toArray()
-                );
+                $contract->contractSheets()->where('id', $headerId)->update($filteredHeaderData);
             }
         }
 
@@ -171,13 +179,21 @@ class ContractController extends Controller
             $itemData['contract_id'] = $contract->id;
             $itemData['project_id'] = $contract->project_id;
 
+            // Filter data to only include valid DB columns
+            $filteredItemData = collect($itemData)->only([
+                'project_id', 'contract_id', 'sheet_dt', 'sheet_type', 'sheetgroup_type',
+                'sheetgroup_id', 'sheetheader_id', 'sheet_code', 'sheet_name',
+                'sheet_description', 'sheet_notes', 'sheet_qty', 'sheet_price',
+                'sheet_grossamt', 'sheet_discountrate', 'sheet_discountvalue',
+                'sheet_taxrate', 'sheet_taxvalue', 'sheet_netamt', 'sheet_grossamt2',
+                'sheet_netamt2', 'sheet_realamt', 'uom_id', 'uom_code',
+                'sheetgroup_seqno', 'sheet_seqno'
+            ])->toArray();
+
             if (!is_numeric($itemId)) {
-                unset($itemData['id']);
-                $contract->contractSheets()->create($itemData);
+                $contract->contractSheets()->create($filteredItemData);
             } else {
-                $contract->contractSheets()->where('id', $itemId)->update(
-                    collect($itemData)->except(['id'])->toArray()
-                );
+                $contract->contractSheets()->where('id', $itemId)->update($filteredItemData);
             }
         }
     }

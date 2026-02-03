@@ -62,7 +62,7 @@ export default function OrdersPage() {
   };
 
   const handleEdit = (order: Order) => {
-    router.push(`/orders/${order.id}`);
+    router.push(`/orders/${order.id}?mode=edit`);
   };
 
   const handleDeleteClick = (order: Order) => {
@@ -184,7 +184,7 @@ export default function OrdersPage() {
             {orders?.map((order: Order) => (
               <tr 
                 key={order.id} 
-                onClick={() => router.push(`/orders/${order.id}`)}
+                onClick={() => router.push(`/orders/${order.id}?mode=view`)}
                 className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
               >
                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">

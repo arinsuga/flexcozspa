@@ -78,7 +78,7 @@ class Contract extends Model
      */
     public function contractSheets()
     {
-        return $this->hasMany('App\ContractSheet', 'contract_id');
+        return $this->hasMany('App\ContractSheet', 'contract_id')->orderBy('sheet_seqno', 'asc');
     }
 
     /**

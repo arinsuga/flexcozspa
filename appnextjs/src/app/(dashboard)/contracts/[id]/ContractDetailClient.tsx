@@ -38,15 +38,19 @@ export default function ContractDetailClient({
   const { data: statusesData, isLoading: isStatusesLoading } = useContractStatuses();
   const { updateContract: updateContractMutation, createContract: createContractMutation } = useContractMutations();
   
-  // Resolve contract data: prefer initialData (for create mode) or fetched data
+  // Resolve contract data: prefer initialData (containing potential Step 1 edits) or fallback to fetched
   const fetchedContract = contractData?.data || contractData;
   const [contract, setContract] = useState<Partial<Contract> | null>(initialData || null);
 
+  // Sync contract state with fetched data if not already initialized from initialData
+  const [isContractInitialized, setIsContractInitialized] = useState(!!(initialData && Object.keys(initialData).length > 2));
+  
   useEffect(() => {
-    if (fetchedContract && !initialData) {
+    if (fetchedContract && !isContractInitialized) {
       setContract(fetchedContract);
+      setIsContractInitialized(true);
     }
-  }, [fetchedContract, initialData]);
+  }, [fetchedContract, isContractInitialized]);
 
   const { data: projectData, isLoading: isProjectLoading } = useProject(contract?.project_id ?? '');
   const project = projectData?.data || projectData;
@@ -60,15 +64,15 @@ export default function ContractDetailClient({
   }, [statusesData]);
 
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
-  const [localSheets, setLocalSheets] = useState<ContractSheet[]>([]);
-  const [hasInitialized, setHasInitialized] = useState(false);
+  const [localSheets, setLocalSheets] = useState<ContractSheet[]>(initialData?.contract_sheets || []);
+  const [hasInitialized, setHasInitialized] = useState(!!(initialData?.contract_sheets && initialData.contract_sheets.length > 0));
   const sheetRef = useRef<any>(null);
 
-  // Sync localSheets with API data once upon initial load
+  // Sync localSheets with API data if not already provided via initialData
   useEffect(() => {
-    if (contract && !hasInitialized) {
-      const sheets = contract.contract_sheets || [];
-      setLocalSheets(sheets);
+    const sheetsFromContract = contract?.contract_sheets;
+    if (sheetsFromContract && !hasInitialized) {
+      setLocalSheets(sheetsFromContract);
       setHasInitialized(true);
     }
   }, [contract, hasInitialized]);
@@ -76,7 +80,8 @@ export default function ContractDetailClient({
   // Initialize activeTabId when sheetGroups are loaded
   useEffect(() => {
     if (Array.isArray(sheetGroups) && sheetGroups.length > 0 && activeTabId === null) {
-      setActiveTabId(sheetGroups[0].id);
+      const firstGroupId = sheetGroups[0].id;
+      setActiveTabId(firstGroupId);
     }
   }, [sheetGroups, activeTabId]);
 
@@ -147,8 +152,8 @@ export default function ContractDetailClient({
        ...contract,
        project_id: contract.project_id ? Number(contract.project_id) : 0,
        contractstatus_id: contract.contractstatus_id ? Number(contract.contractstatus_id) : 1,
-       contract_amount: parseNumeric(contract.contract_amount?.toString() || ''),
-       contract_payment: parseNumeric(contract.contract_payment?.toString() || ''),
+       contract_amount: parseNumeric(contract.contract_amount?.toString() || '').toString(),
+       contract_payment: parseNumeric(contract.contract_payment?.toString() || '').toString(),
        contract_sheets: sortedSheets as ContractSheet[]
     };
 

@@ -40,6 +40,19 @@ class Order extends Model
     ];
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        // Cascade delete ordersheets when order is deleted
+        static::deleting(function($order) {
+            $order->ordersheets()->delete();
+        });
+    }
+
+    /**
      * Project that this order belongs to.
      */
     public function project()

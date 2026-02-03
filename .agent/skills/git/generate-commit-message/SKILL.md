@@ -23,11 +23,14 @@ The golden rule of Git commit messages is clarity: each commit should be in plai
 
 ## Content Guidelines
 
+- read the example from .agent/skills/git/generate-commit-message/format-example.md
 - Atomic commits: Each commit should represent one logical change (e.g., fix a bug, add a feature, update docs).
 - Be descriptive but concise: Avoid vague messages like “fix stuff” or “update code.”
 - Explain reasoning: If the change isn’t obvious, document the motivation.
 - Reference context: Link to issue numbers or PRs when applicable.
+- Explain every file added, modified, or deleted and split into categories between frontend and backend or others. Give only the file name and the type of change (added, modified, or deleted) exclude information about fullpath of the file.
 - Generate only plain text format.
+- make sure to display the plain text and able to copy it to terminal!
 
 ## Conventional Commit Standards (Optional but Popular)
 

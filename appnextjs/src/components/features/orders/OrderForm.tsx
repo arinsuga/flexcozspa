@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Input from '@/components/common/Input';
 import Button from '@/components/common/Button';
 import { Order } from '@/services/orderService';
@@ -46,6 +46,25 @@ export default function OrderForm({ initialData, onSubmit, isLoading, errors, su
     project_id: initialData?.project_id || undefined,
     contract_id: initialData?.contract_id || undefined,
   }));
+
+  // Accurate initialization tracking
+  const [isInitialized, setIsInitialized] = useState(!!(initialData && Object.keys(initialData).length > 2));
+
+  // Sync formData when initialData changes (essential for async fetches)
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).length > 2 && !isInitialized) {
+      setFormData({
+        order_number: initialData.order_number || '',
+        order_description: initialData.order_description || '',
+        order_pic: initialData.order_pic || '',
+        order_dt: initialData.order_dt || getCurrentDate(),
+        orderstatus_id: initialData.orderstatus_id || 1,
+        project_id: initialData.project_id || undefined,
+        contract_id: initialData.contract_id || undefined,
+      });
+      setIsInitialized(true);
+    }
+  }, [initialData, isInitialized]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -139,7 +158,7 @@ export default function OrderForm({ initialData, onSubmit, isLoading, errors, su
             label="Order Date"
             name="order_dt"
             type="date"
-            value={formData.order_dt ? formData.order_dt.split('T')[0] : ''}
+            value={formData.order_dt ? formData.order_dt.split(/[ T]/)[0] : ''}
             onChange={handleChange}
             error={errors?.order_dt?.[0]}
           />

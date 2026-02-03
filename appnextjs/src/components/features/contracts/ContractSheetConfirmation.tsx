@@ -13,9 +13,10 @@ interface ContractSheetConfirmationProps {
   onBack: () => void;
   onSave: (processedSheets: ContractSheet[]) => void;
   isLoading: boolean;
+  mode?: 'edit' | 'view';
 }
 
-export default function ContractSheetConfirmation({ contract, onBack, onSave, isLoading }: ContractSheetConfirmationProps) {
+export default function ContractSheetConfirmation({ contract, onBack, onSave, isLoading, mode = 'edit' }: ContractSheetConfirmationProps) {
   const { data: projectData } = useProject(contract.project_id || '');
   const project = projectData?.data || projectData;
   const { data: statusData } = useContractStatuses();
@@ -35,12 +36,9 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
       sheet_code: s.sheet_code!.toString().replace(/\s+/g, '')
     }));
 
-    // 2. Sort naturally by code string pattern
+    // 2. Sort by sequence number
     cleanedSheets.sort((a, b) => {
-      return a.sheet_code!.localeCompare(b.sheet_code!, undefined, { 
-        numeric: true, 
-        sensitivity: 'base' 
-      });
+      return (a.sheet_seqno || 0) - (b.sheet_seqno || 0);
     });
 
     // Create a map to cache items by code for parent resolution
@@ -107,7 +105,8 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
           sheet_grossamt: subTotal,
           sheet_grossamt2: subTotal,
           sheet_netamt: subTotal,
-          sheet_netamt2: subTotal
+          sheet_netamt2: subTotal,
+          sheet_realamt: subTotal
         };
       }
       return item;
@@ -125,21 +124,33 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
   };
 
   return (
-    <div className="space-y-6 bg-white dark:bg-gray-800 p-6 shadow sm:rounded-lg">
-      <div className="flex justify-between items-center border-b pb-4 dark:border-gray-700">
-        <div>
-           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Step 3: Contract Sheet Confirmation</h2>
-           <p className="text-sm text-gray-500 mt-1">Review and validate your contract sheet structure before saving.</p>
+    <div className={`space-y-6 bg-white dark:bg-gray-800 p-6 shadow sm:rounded-lg ${mode === 'view' ? 'border-t-4 border-primary' : ''}`}>
+      {mode === 'edit' ? (
+        <div className="flex justify-between items-center border-b pb-4 dark:border-gray-700">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Step 3: Contract Sheet Confirmation</h2>
+            <p className="text-sm text-gray-500 mt-1">Review and validate your contract sheet structure before saving.</p>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={onBack} leftIcon="arrow_back" disabled={isLoading}>
+              Back
+            </Button>
+            <Button variant="primary" onClick={handleSaveClick} leftIcon="save" isLoading={isLoading}>
+              Save Data
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <Button variant="ghost" onClick={onBack} leftIcon="arrow_back" disabled={isLoading}>
-            Back
-          </Button>
-          <Button variant="primary" onClick={handleSaveClick} leftIcon="save" isLoading={isLoading}>
-            Save Data
+      ) : (
+        <div className="flex justify-between items-center border-b pb-4 dark:border-gray-700">
+           <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Contract Summary</h2>
+            <p className="text-sm text-gray-500 mt-1">Read-only view of the contract and its items.</p>
+          </div>
+          <Button variant="ghost" onClick={onBack} leftIcon="arrow_back">
+            Back to List
           </Button>
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border dark:border-gray-700">
         <div>

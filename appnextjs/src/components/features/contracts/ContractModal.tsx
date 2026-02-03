@@ -59,10 +59,13 @@ export default function ContractModal({
     contract_dt: '',
   });
 
+  const [isInitialized, setIsInitialized] = useState(false);
+
   useEffect(() => {
-    if (initialData) {
+    if (initialData && !isInitialized) {
       setFormData(prev => ({ ...prev, ...initialData }));
-    } else {
+      setIsInitialized(true);
+    } else if (!initialData && isOpen && !isInitialized) {
       const currentDate = getCurrentDate();
       setFormData({
         contract_number: '',
@@ -80,8 +83,15 @@ export default function ContractModal({
         contract_payment_dt: currentDate,
         contract_dt: currentDate,
       });
+      setIsInitialized(true);
     }
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, isInitialized]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsInitialized(false);
+    }
+  }, [isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -95,8 +105,8 @@ export default function ContractModal({
     e.preventDefault();
     const submissionData = {
       ...formData,
-      contract_amount: parseNumeric(formData.contract_amount?.toString() || ''),
-      contract_payment: parseNumeric(formData.contract_payment?.toString() || ''),
+      contract_amount: parseNumeric(formData.contract_amount?.toString() || '').toString(),
+      contract_payment: parseNumeric(formData.contract_payment?.toString() || '').toString(),
     };
     onSubmit(submissionData);
   };
@@ -155,7 +165,7 @@ export default function ContractModal({
                 label="Contract Date *"
                 name="contract_dt"
                 type="date"
-                value={formData.contract_dt ? (formData.contract_dt as string).split('T')[0] : ''}
+                value={formData.contract_dt ? (formData.contract_dt as string).split(/[ T]/)[0] : ''}
                 onChange={handleChange}
                 required
                 error={errors?.contract_dt?.[0]}
@@ -218,7 +228,7 @@ export default function ContractModal({
                   label="Payment Date"
                   name="contract_payment_dt"
                   type="date"
-                  value={formData.contract_payment_dt ? formData.contract_payment_dt.split('T')[0] : ''}
+                  value={formData.contract_payment_dt ? formData.contract_payment_dt.split(/[ T]/)[0] : ''}
                   onChange={handleChange}
                   error={errors?.contract_payment_dt?.[0]}
                 />
@@ -236,7 +246,7 @@ export default function ContractModal({
                   label="Start Date"
                   name="contract_startdt"
                   type="date"
-                  value={formData.contract_startdt ? formData.contract_startdt.split('T')[0] : ''}
+                  value={formData.contract_startdt ? formData.contract_startdt.split(/[ T]/)[0] : ''}
                   onChange={handleChange}
                   error={errors?.contract_startdt?.[0]}
                 />
@@ -244,7 +254,7 @@ export default function ContractModal({
                   label="End Date"
                   name="contract_enddt"
                   type="date"
-                  value={formData.contract_enddt ? formData.contract_enddt.split('T')[0] : ''}
+                  value={formData.contract_enddt ? formData.contract_enddt.split(/[ T]/)[0] : ''}
                   onChange={handleChange}
                   error={errors?.contract_enddt?.[0]}
                 />

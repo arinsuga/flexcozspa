@@ -1,10 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { contractOrderSummaryService } from '@/services/contractOrderSummaryService';
 
-export const useContractOrderSummary = (contractId: string | number) => {
+export const useContractOrderSummary = (contractId: string | number, excludeOrderId?: string | number) => {
   return useQuery({
-    queryKey: ['contract-order-summary', contractId],
-    queryFn: () => contractOrderSummaryService.getByContract(contractId),
+    queryKey: ['contract-order-summary', contractId, excludeOrderId],
+    queryFn: () => {
+      if (excludeOrderId && excludeOrderId !== 'new') {
+        return contractOrderSummaryService.getByContractExcludingOrder(contractId, excludeOrderId);
+      }
+      return contractOrderSummaryService.getByContract(contractId);
+    },
     enabled: !!contractId,
   });
 };

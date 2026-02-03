@@ -128,4 +128,10 @@ class ContractSheetController extends Controller
         $this->repository->delete($id);
         return response()->json(['message' => 'Contract sheet deleted successfully'], 200);
     }
+
+    public function getOrderSummaryByContractExcludingOrder($contractId, $orderId)
+    {
+        $summary = $this->summaryRepository->getSummaryByContractExcludingOrder($contractId, $orderId);
+        return response()->json(['data' => $summary], 200);
+    }
 }

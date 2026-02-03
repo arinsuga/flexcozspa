@@ -1,4 +1,5 @@
 import { appApi } from './api';
+import { OrderSheet } from './orderSheetService';
 
 export interface OrderStatus {
   id: number;
@@ -19,7 +20,7 @@ export interface Order {
   status?: OrderStatus;
   project?: { project_name: string; project_number: string; id: number };
   contract?: { contract_name: string; contract_number: string; id: number };
-  ordersheets?: unknown[];
+  ordersheets?: OrderSheet[];
 }
 
 export const orderService = {

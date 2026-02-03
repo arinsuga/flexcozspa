@@ -78,7 +78,9 @@ class OrderController extends Controller
             return response()->json(['error' => 'Order not found'], 404);
         }
 
-        $order->delete();
+        // The deleting event in the Order model will handle cascade deletion of ordersheets
+        $this->repository->delete($id);
+        
         return response()->json(['message' => 'Order deleted successfully'], 200);
     }
 

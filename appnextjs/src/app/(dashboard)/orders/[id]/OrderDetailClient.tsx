@@ -6,6 +6,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useContracts } from '@/hooks/useContracts';
 import Button from '@/components/common/Button';
 import OrderSheetTable from '@/components/features/orders/OrderSheetTable';
+import InfoDialog from '@/components/common/InfoDialog';
 import { useRef, useState, useMemo, useEffect } from 'react';
 import { Order } from '@/services/orderService';
 import { useOrderSheets } from '@/hooks/useOrderSheets';
@@ -14,14 +15,14 @@ import { OrderSheet } from '@/services/orderSheetService';
 interface OrderDetailClientProps {
   id: string;
   initialData?: Partial<Order>;
-  mode?: 'create' | 'edit' | 'view';
+  mode?: 'create' | 'edit';
   onBack?: () => void;
   onSubmit?: (data: Partial<Order>) => void;
   submitLabel?: string;
   readOnlyInfo?: boolean;
 }
 
-export default function OrderDetailClient({ id, initialData, mode = 'view', onBack, onSubmit, submitLabel, readOnlyInfo = false }: OrderDetailClientProps) {
+export default function OrderDetailClient({ id, initialData, mode = 'edit', onBack, onSubmit, submitLabel, readOnlyInfo = false }: OrderDetailClientProps) {
   const router = useRouter();
   const { data: orderResponse, isLoading: isOrderLoading } = useOrder(id);
   const { data: projectsData } = useProjects();
@@ -35,33 +36,53 @@ export default function OrderDetailClient({ id, initialData, mode = 'view', onBa
   // Resolve order data: prefer initialData (for create mode) or fetched data
   const fetchedOrder = orderResponse?.data || orderResponse;
   const [order, setOrder] = useState<Partial<Order> | null>(initialData || null);
+  const [isDataInitialized, setIsDataInitialized] = useState(false);
 
   // Initialize order data when it becomes available
   useEffect(() => {
-    if (fetchedOrder && !order && !initialData) {
+    if (fetchedOrder && !isDataInitialized) {
       setOrder(fetchedOrder);
+      setIsDataInitialized(true);
     }
-  }, [fetchedOrder, order, initialData]);
+  }, [fetchedOrder, isDataInitialized]);
 
   const [localSheets, setLocalSheets] = useState<OrderSheet[]>([]);
   const [hasInitializedSheets, setHasInitializedSheets] = useState(false);
   const sheetRef = useRef<any>(null);
+
+  // Info dialog state
+  const [infoDialog, setInfoDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'success' | 'error' | 'info';
+    onClose?: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'info',
+  });
 
 
   // Sync localSheets with API data once
   useEffect(() => {
     if (hasInitializedSheets) return;
 
-    const itemsFromProps = (initialData as any)?.order_items;
+    const itemsFromProps = (initialData as any)?.order_items || (initialData as any)?.ordersheets;
     
     if (Array.isArray(itemsFromProps)) {
        setLocalSheets(itemsFromProps);
        setHasInitializedSheets(true);
     } else if (sheetsData && id !== 'new') {
-       setLocalSheets(sheetsData);
+       const sheets = Array.isArray(sheetsData) ? sheetsData : (sheetsData as any).data || [];
+       setLocalSheets(sheets);
+       setHasInitializedSheets(true);
+    } else if (fetchedOrder?.ordersheets && id !== 'new') {
+       setLocalSheets(fetchedOrder.ordersheets);
        setHasInitializedSheets(true);
     }
-  }, [sheetsData, initialData, hasInitializedSheets, id]);
+  }, [sheetsData, initialData, hasInitializedSheets, id, fetchedOrder]);
 
   const handleHeaderChange = (field: keyof Order, value: any) => {
     setOrder(prev => prev ? ({ ...prev, [field]: value }) : null);
@@ -88,18 +109,36 @@ export default function OrderDetailClient({ id, initialData, mode = 'view', onBa
     try {
       if (mode === 'create' || id === 'new') {
          await createOrderMutation.mutateAsync(payload);
-         alert('Order created successfully!');
-         router.push('/orders');
+         setInfoDialog({
+           isOpen: true,
+           title: 'Success',
+           message: 'Order created successfully!',
+           variant: 'success',
+           onClose: () => {
+             setInfoDialog(prev => ({ ...prev, isOpen: false }));
+             router.push('/orders');
+           }
+         });
       } else {
          await updateOrderMutation.mutateAsync({ 
            id, 
            data: payload
          });
-         alert('Saved successfully!');
+         setInfoDialog({
+           isOpen: true,
+           title: 'Success',
+           message: 'Order saved successfully!',
+           variant: 'success',
+         });
       }
     } catch (error) {
       console.error('Save failed', error);
-      alert('Failed to save.');
+      setInfoDialog({
+        isOpen: true,
+        title: 'Error',
+        message: 'Failed to save order. Please try again.',
+        variant: 'error',
+      });
     }
   };
 
@@ -220,15 +259,23 @@ export default function OrderDetailClient({ id, initialData, mode = 'view', onBa
         </div>
 
         <div className="pt-4 space-y-4">
-               <OrderSheetTable 
-                 ref={sheetRef} 
-                 data={localSheets} 
-                 orderId={id} 
-                 projectId={Number(safeOrder.project_id) || 0} 
-                 contractId={Number(safeOrder.contract_id) || 0}
-               />
+                <OrderSheetTable 
+                  ref={sheetRef} 
+                  data={localSheets} 
+                  orderId={id} 
+                  projectId={Number(safeOrder.project_id) || 0} 
+                  contractId={Number(safeOrder.contract_id) || 0}
+                />
         </div>
       </div>
+
+      <InfoDialog
+        isOpen={infoDialog.isOpen}
+        onClose={infoDialog.onClose || (() => setInfoDialog(prev => ({ ...prev, isOpen: false })))}
+        title={infoDialog.title}
+        message={infoDialog.message}
+        variant={infoDialog.variant}
+      />
     </div>
   );
 }

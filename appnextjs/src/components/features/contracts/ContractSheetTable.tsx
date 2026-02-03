@@ -16,10 +16,11 @@ interface ContractSheetTableProps {
   projectId: number;
   sheetgroupId?: number;
   onchange?: (instance: any, cell: any, x: any, y: any, value: any) => void;
+  readOnly?: boolean;
 }
 
 const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
-  const { data, contractId, projectId, sheetgroupId = 1, onchange } = props;
+  const { data, contractId, projectId, sheetgroupId = 1, onchange, readOnly = false } = props;
   const jRef = useRef<HTMLDivElement>(null);
   const jInstance = useRef<any>(null);
 
@@ -319,6 +320,14 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       },
     ];
 
+    if (readOnly) {
+      columns.forEach(col => {
+        if (col.name !== 'id') {
+           (col as any).readOnly = true;
+        }
+      });
+    }
+
     // jspreadsheet-ce v5 stable initialization
     const options = {
       // Event at top level is often preferred in JSS CE
@@ -340,6 +349,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       copyCompatibility: true,
       defaultColWidth: 100,
       onselection: () => {},
+      contextMenu: readOnly ? false : undefined,
     };
 
     try {
