@@ -169,6 +169,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             uom_id: originalSheet?.uom_id ? parseInt(originalSheet.uom_id as unknown as string) : 1,
             uom_code: uom_code ? String(uom_code) : (originalSheet?.uom_code || ''),
             sheet_seqno: index + 1,
+            is_active: 1,
           };
 
           return sheet;

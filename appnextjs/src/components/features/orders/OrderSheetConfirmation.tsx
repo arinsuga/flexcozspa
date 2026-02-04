@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Order } from '@/services/orderService';
 import { OrderSheet } from '@/services/orderSheetService';
 import Button from '@/components/common/Button';
@@ -9,6 +9,8 @@ import { useContract } from '@/hooks/useContracts';
 import { formatNumeric } from '@/utils/numberFormat';
 import { useContractOrderSummary } from '@/hooks/useContractOrderSummary';
 import { ContractOrderSummary } from '@/services/contractOrderSummaryService';
+import InfoDialog from '@/components/common/InfoDialog';
+
 
 interface OrderSheetConfirmationProps {
   order: Partial<Order> & { order_items?: Partial<OrderSheet>[]; ordersheets?: Partial<OrderSheet>[] };
@@ -29,6 +31,23 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
     const raw = summaryDataResponse?.data || summaryDataResponse;
     return Array.isArray(raw) ? raw : [];
   }, [summaryDataResponse]);
+
+  const [infoModal, setInfoModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'success' | 'error' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'info'
+  });
+
+  const showInfo = (title: string, message: string, variant: 'success' | 'error' | 'info' = 'info') => {
+    setInfoModal({ isOpen: true, title, message, variant });
+  };
+
   
   // Refined processing logic
   const processedSheets = useMemo(() => {
@@ -113,15 +132,16 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
   const handleSaveClick = () => {
     const sheets = processedSheets || [];
     if (sheets.length === 0) {
-      alert('Please add at least one item to the order sheet.');
+      showInfo('Attention', 'Please add at least one item to the order sheet.', 'info');
       return;
     }
 
     const hasErrors = sheets.some(s => (s.validation_errors?.length || 0) > 0);
     if (hasErrors) {
-      alert('Please fix validation errors before saving.');
+      showInfo('Validation Error', 'Please fix validation errors before saving.', 'error');
       return;
     }
+
     onSave(sheets as OrderSheet[]);
   };
 
@@ -292,6 +312,15 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
           </table>
         </div>
       </div>
+
+      <InfoDialog
+        isOpen={infoModal.isOpen}
+        onClose={() => setInfoModal(prev => ({ ...prev, isOpen: false }))}
+        title={infoModal.title}
+        message={infoModal.message}
+        variant={infoModal.variant}
+      />
     </div>
+
   );
 }

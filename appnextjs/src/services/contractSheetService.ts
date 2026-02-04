@@ -28,6 +28,7 @@ export interface ContractSheet {
   uom_code: string;
   sheetgroup_seqno: number;
   sheet_seqno: number;
+  is_active: number;
   created_at: string;
   updated_at: string;
 }

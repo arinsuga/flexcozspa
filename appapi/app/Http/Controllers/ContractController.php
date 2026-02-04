@@ -149,8 +149,10 @@ class ContractController extends Controller
                 'sheet_grossamt', 'sheet_discountrate', 'sheet_discountvalue',
                 'sheet_taxrate', 'sheet_taxvalue', 'sheet_netamt', 'sheet_grossamt2',
                 'sheet_netamt2', 'sheet_realamt', 'uom_id', 'uom_code',
-                'sheetgroup_seqno', 'sheet_seqno'
+                'sheetgroup_seqno', 'sheet_seqno', 'is_active'
             ])->toArray();
+
+            $filteredHeaderData['is_active'] = 1;
 
             if ($isNewHeader) {
                 $newHeader = $contract->contractSheets()->create($filteredHeaderData);
@@ -190,8 +192,10 @@ class ContractController extends Controller
                 'sheet_grossamt', 'sheet_discountrate', 'sheet_discountvalue',
                 'sheet_taxrate', 'sheet_taxvalue', 'sheet_netamt', 'sheet_grossamt2',
                 'sheet_netamt2', 'sheet_realamt', 'uom_id', 'uom_code',
-                'sheetgroup_seqno', 'sheet_seqno'
+                'sheetgroup_seqno', 'sheet_seqno', 'is_active'
             ])->toArray();
+
+            $filteredItemData['is_active'] = 1;
 
             if (!is_numeric($itemId)) {
                 $contract->contractSheets()->create($filteredItemData);

@@ -9,6 +9,8 @@ import { useContractStatuses } from '@/hooks/useContractStatuses';
 import { useSheetGroupsByType } from '@/hooks/useSheetGroups';
 import { SheetGroup } from '@/services/sheetGroupService';
 import { formatNumeric } from '@/utils/numberFormat';
+import InfoDialog from '@/components/common/InfoDialog';
+
 
 interface ContractSheetConfirmationProps {
   contract: Partial<Contract>;
@@ -40,6 +42,9 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
   }, [workSheetGroupsData, costSheetGroupsData]);
 
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
 
   useEffect(() => {
     if (sheetGroups.length > 0 && activeTabId === null) {
@@ -149,9 +154,11 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
     // Only save if no validation errors (or let the user decide, but usually we block if invalid)
     const hasErrors = (processedSheets || []).some(s => (s.validation_errors?.length || 0) > 0);
     if (hasErrors) {
-      alert('Please fix validation errors before saving.');
+      setErrorMessage('Please fix validation errors before saving.');
+      setIsErrorModalOpen(true);
       return;
     }
+
     onSave(processedSheets as ContractSheet[]);
   };
 
@@ -368,6 +375,15 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
         </div>
         </div>
       </div>
+
+      <InfoDialog
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+        title="Validation Error"
+        message={errorMessage}
+        variant="error"
+      />
     </div>
+
   );
 }

@@ -69,6 +69,7 @@ class ContractSheet extends Model
         'uom_code',
         'sheetgroup_seqno',
         'sheet_seqno',
+        'is_active',
     ];
 
     /**

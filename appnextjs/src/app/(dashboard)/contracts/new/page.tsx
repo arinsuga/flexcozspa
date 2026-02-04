@@ -9,12 +9,30 @@ import { ContractSheet } from '@/services/contractSheetService';
 import Stepper from '@/components/common/Stepper';
 import { useContractMutations } from '@/hooks/useContracts';
 import { useRouter } from 'next/navigation';
+import InfoDialog from '@/components/common/InfoDialog';
+
 
 export default function NewContractPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [contractData, setContractData] = useState<Partial<Contract>>({});
   const { createContract } = useContractMutations();
+  const [infoModal, setInfoModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'success' | 'error' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'info'
+  });
+
+  const showInfo = (title: string, message: string, variant: 'success' | 'error' | 'info' = 'info') => {
+    setInfoModal({ isOpen: true, title, message, variant });
+  };
+
 
   const handleStep1Submit = (data: Partial<Contract>) => {
     setContractData(prev => ({ ...prev, ...data }));
@@ -33,13 +51,14 @@ export default function NewContractPage() {
         contract_sheets: processedSheets
       };
       await createContract.mutateAsync(payload);
-      alert('Contract created successfully!');
-      router.push('/contracts');
+      showInfo('Success', 'Contract created successfully!', 'success');
+      setTimeout(() => router.push('/contracts'), 1500);
     } catch (error) {
       console.error('Final save failed', error);
-      alert('Failed to save contract.');
+      showInfo('Error', 'Failed to save contract.', 'error');
     }
   };
+
 
   const steps = ['Contract Details', 'Contract Sheet Input', 'Contract Sheet Confirmation'];
 
@@ -84,6 +103,15 @@ export default function NewContractPage() {
           />
         </div>
       )}
+
+      <InfoDialog
+        isOpen={infoModal.isOpen}
+        onClose={() => setInfoModal(prev => ({ ...prev, isOpen: false }))}
+        title={infoModal.title}
+        message={infoModal.message}
+        variant={infoModal.variant}
+      />
     </div>
+
   );
 }

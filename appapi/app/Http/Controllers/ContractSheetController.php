@@ -93,6 +93,7 @@ class ContractSheetController extends Controller
             '*.uom_code' => 'required|string|max:255',
             '*.sheetgroup_seqno' => 'nullable|integer',
             '*.sheet_seqno' => 'nullable|integer',
+            '*.is_active' => 'nullable|boolean',
         ]);
 
         // $contractsheet = $this->repository->create($request->all());

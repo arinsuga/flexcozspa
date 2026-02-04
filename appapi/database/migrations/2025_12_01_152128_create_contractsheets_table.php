@@ -49,6 +49,7 @@ class CreateContractsheetsTable extends Migration
 
             $table->bigInteger('sheetgroup_seqno')->nullable();
             $table->bigInteger('sheet_seqno')->nullable();
+            $table->boolean('is_active')->default(1);
             $table->timestamps();
         });
     }

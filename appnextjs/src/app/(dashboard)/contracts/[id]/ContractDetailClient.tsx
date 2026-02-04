@@ -12,6 +12,8 @@ import { ContractSheet } from '@/services/contractSheetService';
 import { SheetGroup } from '@/services/sheetGroupService';
 import { Contract } from '@/services/contractService';
 import { formatNumeric, parseNumeric } from '@/utils/numberFormat';
+import InfoDialog from '@/components/common/InfoDialog';
+
 
 interface ContractDetailClientProps {
   id: string;
@@ -75,6 +77,23 @@ export default function ContractDetailClient({
   const [localSheets, setLocalSheets] = useState<ContractSheet[]>(initialData?.contract_sheets || []);
   const [hasInitialized, setHasInitialized] = useState(!!(initialData?.contract_sheets && initialData.contract_sheets.length > 0));
   const sheetRef = useRef<any>(null);
+
+  const [infoModal, setInfoModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'success' | 'error' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'info'
+  });
+
+  const showInfo = (title: string, message: string, variant: 'success' | 'error' | 'info' = 'info') => {
+    setInfoModal({ isOpen: true, title, message, variant });
+  };
+
 
   // Sync localSheets with API data if not already provided via initialData
   useEffect(() => {
@@ -175,22 +194,23 @@ export default function ContractDetailClient({
     try {
       if (mode === 'create' || id === 'new') {
          await createContractMutation.mutateAsync(payload);
-         alert('Contract created successfully!');
-         router.push('/contracts');
+         showInfo('Success', 'Contract created successfully!', 'success');
+         setTimeout(() => router.push('/contracts'), 1500);
       } else {
          await updateContractMutation.mutateAsync({ 
            id, 
            data: payload
          });
-         alert('Saved successfully!');
+         showInfo('Success', 'Saved successfully!', 'success');
          // Re-sync to ensure we have latest IDs etc if needed, though usually we might stay or reload
          setHasInitialized(false); 
       }
     } catch (error) {
       console.error('Save failed', error);
-      alert('Failed to save.');
+      showInfo('Error', 'Failed to save.', 'error');
     }
   };
+
 
   // Loading states
   if ((isContractLoading && id !== 'new') || isWorkSheetGroupsLoading || isCostSheetGroupsLoading || isStatusesLoading || (isProjectLoading && contract?.project_id)) {
@@ -383,7 +403,6 @@ export default function ContractDetailClient({
                 {sheetGroups.map((group: SheetGroup) => {
                   const tabLabel = `${group.sheetgroup_code}. ${group.sheetgroup_name}`;
                   const isActive = activeTabId === group.id;
-                  const hasData = localSheets.some(s => s.sheetgroup_id === group.id);
                   
                   return (
                     <button
@@ -393,19 +412,12 @@ export default function ContractDetailClient({
                         flex-1 md:flex-none text-left py-3 px-4 border-b-2 md:border-b-0 md:border-r-4 font-medium text-xs transition-colors
                         ${isActive
                           ? 'border-primary text-primary bg-primary/5'
-                          : !hasData
-                            ? 'border-transparent text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-900/10'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700/50'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700/50'
                         }
                       `}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span>{tabLabel}</span>
-                        {!hasData && (
-                          <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-tighter">
-                            Empty
-                          </span>
-                        )}
                       </div>
                     </button>
                   );
@@ -440,6 +452,15 @@ export default function ContractDetailClient({
           </div>
         </div>
       </div>
+      
+      <InfoDialog
+        isOpen={infoModal.isOpen}
+        onClose={() => setInfoModal(prev => ({ ...prev, isOpen: false }))}
+        title={infoModal.title}
+        message={infoModal.message}
+        variant={infoModal.variant}
+      />
     </div>
+
   );
 }

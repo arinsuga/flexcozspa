@@ -42,6 +42,7 @@ class ContractsheetsTableSeeder extends Seeder
                 'uom_code' => 'Lot',
                 'sheetgroup_seqno' => 1,
                 'sheet_seqno' => 1,
+                'is_active' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

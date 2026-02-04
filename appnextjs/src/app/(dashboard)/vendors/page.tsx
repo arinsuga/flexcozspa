@@ -6,12 +6,13 @@ import Button from '@/components/common/Button';
 import VendorModal from '@/components/features/vendors/VendorModal';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { Vendor } from '@/services/vendorService';
-import { vendorTypeService } from '@/services/vendorTypeService';
-import Link from 'next/link';
 import { TableSkeleton } from '@/components/common/Skeleton';
+
 import SelectInput from '@/components/common/SelectInput';
 import Input from '@/components/common/Input';
 import Pagination from '@/components/common/Pagination';
+import InfoDialog from '@/components/common/InfoDialog';
+
 
 export default function VendorsPage() {
   const [page, setPage] = useState(1);
@@ -51,7 +52,24 @@ export default function VendorsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | undefined>(undefined);
   const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
-  const [appError, setAppError] = useState<string | null>(null);
+  
+  // Modal states for notifications
+  const [infoModal, setInfoModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'success' | 'error' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'info'
+  });
+
+  const showInfo = (title: string, message: string, variant: 'success' | 'error' | 'info' = 'info') => {
+    setInfoModal({ isOpen: true, title, message, variant });
+  };
+
   
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [vendorToDelete, setVendorToDelete] = useState<Vendor | null>(null);
@@ -59,16 +77,16 @@ export default function VendorsPage() {
   const handleCreate = () => {
     setEditingVendor(undefined);
     setFormErrors({});
-    setAppError(null);
     setIsModalOpen(true);
   };
+
 
   const handleEdit = (vendor: Vendor) => {
     setEditingVendor(vendor);
     setFormErrors({});
-    setAppError(null);
     setIsModalOpen(true);
   };
+
 
   const handleDeleteClick = (vendor: Vendor) => {
     setVendorToDelete(vendor);
@@ -83,16 +101,26 @@ export default function VendorsPage() {
         await createVendor.mutateAsync(data);
       }
       setIsModalOpen(false);
-    } catch (error: any) {
-      if (error.response?.status === 422) {
-        setFormErrors(error.response.data.errors);
+      showInfo('Success', `Vendor ${editingVendor ? 'updated' : 'created'} successfully!`, 'success');
+    } catch (error: unknown) {
+      if (error != null && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response: { status: number; data: { errors: Record<string, string[]> } } };
+        if (axiosError.response.status === 422) {
+          setFormErrors(axiosError.response.data.errors);
+        } else {
+          console.error('App Error:', error);
+          setIsModalOpen(false);
+          showInfo('Error', 'An application error occurred. Please try again later.', 'error');
+        }
       } else {
         console.error('App Error:', error);
-        setAppError("An application error occurred. Please try again later.");
         setIsModalOpen(false);
+        showInfo('Error', 'An application error occurred. Please try again later.', 'error');
       }
     }
   };
+
+
 
   const handleConfirmDelete = async () => {
     if (vendorToDelete) {
@@ -107,32 +135,7 @@ export default function VendorsPage() {
 
   return (
     <div className="space-y-6">
-      {appError && (
-        <div className="bg-red-50 border-l-4 border-error p-4 relative dark:bg-red-900/20 dark:border-red-500">
-            <div className="flex">
-                <div className="flex-shrink-0">
-                    <span className="text-error">⚠️</span>
-                </div>
-                <div className="ml-3">
-                    <p className="text-sm text-red-700 dark:text-red-200">
-                        {appError}
-                    </p>
-                </div>
-                <div className="ml-auto pl-3">
-                    <div className="-mx-1.5 -my-1.5">
-                        <button
-                            type="button"
-                            onClick={() => setAppError(null)}
-                            className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:ring-offset-red-50 dark:bg-transparent dark:hover:bg-red-900/40"
-                        >
-                            <span className="sr-only">Dismiss</span>
-                            <span aria-hidden="true">×</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-      )}
+
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Vendors</h1>
@@ -260,6 +263,16 @@ export default function VendorsPage() {
         variant="danger"
         isLoading={deleteVendor.isPending}
       />
+
+
+      <InfoDialog
+        isOpen={infoModal.isOpen}
+        onClose={() => setInfoModal(prev => ({ ...prev, isOpen: false }))}
+        title={infoModal.title}
+        message={infoModal.message}
+        variant={infoModal.variant}
+      />
     </div>
+
   );
 }
