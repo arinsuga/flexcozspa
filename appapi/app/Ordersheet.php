@@ -125,11 +125,6 @@ class Ordersheet extends Model
         return $this->belongsTo('App\Vendor', 'vendor_id');
     }
 
-    public function uom()
-    {
-        return $this->belongsTo('App\Uom', 'uom_id');
-    }
-
     /**
      * Get the UOM normalization associated with the order sheet.
      */

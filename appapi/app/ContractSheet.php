@@ -96,11 +96,6 @@ class ContractSheet extends Model
         return $this->hasMany('App\Ordersheet', 'contractsheets_id');
     }
 
-    public function uom()
-    {
-        return $this->belongsTo('App\Uom', 'uom_id');
-    }
-
     /**
      * Get the UOM normalization associated with the contract sheet.
      */

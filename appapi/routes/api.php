@@ -109,9 +109,6 @@ Route::get('vendortypes/{vendorTypeId}/vendors', 'VendorController@getByType')->
 // Vendor Types API
 Route::apiResource('vendortypes', 'VendorTypeController');
 
-// Units of Measure API
-Route::apiResource('uoms', 'UomController');
-
 // UOM Normalizations API
 Route::apiResource('uom-normalizations', 'UomNormalizationController');
 

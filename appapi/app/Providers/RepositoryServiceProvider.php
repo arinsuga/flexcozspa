@@ -10,7 +10,6 @@ use App\Repositories\Contracts\ContractRepositoryInterface;
 use App\Repositories\Contracts\SheetGroupRepositoryInterface;
 use App\Repositories\Contracts\VendorRepositoryInterface;
 use App\Repositories\Contracts\VendorTypeRepositoryInterface;
-use App\Repositories\Contracts\UomRepositoryInterface;
 use App\Repositories\Contracts\RefftypeRepositoryInterface;
 use App\Repositories\Contracts\ContractSheetRepositoryInterface;
 use App\Repositories\Contracts\OrderRepositoryInterface;
@@ -27,7 +26,6 @@ use App\Repositories\ContractRepository;
 use App\Repositories\SheetGroupRepository;
 use App\Repositories\VendorRepository;
 use App\Repositories\VendorTypeRepository;
-use App\Repositories\UomRepository;
 use App\Repositories\RefftypeRepository;
 use App\Repositories\ContractSheetRepository;
 use App\Repositories\OrderRepository;
@@ -44,7 +42,6 @@ use App\Contract;
 use App\SheetGroup;
 use App\Vendor;
 use App\VendorType;
-use App\Uom;
 use App\Refftype;
 use App\ContractSheet;
 use App\Order;
@@ -82,11 +79,6 @@ class RepositoryServiceProvider extends ServiceProvider
         // VendorType Repository Binding
         $this->app->bind(VendorTypeRepositoryInterface::class, function ($app) {
             return new VendorTypeRepository(new VendorType());
-        });
-
-        // Uom Repository Binding
-        $this->app->bind(UomRepositoryInterface::class, function ($app) {
-            return new UomRepository(new Uom());
         });
 
         // Refftype Repository Binding
