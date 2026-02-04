@@ -34,7 +34,8 @@ export default function ContractDetailClient({
 }: ContractDetailClientProps) {
   const router = useRouter();
   const { data: contractData, isLoading: isContractLoading } = useContract(id);
-  const { data: sheetGroupsData, isLoading: isSheetGroupsLoading } = useSheetGroupsByType(0);
+  const { data: workSheetGroupsData, isLoading: isWorkSheetGroupsLoading } = useSheetGroupsByType(0);
+  const { data: costSheetGroupsData, isLoading: isCostSheetGroupsLoading } = useSheetGroupsByType(1);
   const { data: statusesData, isLoading: isStatusesLoading } = useContractStatuses();
   const { updateContract: updateContractMutation, createContract: createContractMutation } = useContractMutations();
   
@@ -56,8 +57,15 @@ export default function ContractDetailClient({
   const project = projectData?.data || projectData;
 
   const sheetGroups = useMemo(() => {
-    return Array.isArray(sheetGroupsData) ? sheetGroupsData : (sheetGroupsData?.data || []);
-  }, [sheetGroupsData]);
+    const workGroups = Array.isArray(workSheetGroupsData) ? workSheetGroupsData : (workSheetGroupsData?.data || []);
+    const costGroups = Array.isArray(costSheetGroupsData) ? costSheetGroupsData : (costSheetGroupsData?.data || []);
+    return [...workGroups, ...costGroups].sort((a, b) => {
+        if (a.sheetgroup_type !== b.sheetgroup_type) {
+            return a.sheetgroup_type - b.sheetgroup_type;
+        }
+        return (a.sheetgroup_seqno || 0) - (b.sheetgroup_seqno || 0);
+    });
+  }, [workSheetGroupsData, costSheetGroupsData]);
   
   const statuses = useMemo(() => {
     return Array.isArray(statusesData) ? statusesData : (statusesData?.data || []);
@@ -185,7 +193,7 @@ export default function ContractDetailClient({
   };
 
   // Loading states
-  if ((isContractLoading && id !== 'new') || isSheetGroupsLoading || isStatusesLoading || (isProjectLoading && contract?.project_id)) {
+  if ((isContractLoading && id !== 'new') || isWorkSheetGroupsLoading || isCostSheetGroupsLoading || isStatusesLoading || (isProjectLoading && contract?.project_id)) {
     return <div className="p-6">Loading...</div>;
   }
   
@@ -358,39 +366,78 @@ export default function ContractDetailClient({
             </div>
           </div>
 
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="-mb-px flex space-x-8 overflow-x-auto whitespace-nowrap scrollbar-hide" aria-label="Tabs">
-              {sheetGroups.map((group: SheetGroup) => {
-                const tabLabel = `${group.sheetgroup_code}. ${group.sheetgroup_name}`;
-                return (
-                  <button
-                    key={group.id}
-                    onClick={() => handleTabClick(group.id)}
-                    className={`
-                      whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                      ${activeTabId === group.id
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                      }
-                    `}
-                  >
-                    {tabLabel}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
+          <div className="flex flex-col md:flex-row gap-3 items-start">
+            {/* Vertical Tabs Sidebar */}
+            <div className="w-full md:w-52 flex-shrink-0 bg-gray-50 dark:bg-gray-900/50 rounded-lg overflow-hidden border dark:border-gray-700">
+              <nav 
+                className="flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto whitespace-nowrap scrollbar-hide max-h-[600px]" 
+                aria-label="Tabs"
+                onWheel={(e) => {
+                  if (window.innerWidth >= 768) { // Only vertical scroll on desktop
+                    e.currentTarget.scrollTop += e.deltaY;
+                  } else {
+                    e.currentTarget.scrollLeft += e.deltaY;
+                  }
+                }}
+              >
+                {sheetGroups.map((group: SheetGroup) => {
+                  const tabLabel = `${group.sheetgroup_code}. ${group.sheetgroup_name}`;
+                  const isActive = activeTabId === group.id;
+                  const hasData = localSheets.some(s => s.sheetgroup_id === group.id);
+                  
+                  return (
+                    <button
+                      key={group.id}
+                      onClick={() => handleTabClick(group.id)}
+                      className={`
+                        flex-1 md:flex-none text-left py-3 px-4 border-b-2 md:border-b-0 md:border-r-4 font-medium text-xs transition-colors
+                        ${isActive
+                          ? 'border-primary text-primary bg-primary/5'
+                          : !hasData
+                            ? 'border-transparent text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:text-amber-300 dark:hover:bg-amber-900/10'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700/50'
+                        }
+                      `}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span>{tabLabel}</span>
+                        {!hasData && (
+                          <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-tighter">
+                            Empty
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
 
-          {activeTabId !== null && (
-            <ContractSheetTable 
-              key={`sheet-tab-${activeTabId}`}
-              ref={sheetRef} 
-              data={filteredSheets} 
-              contractId={id}
-              projectId={safeContract.project_id || 0}
-              sheetgroupId={activeTabId}
-            />
-          )}
+            {/* Table Content */}
+            <div className="flex-grow w-full overflow-hidden">
+              {activeTabId !== null && (
+                <>
+                  {filteredSheets.length === 0 && (
+                    <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg flex items-center gap-3 text-yellow-800 dark:text-yellow-200">
+                      <span className="material-icons-outlined text-xl">info</span>
+                      <div className="text-sm font-medium">
+                        This group currently has no data. You can start adding items by typing in the table below.
+                      </div>
+                    </div>
+                  )}
+                  <ContractSheetTable 
+                    key={`sheet-tab-${activeTabId}`}
+                    ref={sheetRef} 
+                    data={filteredSheets} 
+                    contractId={id}
+                    projectId={safeContract.project_id || 0}
+                    sheetgroupId={activeTabId}
+                    sheetgroupType={sheetGroups.find(g => g.id === activeTabId)?.sheetgroup_type ?? 0}
+                  />
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

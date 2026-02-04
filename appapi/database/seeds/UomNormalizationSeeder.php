@@ -102,10 +102,29 @@ class UomNormalizationSeeder extends Seeder
             ['raw_uom_code' => 'pck', 'uom_code' => 'pack', 'language' => 'en', 'is_indonesian_specific' => 0],
             ['raw_uom_code' => 'pak', 'uom_code' => 'pack', 'language' => 'en', 'is_indonesian_specific' => 0],
 
+            ['raw_uom_code' => 'box', 'uom_code' => 'box', 'language' => 'en', 'is_indonesian_specific' => 0],
+            ['raw_uom_code' => 'boxes', 'uom_code' => 'box', 'language' => 'en', 'is_indonesian_specific' => 0],
+            ['raw_uom_code' => 'boks', 'uom_code' => 'box', 'language' => 'en', 'is_indonesian_specific' => 0],
+            ['raw_uom_code' => 'bok', 'uom_code' => 'box', 'language' => 'en', 'is_indonesian_specific' => 0],
+            ['raw_uom_code' => 'bx', 'uom_code' => 'box', 'language' => 'en', 'is_indonesian_specific' => 0],
+
+            ['raw_uom_code' => 'kantong', 'uom_code' => 'kantong', 'language' => 'en', 'is_indonesian_specific' => 0],
+            ['raw_uom_code' => 'ktg', 'uom_code' => 'kantong', 'language' => 'en', 'is_indonesian_specific' => 0],
+            ['raw_uom_code' => 'kant', 'uom_code' => 'kantong', 'language' => 'en', 'is_indonesian_specific' => 0],
+
+            ['raw_uom_code' => 'org', 'uom_code' => 'org', 'language' => 'id', 'is_indonesian_specific' => 1],
+            ['raw_uom_code' => 'orang', 'uom_code' => 'org', 'language' => 'id', 'is_indonesian_specific' => 1],
+            ['raw_uom_code' => 'orng', 'uom_code' => 'org', 'language' => 'id', 'is_indonesian_specific' => 1],
+            ['raw_uom_code' => 'oran', 'uom_code' => 'org', 'language' => 'id', 'is_indonesian_specific' => 1],
+
             // ==================== LUMP SUM ====================
             ['raw_uom_code' => 'ls', 'uom_code' => 'ls', 'language' => 'en', 'is_indonesian_specific' => 0],
             ['raw_uom_code' => 'lump sum', 'uom_code' => 'ls', 'language' => 'en', 'is_indonesian_specific' => 0],
+            ['raw_uom_code' => 'lum sum', 'uom_code' => 'ls', 'language' => 'en', 'is_indonesian_specific' => 0],
+            ['raw_uom_code' => 'lumpsump', 'uom_code' => 'ls', 'language' => 'en', 'is_indonesian_specific' => 0],
             ['raw_uom_code' => 'lumpsum', 'uom_code' => 'ls', 'language' => 'en', 'is_indonesian_specific' => 0],
+            ['raw_uom_code' => 'lump', 'uom_code' => 'ls', 'language' => 'en', 'is_indonesian_specific' => 0],
+            ['raw_uom_code' => 'lumps', 'uom_code' => 'ls', 'language' => 'en', 'is_indonesian_specific' => 0],
             ['raw_uom_code' => 'lumsum', 'uom_code' => 'ls', 'language' => 'en', 'is_indonesian_specific' => 0],
             ['raw_uom_code' => 'lamsam', 'uom_code' => 'ls', 'language' => 'en', 'is_indonesian_specific' => 0],
             ['raw_uom_code' => 'l.s', 'uom_code' => 'ls', 'language' => 'en', 'is_indonesian_specific' => 0],
@@ -128,11 +147,6 @@ class UomNormalizationSeeder extends Seeder
             ['raw_uom_code' => 'hour', 'uom_code' => 'hour(s)', 'language' => 'en', 'is_indonesian_specific' => 0],
             ['raw_uom_code' => 'hours', 'uom_code' => 'hour(s)', 'language' => 'en', 'is_indonesian_specific' => 0],
             ['raw_uom_code' => 'jam', 'uom_code' => 'hour(s)', 'language' => 'id', 'is_indonesian_specific' => 0],
-
-            ['raw_uom_code' => 'box', 'uom_code' => 'box', 'language' => 'en', 'is_indonesian_specific' => 0],
-            ['raw_uom_code' => 'boxes', 'uom_code' => 'box', 'language' => 'en', 'is_indonesian_specific' => 0],
-            ['raw_uom_code' => 'boks', 'uom_code' => 'box', 'language' => 'en', 'is_indonesian_specific' => 0],
-            ['raw_uom_code' => 'bx', 'uom_code' => 'box', 'language' => 'en', 'is_indonesian_specific' => 0],
 
             // ==================== CONSTRUCTION-SPECIFIC (INDONESIAN) ====================
             ['raw_uom_code' => 'colt', 'uom_code' => 'colt', 'language' => 'id', 'is_indonesian_specific' => 1],

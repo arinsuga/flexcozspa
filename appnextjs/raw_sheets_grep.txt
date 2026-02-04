@@ -1,0 +1,2 @@
+52:    const rawSheets = contract.contract_sheets || [];
+54:    const validRaw = [...rawSheets].filter(s => s.sheet_code && s.sheet_code.toString().trim() !== '');

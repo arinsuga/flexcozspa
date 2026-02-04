@@ -15,12 +15,13 @@ interface ContractSheetTableProps {
   contractId: number | string;
   projectId: number;
   sheetgroupId?: number;
+  sheetgroupType?: number;
   onchange?: (instance: any, cell: any, x: any, y: any, value: any) => void;
   readOnly?: boolean;
 }
 
 const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
-  const { data, contractId, projectId, sheetgroupId = 1, onchange, readOnly = false } = props;
+  const { data, contractId, projectId, sheetgroupId = 1, sheetgroupType = 0, onchange, readOnly = false } = props;
   const jRef = useRef<HTMLDivElement>(null);
   const jInstance = useRef<any>(null);
 
@@ -147,7 +148,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             contract_id: isEditMode ? (typeof contractId === 'string' ? parseInt(contractId) : contractId as number) : undefined,
             sheet_dt: originalSheet?.sheet_dt || null,
             sheet_type: sheetType,
-            sheetgroup_type: 0,
+            sheetgroup_type: sheetgroupType,
             sheetgroup_id: parseInt(sheetgroupId as unknown as string),
             sheetheader_id: originalSheet?.sheetheader_id ? parseInt(originalSheet.sheetheader_id as unknown as string) : null,
             sheet_code: sheet_code ? String(sheet_code) : '',
@@ -296,14 +297,14 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
 
     const columns = [
       { type: 'hidden', name: 'id', title: 'ID', width: 0 },
-      { type: 'text', name: 'sheet_code', title: 'Code', width: 150, align: 'left' },
-      { type: 'text', name: 'description', title: 'Description', width: 650, align: 'left', wordWrap: true },
-      { type: 'numeric', name: 'qty', title: 'Vol', width: 120, mask: '#,##0.00', align: 'right' },
+      { type: 'text', name: 'sheet_code', title: 'Code', width: 130, align: 'left' },
+      { type: 'text', name: 'description', title: 'Description', width: 540, align: 'left', wordWrap: true },
+      { type: 'numeric', name: 'qty', title: 'Vol', width: 80, mask: '#,##0.00', align: 'right' },
       { 
         type: 'text', 
         name: 'uom_code', 
         title: 'Sat', 
-        width: 150,
+        width: 100,
         align: 'center'
       },
       { type: 'numeric', name: 'price', title: 'H.Satuan', width: 200, mask: '#,##0.00', align: 'right' },
@@ -342,7 +343,6 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         onchange: handleCellChange,
       }],
       allowComments: true,
-      contextMenu: true,
       search: true,
       pagination: 50,
       copyCompatibility: true,
