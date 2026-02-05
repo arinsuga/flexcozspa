@@ -59,4 +59,12 @@ class Project extends Model
         return $this->hasMany('App\Order', 'project_id');
     }
 
+    /**
+     * Contracts that belong to this project.
+     */
+    public function contracts()
+    {
+        return $this->hasMany('App\Contract', 'project_id');
+    }
+
 }

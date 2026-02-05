@@ -20,6 +20,7 @@ export interface Contract {
   contract_amount: string;
   contract_payment: string;
   contract_payment_status: string;
+  is_active: number;
   created_at: string;
   updated_at: string;
   contract_status?: ContractStatus;

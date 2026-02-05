@@ -70,6 +70,15 @@ class RefftypeController extends Controller
             return response()->json(['error' => 'Reference type not found'], 404);
         }
 
+        // Validation Rule: User can not delete physical data if already use by ordersheet items.
+        if ($refftype->ordersheets()->count() > 0) {
+            return response()->json([
+                'error' => 'Conflict',
+                'message' => 'Reference type cannot be deleted because it is already used by ordersheet items.',
+                'in_use' => true
+            ], 409);
+        }
+
         $this->repository->delete($id);
         return response()->json(['message' => 'Reference type deleted successfully'], 200);
     }

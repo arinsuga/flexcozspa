@@ -126,6 +126,15 @@ class ContractSheetController extends Controller
             return response()->json(['error' => 'Contract sheet not found'], 404);
         }
 
+        // Validation Rule: User can not delete physical data if already use by ordersheet items.
+        if ($contractsheet->ordersheets()->count() > 0) {
+            return response()->json([
+                'error' => 'Conflict',
+                'message' => 'Contract sheet item cannot be deleted because it is already used by ordersheet items.',
+                'in_use' => true
+            ], 409);
+        }
+
         $this->repository->delete($id);
         return response()->json(['message' => 'Contract sheet deleted successfully'], 200);
     }

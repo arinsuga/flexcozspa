@@ -12,7 +12,9 @@ import { ContractSheet } from '@/services/contractSheetService';
 import { SheetGroup } from '@/services/sheetGroupService';
 import { Contract } from '@/services/contractService';
 import { formatNumeric, parseNumeric } from '@/utils/numberFormat';
+import axios from 'axios';
 import InfoDialog from '@/components/common/InfoDialog';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
 
 
 interface ContractDetailClientProps {
@@ -48,12 +50,7 @@ export default function ContractDetailClient({
   // Sync contract state with fetched data if not already initialized from initialData
   const [isContractInitialized, setIsContractInitialized] = useState(!!(initialData && Object.keys(initialData).length > 2));
   
-  useEffect(() => {
-    if (fetchedContract && !isContractInitialized) {
-      setContract(fetchedContract);
-      setIsContractInitialized(true);
-    }
-  }, [fetchedContract, isContractInitialized]);
+  // No changes to effect order, but ensure we don't have loop
 
   const { data: projectData, isLoading: isProjectLoading } = useProject(contract?.project_id ?? '');
   const project = projectData?.data || projectData;
@@ -76,7 +73,7 @@ export default function ContractDetailClient({
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
   const [localSheets, setLocalSheets] = useState<ContractSheet[]>(initialData?.contract_sheets || []);
   const [hasInitialized, setHasInitialized] = useState(!!(initialData?.contract_sheets && initialData.contract_sheets.length > 0));
-  const sheetRef = useRef<any>(null);
+  const sheetRef = useRef<{ getSheetData: () => ContractSheet[] } | null>(null);
 
   const [infoModal, setInfoModal] = useState<{
     isOpen: boolean;
@@ -90,7 +87,19 @@ export default function ContractDetailClient({
     variant: 'info'
   });
 
-  const showInfo = (title: string, message: string, variant: 'success' | 'error' | 'info' = 'info') => {
+  const [inUseModal, setInUseModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    payload: Partial<Contract> | null;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    payload: null
+  });
+
+  const showInfo = (title: string, message: string, variant: 'success' | 'error' | 'info' | 'warning' = 'info') => {
     setInfoModal({ isOpen: true, title, message, variant });
   };
 
@@ -99,16 +108,15 @@ export default function ContractDetailClient({
   useEffect(() => {
     const sheetsFromContract = contract?.contract_sheets;
     if (sheetsFromContract && !hasInitialized) {
-      setLocalSheets(sheetsFromContract);
       setHasInitialized(true);
+      setLocalSheets(sheetsFromContract);
     }
   }, [contract, hasInitialized]);
 
   // Initialize activeTabId when sheetGroups are loaded
   useEffect(() => {
     if (Array.isArray(sheetGroups) && sheetGroups.length > 0 && activeTabId === null) {
-      const firstGroupId = sheetGroups[0].id;
-      setActiveTabId(firstGroupId);
+      setActiveTabId(sheetGroups[0].id);
     }
   }, [sheetGroups, activeTabId]);
 
@@ -202,12 +210,35 @@ export default function ContractDetailClient({
            data: payload
          });
          showInfo('Success', 'Saved successfully!', 'success');
-         // Re-sync to ensure we have latest IDs etc if needed, though usually we might stay or reload
          setHasInitialized(false); 
       }
-    } catch (error) {
-      console.error('Save failed', error);
-      showInfo('Error', 'Failed to save.', 'error');
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error?.response?.status === 409) {
+        setInUseModal({
+          isOpen: true,
+          title: 'Items In Use',
+          message: error?.response?.data?.message || 'Some items are in use and cannot be physically deleted. Would you like to mark them as inactive instead?',
+          payload: { ...payload, force_soft_delete: true } as any
+        });
+      } else {
+        console.error('Save failed', error);
+        showInfo('Error', 'Failed to save.', 'error');
+      }
+    }
+  };
+
+  const handleForceSave = async () => {
+    if (!inUseModal.payload || !id) return;
+    try {
+      await updateContractMutation.mutateAsync({ 
+        id, 
+        data: inUseModal.payload
+      });
+      setInUseModal(prev => ({ ...prev, isOpen: false, payload: null }));
+      showInfo('Success', 'Saved successfully (with soft-deletes)!', 'success');
+      setHasInitialized(false);
+    } catch {
+      showInfo('Error', 'Failed to save even with soft-delete.', 'error');
     }
   };
 
@@ -288,7 +319,7 @@ export default function ContractDetailClient({
                   disabled={readOnlyInfo}
                   className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
                >
-                  {statuses.map((s: any) => (
+                  {statuses.map((s: { id: number; name: string }) => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                </select>
@@ -453,12 +484,23 @@ export default function ContractDetailClient({
         </div>
       </div>
       
+      <ConfirmDialog
+        isOpen={inUseModal.isOpen}
+        onClose={() => setInUseModal(prev => ({ ...prev, isOpen: false, payload: null }))}
+        onConfirm={handleForceSave}
+        title={inUseModal.title}
+        message={inUseModal.message}
+        confirmLabel="Mark Inactive & Save"
+        variant="warning"
+        isLoading={updateContractMutation.isPending}
+      />
+
       <InfoDialog
         isOpen={infoModal.isOpen}
         onClose={() => setInfoModal(prev => ({ ...prev, isOpen: false }))}
         title={infoModal.title}
         message={infoModal.message}
-        variant={infoModal.variant}
+        variant={infoModal.variant as 'success' | 'error' | 'info' | undefined}
       />
     </div>
 

@@ -10,6 +10,7 @@ import { ReffType } from '@/services/refftypeService';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import SelectInput from '@/components/common/SelectInput';
 import Pagination from '@/components/common/Pagination';
+import axios from 'axios';
 import InfoDialog from '@/components/common/InfoDialog';
 
 
@@ -67,6 +68,18 @@ export default function ReffTypesPage() {
     title: '',
     message: '',
     variant: 'info'
+  });
+
+  const [inUseModal, setInUseModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    item: ReffType | null;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    item: null
   });
 
   const showInfo = (title: string, message: string, variant: 'success' | 'error' | 'info' = 'info') => {
@@ -129,9 +142,40 @@ export default function ReffTypesPage() {
 
   const handleConfirmDelete = async () => {
     if (refftypeToDelete) {
-      await deleteReffType.mutateAsync(refftypeToDelete.id);
-      setIsDeleteOpen(false);
-      setReffTypeToDelete(null);
+      try {
+        await deleteReffType.mutateAsync(refftypeToDelete.id);
+        setIsDeleteOpen(false);
+        setReffTypeToDelete(null);
+        showInfo('Success', 'Reference Type deleted successfully!', 'success');
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.status === 409) {
+          setIsDeleteOpen(false);
+          setInUseModal({
+            isOpen: true,
+            title: 'Reference Type In Use',
+            message: error?.response?.data?.message || 'This reference type is in use (by ordersheet items) and cannot be physically deleted. Would you like to mark it as inactive instead?',
+            item: refftypeToDelete
+          });
+        } else {
+          setIsDeleteOpen(false);
+          showInfo('Error', 'Failed to delete reference type.', 'error');
+        }
+      }
+    }
+  };
+
+  const handleMarkInactive = async () => {
+    if (inUseModal.item) {
+      try {
+        await updateReffType.mutateAsync({ 
+          id: inUseModal.item.id, 
+          data: { is_active: 0 } 
+        });
+        setInUseModal(prev => ({ ...prev, isOpen: false, item: null }));
+        showInfo('Success', 'Reference Type marked as inactive!', 'success');
+      } catch {
+        showInfo('Error', 'Failed to mark reference type as inactive.', 'error');
+      }
     }
   };
 
@@ -192,12 +236,12 @@ export default function ReffTypesPage() {
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {refftypes?.map((rt: ReffType) => (
-              <tr key={rt.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <tr key={rt.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${!rt.is_active ? 'opacity-60' : ''}`}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{rt.refftype_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{rt.refftype_code || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{rt.refftype_description || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${!!rt.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase tracking-wider ${!!rt.is_active ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' : 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}>
                     {!!rt.is_active ? 'active' : 'inactive'}
                   </span>
                 </td>
@@ -286,6 +330,17 @@ export default function ReffTypesPage() {
         message={`Are you sure you want to delete ${refftypeToDelete?.refftype_name}?`}
         variant="danger"
         isLoading={deleteReffType.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={inUseModal.isOpen}
+        onClose={() => setInUseModal(prev => ({ ...prev, isOpen: false, item: null }))}
+        onConfirm={handleMarkInactive}
+        title={inUseModal.title}
+        message={inUseModal.message}
+        confirmLabel="Mark Inactive"
+        variant="warning"
+        isLoading={updateReffType.isPending}
       />
 
       <InfoDialog

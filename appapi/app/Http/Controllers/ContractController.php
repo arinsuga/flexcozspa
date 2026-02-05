@@ -47,7 +47,7 @@ class ContractController extends Controller
             $contract = $this->repository->create($request->all());
             
             if ($request->has('contract_sheets')) {
-                $this->syncSheets($contract, $request->get('contract_sheets'));
+                $this->syncSheets($contract, $request->get('contract_sheets'), $request);
             }
 
             return response()->json(['data' => $contract->load('contractSheets')], 201);
@@ -74,7 +74,7 @@ class ContractController extends Controller
             $this->repository->update($id, $request->all());
             
             if ($request->has('contract_sheets')) {
-                $this->syncSheets($contract, $request->get('contract_sheets'));
+                $this->syncSheets($contract, $request->get('contract_sheets'), $request);
             }
 
             return response()->json(['data' => $contract->load('contractSheets')], 200);
@@ -84,15 +84,46 @@ class ContractController extends Controller
     /**
      * Sync contract sheets with calculations.
      */
-    protected function syncSheets($contract, array $inputSheets)
+    protected function syncSheets($contract, array $inputSheets, Request $request)
     {
         $existingSheetIds = $contract->contractSheets()->pluck('id')->toArray();
-        $inputSheetIds = array_filter(array_column($inputSheets, 'id'), 'is_numeric');
+        $inputSheetIds = array_map('intval', array_filter(array_column($inputSheets, 'id'), function($id) use ($existingSheetIds) {
+            return is_numeric($id) && in_array((int)$id, $existingSheetIds);
+        }));
         
         // 1. Remove sheets not in input
         $idsToDelete = array_diff($existingSheetIds, $inputSheetIds);
         if (!empty($idsToDelete)) {
-            $contract->contractSheets()->whereIn('id', $idsToDelete)->delete();
+            $inUseSheets = [];
+            foreach ($idsToDelete as $id) {
+                $sheet = $contract->contractSheets()->find($id);
+                if ($sheet && $sheet->ordersheets()->count() > 0) {
+                    $inUseSheets[] = $sheet->sheet_code . ' - ' . $sheet->sheet_name;
+                }
+            }
+
+            if (!empty($inUseSheets) && !$request->has('force_soft_delete')) {
+                // Throwing an exception to be caught by the outer try-catch or transaction handler
+                // Actually, since we're inside a transaction callback in update(), we should return a specific response or throw an exception.
+                // But update() returns whatever the callback returns.
+                return response()->json([
+                    'error' => 'Conflict',
+                    'message' => 'The following items are in use and cannot be physically deleted: ' . implode(', ', $inUseSheets) . '. Would you like to mark them as inactive instead?',
+                    'in_use' => true,
+                    'in_use_items' => $inUseSheets
+                ], 409);
+            }
+
+            foreach ($idsToDelete as $id) {
+                $sheet = $contract->contractSheets()->find($id);
+                if ($sheet) {
+                    if ($sheet->ordersheets()->count() > 0) {
+                        $sheet->update(['is_active' => 0]);
+                    } else {
+                        $sheet->delete();
+                    }
+                }
+            }
         }
 
         // 2. Separate headers and items for calculation
@@ -172,7 +203,7 @@ class ContractController extends Controller
             $itemId = $itemData['id'] ?? null;
             
             // Map header ID if it was a new header
-            if (isset($tempIdMap[$itemData['sheetheader_id']])) {
+            if (isset($itemData['sheetheader_id']) && isset($tempIdMap[$itemData['sheetheader_id']])) {
                 $itemData['sheetheader_id'] = $tempIdMap[$itemData['sheetheader_id']];
             }
 
@@ -214,6 +245,15 @@ class ContractController extends Controller
         
         if (!$contract) {
             return response()->json(['error' => 'Contract not found'], 404);
+        }
+
+        // Validation Rule: User can not delete physical data if already use by order.
+        if ($contract->orders()->count() > 0) {
+            return response()->json([
+                'error' => 'Conflict',
+                'message' => 'Contract cannot be deleted because it is already used by orders.',
+                'in_use' => true
+            ], 409);
         }
 
         return \DB::transaction(function () use ($id, $contract) {

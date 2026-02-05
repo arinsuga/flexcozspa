@@ -68,6 +68,18 @@ export default function ProjectsPage() {
     variant: 'info'
   });
 
+  const [inUseModal, setInUseModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    item: Project | null;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    item: null
+  });
+
   const showInfo = (title: string, message: string, variant: 'success' | 'error' | 'info' = 'info') => {
     setInfoModal({ isOpen: true, title, message, variant });
   };
@@ -123,9 +135,40 @@ export default function ProjectsPage() {
 
   const handleConfirmDelete = async () => {
     if (projectToDelete) {
-      await deleteProject.mutateAsync(projectToDelete.id);
-      setIsDeleteOpen(false);
-      setProjectToDelete(null);
+      try {
+        await deleteProject.mutateAsync(projectToDelete.id);
+        setIsDeleteOpen(false);
+        setProjectToDelete(null);
+        showInfo('Success', 'Project deleted successfully!', 'success');
+      } catch (error: any) {
+        if (error?.response?.status === 409) {
+          setIsDeleteOpen(false);
+          setInUseModal({
+            isOpen: true,
+            title: 'Project In Use',
+            message: error?.response?.data?.message || 'This project is in use and cannot be physically deleted. Would you like to mark it as inactive instead?',
+            item: projectToDelete
+          });
+        } else {
+          setIsDeleteOpen(false);
+          showInfo('Error', 'Failed to delete project.', 'error');
+        }
+      }
+    }
+  };
+
+  const handleMarkInactive = async () => {
+    if (inUseModal.item) {
+      try {
+        await updateProject.mutateAsync({ 
+          id: inUseModal.item.id, 
+          data: { is_active: 0 } 
+        });
+        setInUseModal(prev => ({ ...prev, isOpen: false, item: null }));
+        showInfo('Success', 'Project marked as inactive!', 'success');
+      } catch {
+        showInfo('Error', 'Failed to mark project as inactive.', 'error');
+      }
     }
   };
 
@@ -188,7 +231,7 @@ export default function ProjectsPage() {
             {projects?.map((project: Project) => (
               <tr 
                 key={project.id} 
-                className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${!project.is_active ? 'opacity-60' : ''}`}
                 onClick={() => handleEdit(project)}
               >
                 <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">
@@ -201,11 +244,18 @@ export default function ProjectsPage() {
                    {project.project_startdt || 'N/A'} - {project.project_enddt || 'N/A'}
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-sm">
-                    <span className={`px-2 py-1 text-xs rounded-full 
-                        ${project.project_status?.id === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
-                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
-                         {project.project_status?.name || 'Unknown'}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                        <span className={`px-2 py-1 text-xs rounded-full w-fit
+                            ${project.project_status?.id === 1 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
+                            'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
+                            {project.project_status?.name || 'Unknown'}
+                        </span>
+                        {project.is_active == 0 && (
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800 w-fit uppercase tracking-wider">
+                                Inactive
+                            </span>
+                        )}
+                    </div>
                 </td>
                  <td className="px-3 py-4 whitespace-nowrap text-center text-sm font-medium" onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-center gap-2">
@@ -264,6 +314,17 @@ export default function ProjectsPage() {
         message={`Are you sure you want to delete ${projectToDelete?.project_name}?`}
         variant="danger"
         isLoading={deleteProject.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={inUseModal.isOpen}
+        onClose={() => setInUseModal(prev => ({ ...prev, isOpen: false, item: null }))}
+        onConfirm={handleMarkInactive}
+        title={inUseModal.title}
+        message={inUseModal.message}
+        confirmLabel="Mark Inactive"
+        variant="warning"
+        isLoading={updateProject.isPending}
       />
 
       <InfoDialog

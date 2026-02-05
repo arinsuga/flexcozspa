@@ -1,7 +1,7 @@
 import { appApi } from './api';
 
 export interface ContractSheet {
-  id: number;
+  id: number | string;
   project_id: number;
   contract_id: number;
   sheet_dt: string | null;
@@ -29,6 +29,7 @@ export interface ContractSheet {
   sheetgroup_seqno: number;
   sheet_seqno: number;
   is_active: number;
+  ordersheets_count?: number;
   created_at: string;
   updated_at: string;
 }

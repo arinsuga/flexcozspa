@@ -10,6 +10,7 @@ import { VendorType } from '@/services/vendorTypeService';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import SelectInput from '@/components/common/SelectInput';
 import Pagination from '@/components/common/Pagination';
+import axios from 'axios';
 import InfoDialog from '@/components/common/InfoDialog';
 
 
@@ -67,6 +68,18 @@ export default function VendorTypesPage() {
     title: '',
     message: '',
     variant: 'info'
+  });
+
+  const [inUseModal, setInUseModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    item: VendorType | null;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    item: null
   });
 
   const showInfo = (title: string, message: string, variant: 'success' | 'error' | 'info' = 'info') => {
@@ -129,9 +142,40 @@ export default function VendorTypesPage() {
 
   const handleConfirmDelete = async () => {
     if (vendorTypeToDelete) {
-      await deleteVendorType.mutateAsync(vendorTypeToDelete.id);
-      setIsDeleteOpen(false);
-      setVendorTypeToDelete(null);
+      try {
+        await deleteVendorType.mutateAsync(vendorTypeToDelete.id);
+        setIsDeleteOpen(false);
+        setVendorTypeToDelete(null);
+        showInfo('Success', 'Vendor Type deleted successfully!', 'success');
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.status === 409) {
+          setIsDeleteOpen(false);
+          setInUseModal({
+            isOpen: true,
+            title: 'Vendor Type In Use',
+            message: error?.response?.data?.message || 'This vendor type is in use (by vendors) and cannot be physically deleted. Would you like to mark it as inactive instead?',
+            item: vendorTypeToDelete
+          });
+        } else {
+          setIsDeleteOpen(false);
+          showInfo('Error', 'Failed to delete vendor type.', 'error');
+        }
+      }
+    }
+  };
+
+  const handleMarkInactive = async () => {
+    if (inUseModal.item) {
+      try {
+        await updateVendorType.mutateAsync({ 
+          id: inUseModal.item.id, 
+          data: { is_active: 0 } 
+        });
+        setInUseModal(prev => ({ ...prev, isOpen: false, item: null }));
+        showInfo('Success', 'Vendor Type marked as inactive!', 'success');
+      } catch {
+        showInfo('Error', 'Failed to mark vendor type as inactive.', 'error');
+      }
     }
   };
 
@@ -192,12 +236,12 @@ export default function VendorTypesPage() {
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {vendorTypes?.map((vt: VendorType) => (
-              <tr key={vt.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <tr key={vt.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${!vt.is_active ? 'opacity-60' : ''}`}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{vt.vendortype_code}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{vt.vendortype_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{vt.vendortype_description || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${vt.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase tracking-wider ${vt.is_active ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' : 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'}`}>
                     {vt.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
@@ -300,6 +344,17 @@ export default function VendorTypesPage() {
         message={`Are you sure you want to delete ${vendorTypeToDelete?.vendortype_name}?`}
         variant="danger"
         isLoading={deleteVendorType.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={inUseModal.isOpen}
+        onClose={() => setInUseModal(prev => ({ ...prev, isOpen: false, item: null }))}
+        onConfirm={handleMarkInactive}
+        title={inUseModal.title}
+        message={inUseModal.message}
+        confirmLabel="Mark Inactive"
+        variant="warning"
+        isLoading={updateVendorType.isPending}
       />
 
       <InfoDialog

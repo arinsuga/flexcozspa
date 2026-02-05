@@ -70,6 +70,15 @@ class ProjectController extends Controller
             return response()->json(['error' => 'Project not found'], 404);
         }
 
+        // Validation Rule: User can not delete physical data if already use by contract or order.
+        if ($project->contracts()->count() > 0 || $project->orders()->count() > 0) {
+            return response()->json([
+                'error' => 'Conflict',
+                'message' => 'Project cannot be deleted because it is already used by contracts or orders.',
+                'in_use' => true
+            ], 409);
+        }
+
         $this->repository->delete($id);
         return response()->json(['message' => 'Project deleted successfully'], 200);
     }

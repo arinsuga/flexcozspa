@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline' | 'warning';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -29,7 +29,8 @@ export default function Button({
     secondary: "bg-secondary text-gray-900 hover:bg-[#EAC058] focus:ring-secondary",
     danger: "bg-error text-white hover:bg-[#DA5858] focus:ring-error",
     ghost: "bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800",
-    outline: "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-primary dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800"
+    outline: "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-primary dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-800",
+    warning: "bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500"
   };
 
   const sizes = {

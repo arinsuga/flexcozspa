@@ -78,6 +78,15 @@ class VendorController extends Controller
             return response()->json(['error' => 'Vendor not found'], 404);
         }
 
+        // Validation Rule: User can not delete physical data if already use by order or ordersheet items.
+        if ($vendor->orders()->count() > 0 || $vendor->ordersheets()->count() > 0) {
+            return response()->json([
+                'error' => 'Conflict',
+                'message' => 'Vendor cannot be deleted because it is already used by orders or ordersheet items.',
+                'in_use' => true
+            ], 409);
+        }
+
         $this->repository->delete($id);
         return response()->json(['message' => 'Vendor deleted successfully'], 200);
     }

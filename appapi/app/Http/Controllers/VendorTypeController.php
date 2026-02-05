@@ -70,6 +70,15 @@ class VendorTypeController extends Controller
             return response()->json(['error' => 'Vendor type not found'], 404);
         }
 
+        // Validation Rule: User can not delete physical data if already use by vendors.
+        if ($vendortype->vendors()->count() > 0) {
+            return response()->json([
+                'error' => 'Conflict',
+                'message' => 'Vendor type cannot be deleted because it is already used by vendors.',
+                'in_use' => true
+            ], 409);
+        }
+
         $this->repository->delete($id);
         return response()->json(['message' => 'Vendor type deleted successfully'], 200);
     }

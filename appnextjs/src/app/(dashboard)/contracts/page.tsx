@@ -12,6 +12,7 @@ import Input from '@/components/common/Input';
 import SelectInput from '@/components/common/SelectInput';
 import Pagination from '@/components/common/Pagination';
 import axios from 'axios';
+import InfoDialog from '@/components/common/InfoDialog';
 
 export default function ContractsPage() {
   const router = useRouter();
@@ -44,17 +45,42 @@ export default function ContractsPage() {
   // Handle both direct array and paginated response formats
   const contracts = Array.isArray(contractsResponse) 
     ? contractsResponse 
-    : contractsResponse?.data || [];
+    : (contractsResponse as any)?.data || [];
     
   const meta = contractsResponse && !Array.isArray(contractsResponse) ? contractsResponse : { current_page: 1, last_page: 1 };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingContract] = useState<Contract | undefined>(undefined);
   const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
-  const [appError, setAppError] = useState<string | null>(null);
+  const [infoModal, setInfoModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'info'
+  });
+  
+  const showInfo = (title: string, message: string, variant: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    setInfoModal({ isOpen: true, title, message, variant });
+  };
   
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
+  const [inUseModal, setInUseModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    item: Contract | null;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    item: null
+  });
 
   const handleCreate = () => {
     router.push('/contracts/new');
@@ -87,13 +113,11 @@ export default function ContractsPage() {
         if (err.response?.status === 422) {
           setFormErrors(err.response.data.errors);
         } else {
-          console.error('App Error:', err);
-          setAppError("An application error occurred. Please try again later.");
+          showInfo('Error', "An application error occurred. Please try again later.", 'error');
           setIsModalOpen(false);
         }
       } else {
-        console.error('App Error:', err);
-        setAppError("An unexpected error occurred. Please try again later.");
+        showInfo('Error', "An unexpected error occurred. Please try again later.", 'error');
         setIsModalOpen(false);
       }
     }
@@ -101,9 +125,38 @@ export default function ContractsPage() {
 
   const handleConfirmDelete = async () => {
     if (contractToDelete) {
-      await deleteContract.mutateAsync(contractToDelete.id);
-      setIsDeleteOpen(false);
-      setContractToDelete(null);
+      try {
+        await deleteContract.mutateAsync(contractToDelete.id);
+        setIsDeleteOpen(false);
+        setContractToDelete(null);
+      } catch (error: any) {
+        if (axios.isAxiosError(error) && error.response?.status === 409) {
+          setIsDeleteOpen(false);
+          setInUseModal({
+            isOpen: true,
+            title: 'Contract In Use',
+            message: error?.response?.data?.message || 'This contract is in use (by orders) and cannot be physically deleted. Would you like to mark it as inactive instead?',
+            item: contractToDelete
+          });
+        } else {
+          setIsDeleteOpen(false);
+          showInfo('Error', "Failed to delete contract.", 'error');
+        }
+      }
+    }
+  };
+
+  const handleMarkInactive = async () => {
+    if (inUseModal.item) {
+      try {
+        await updateContract.mutateAsync({ 
+          id: inUseModal.item.id, 
+          data: { is_active: 0 } 
+        });
+        setInUseModal(prev => ({ ...prev, isOpen: false, item: null }));
+      } catch {
+        showInfo('Error', "Failed to mark contract as inactive.", 'error');
+      }
     }
   };
 
@@ -112,32 +165,6 @@ export default function ContractsPage() {
 
   return (
     <div className="space-y-6">
-      {appError && (
-        <div className="bg-red-50 border-l-4 border-error p-4 relative dark:bg-red-900/20 dark:border-red-500">
-            <div className="flex">
-                <div className="flex-shrink-0">
-                    <span className="text-error">⚠️</span>
-                </div>
-                <div className="ml-3">
-                    <p className="text-sm text-red-700 dark:text-red-200">
-                        {appError}
-                    </p>
-                </div>
-                <div className="ml-auto pl-3">
-                    <div className="-mx-1.5 -my-1.5">
-                        <button
-                            type="button"
-                            onClick={() => setAppError(null)}
-                            className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 focus:ring-offset-red-50 dark:bg-transparent dark:hover:bg-red-900/40"
-                        >
-                            <span className="sr-only">Dismiss</span>
-                            <span aria-hidden="true">×</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-      )}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Contracts</h1>
         <Button onClick={handleCreate} leftIcon="add">
@@ -199,7 +226,7 @@ export default function ContractsPage() {
               <tr 
                 key={contract.id} 
                 onClick={() => router.push(`/contracts/${contract.id}?mode=view`)}
-                className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer ${!contract.is_active ? 'opacity-60' : ''}`}
               >
                 <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                     {contract.project?.project_number || '-'}
@@ -220,8 +247,15 @@ export default function ContractsPage() {
                 <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                    {contract.contract_pic}
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                   {contract.contract_status?.name || 'N/A'}
+                <td className="px-3 py-4 whitespace-nowrap text-sm">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-gray-500 dark:text-gray-400">{contract.contract_status?.name || 'N/A'}</span>
+                        {contract.is_active == 0 && (
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800 w-fit uppercase tracking-wider">
+                                Inactive
+                            </span>
+                        )}
+                    </div>
                 </td>
                  <td className="px-3 py-4 whitespace-nowrap text-center text-sm font-medium" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-center gap-4">
@@ -280,6 +314,24 @@ export default function ContractsPage() {
         message={`Are you sure you want to delete ${contractToDelete?.contract_number} - ${contractToDelete?.contract_name}? This action cannot be undone.`}
         variant="danger"
         isLoading={deleteContract.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={inUseModal.isOpen}
+        onClose={() => setInUseModal(prev => ({ ...prev, isOpen: false, item: null }))}
+        onConfirm={handleMarkInactive}
+        title={inUseModal.title}
+        message={inUseModal.message}
+        confirmLabel="Mark Inactive"
+        variant="warning"
+        isLoading={updateContract.isPending}
+      />
+      <InfoDialog
+        isOpen={infoModal.isOpen}
+        onClose={() => setInfoModal(prev => ({ ...prev, isOpen: false }))}
+        title={infoModal.title}
+        message={infoModal.message}
+        variant={infoModal.variant}
       />
     </div>
   );

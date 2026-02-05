@@ -143,7 +143,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           const originalSheet = data.find(s => s.id === (id ? parseInt(id) : null));
 
           const sheet: Partial<ContractSheet> = {
-            id: id ? parseInt(id) : sheet_code,
+            id: id ? parseInt(id) : `temp_${sheet_code}_${index}`,
             project_id: parseInt(projectId as unknown as string),
             contract_id: isEditMode ? (typeof contractId === 'string' ? parseInt(contractId) : contractId as number) : undefined,
             sheet_dt: originalSheet?.sheet_dt || null,
@@ -169,7 +169,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             uom_id: originalSheet?.uom_id ? parseInt(originalSheet.uom_id as unknown as string) : 1,
             uom_code: uom_code ? String(uom_code) : (originalSheet?.uom_code || ''),
             sheet_seqno: index + 1,
-            is_active: 1,
+            is_active: row[7] !== undefined ? parseInt(row[7]) : 1,
+            ordersheets_count: row[8] !== undefined ? parseInt(row[8]) : 0,
           };
 
           return sheet;
@@ -189,6 +190,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       sheet.uom_code,
       sheet.sheet_type === 0 ? null : sheet.sheet_price,
       sheet.sheet_grossamt, // Total (calculated)
+      sheet.is_active,
+      sheet.ordersheets_count || 0
     ]);
   }, []);
 
@@ -206,15 +209,30 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     const requiredCols = [1, 2, 4]; // Code, Description, Sat
 
     rawData.forEach((row: any, y: number) => {
+      const isActive = row[7] === 0;
+      const inUse = (row[8] || 0) > 0;
+      
       requiredCols.forEach((x) => {
         const value = row[x];
         const isValid = hasValue(value);
-        const color = isValid ? '' : 'red';
+        let color = isValid ? '' : 'red';
         
+        // If inactive, use gray color
+        if (isActive) color = '#9ca3af';
+
         if (typeof instance.setStyle === 'function') {
-          // JSS CE Style: setStyle(cell_name, property, value)
           const cellName = String.fromCharCode(65 + x) + (y + 1);
           instance.setStyle(cellName, 'color', color);
+          
+          // Background for in-use
+          if (inUse) {
+             instance.setStyle(cellName, 'background-color', '#fffbeb'); // Amber 50
+          } else {
+             instance.setStyle(cellName, 'background-color', '');
+          }
+          
+          // Strikethrough for inactive
+          instance.setStyle(cellName, 'text-decoration', isActive ? 'line-through' : '');
         }
       });
     });
@@ -319,6 +337,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         align: 'right',
         background: '#106bc5ff',
       },
+      { type: 'hidden', name: 'is_active', title: 'Active', width: 0 },
+      { type: 'hidden', name: 'ordersheets_count', title: 'Orders_Count', width: 0 },
     ];
 
     if (readOnly) {
@@ -349,7 +369,50 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       copyCompatibility: true,
       defaultColWidth: 100,
       onselection: () => {},
-      contextMenu: readOnly ? false : undefined,
+      contextMenu: (obj: any, x: any, y: any, e: any) => {
+          if (readOnly) return false;
+          
+          const items = [];
+          const rowData = obj.getRowData(y);
+          const inUse = (rowData[8] || 0) > 0;
+          const isActive = rowData[7] !== 0;
+
+          // Standard JSS items (simplified/customized)
+          items.push({
+              title: obj.options.text.insertANewRowBefore,
+              onclick: () => obj.insertRow(1, parseInt(y), 1)
+          });
+          items.push({
+              title: obj.options.text.insertANewRowAfter,
+              onclick: () => obj.insertRow(1, parseInt(y), 0)
+          });
+          
+          items.push({ type: 'line' });
+
+          if (inUse) {
+              // In-use rows cannot be deleted, only inactivated
+              items.push({
+                  title: isActive ? 'Mark as Inactive (Mark to Delete)' : 'Mark as Active',
+                  onclick: () => {
+                      const newValue = isActive ? 0 : 1;
+                      obj.setValueFromCoords(7, y, newValue, true);
+                      validateTable(obj);
+                  }
+              });
+              items.push({
+                  title: 'Delete Row (Disabled - Item in use)',
+                  disabled: true
+              });
+          } else {
+              // Not in use -> can be physically deleted
+              items.push({
+                  title: obj.options.text.deleteSelectedRows,
+                  onclick: () => obj.deleteRow(parseInt(y))
+              });
+          }
+
+          return items;
+      },
     };
 
     try {

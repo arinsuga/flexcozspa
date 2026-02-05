@@ -10,7 +10,7 @@ interface ConfirmDialogProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: 'primary' | 'danger';
+  variant?: 'primary' | 'danger' | 'warning';
   isLoading?: boolean;
 }
 

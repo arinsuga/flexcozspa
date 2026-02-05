@@ -135,4 +135,12 @@ class Refftype extends Model
     {
         return $query->where('refftype_code', $code);
     }
+
+    /**
+     * Ordersheets that use this reference type.
+     */
+    public function ordersheets()
+    {
+        return $this->hasMany('App\Ordersheet', 'sheet_refftypeid');
+    }
 }

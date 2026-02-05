@@ -7,7 +7,7 @@ interface InfoDialogProps {
   onClose: () => void;
   title: string;
   message: string;
-  variant?: 'success' | 'error' | 'info';
+  variant?: 'success' | 'error' | 'info' | 'warning';
   okLabel?: string;
 }
 
@@ -51,7 +51,7 @@ export default function InfoDialog({
       size="sm"
       footer={
         <Button 
-          variant={variant === 'error' ? 'danger' : 'primary'} 
+          variant={variant === 'error' ? 'danger' : variant === 'warning' ? 'warning' : 'primary'} 
           onClick={onClose}
           className="w-full sm:w-auto"
         >

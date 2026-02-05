@@ -49,26 +49,44 @@ class OrderRepository extends EloquentRepository implements OrderRepositoryInter
 
     public function update($id, $data)
     {
-        $order = $this->find($id);
-        if ($order) {
-            $order->update($data);
-            
-            if (isset($data['order_items']) && is_array($data['order_items'])) {
-                // Delete existing ones and recreate for simplicity
-                $order->ordersheets()->delete();
-                foreach ($data['order_items'] as $item) {
-                    $item['order_id'] = $order->id;
-                    $item['order_number'] = $order->order_number;
-                    $item['order_dt'] = $order->order_dt;
-                    $item['project_id'] = $order->project_id;
-                    $item['contract_id'] = $order->contract_id;
-                    
-                    $order->ordersheets()->create($item);
+        return \DB::transaction(function () use ($id, $data) {
+            $order = $this->find($id);
+            if ($order) {
+                $order->update($data);
+                
+                if (isset($data['order_items']) && is_array($data['order_items'])) {
+                    // Pre-load existing items to avoid N queries in the loop
+                    $inputItems = $data['order_items'];
+                    $inputIds = collect($inputItems)->pluck('id')->filter()->toArray();
+                    $existingItems = $order->ordersheets()->whereIn('id', $inputIds)->get()->keyBy('id');
+
+                    $itemIdsToKeep = [];
+                    foreach ($inputItems as $item) {
+                        // Sync header fields
+                        $item['order_id'] = $order->id;
+                        $item['order_number'] = $order->order_number;
+                        $item['order_dt'] = $order->order_dt;
+                        $item['project_id'] = $order->project_id;
+                        $item['contract_id'] = $order->contract_id;
+
+                        if (isset($item['id']) && isset($existingItems[$item['id']])) {
+                            // Update existing item
+                            $existingItems[$item['id']]->update($item);
+                            $itemIdsToKeep[] = $item['id'];
+                        } else {
+                            // Create new item
+                            $newItem = $order->ordersheets()->create($item);
+                            $itemIdsToKeep[] = $newItem->id;
+                        }
+                    }
+
+                    // Delete items that are no longer present in the request
+                    $order->ordersheets()->whereNotIn('id', $itemIdsToKeep)->delete();
                 }
+                return $order->fresh(['status', 'project', 'contract', 'ordersheets']);
             }
-            return $order->fresh();
-        }
-        return null;
+            return null;
+        });
     }
     public function getAllPaginated($params)
     {

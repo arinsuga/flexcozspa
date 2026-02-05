@@ -57,4 +57,20 @@ class Vendor extends Model
         return $this->belongsTo('App\VendorType', 'vendortype_id');
     }
 
+    /**
+     * Orders that belong to this vendor.
+     */
+    public function orders()
+    {
+        return $this->hasMany('App\Order', 'vendor_id');
+    }
+
+    /**
+     * Ordersheets that belong to this vendor.
+     */
+    public function ordersheets()
+    {
+        return $this->hasMany('App\Ordersheet', 'vendor_id');
+    }
+
 }

@@ -11,6 +11,7 @@ import { TableSkeleton } from '@/components/common/Skeleton';
 import SelectInput from '@/components/common/SelectInput';
 import Input from '@/components/common/Input';
 import Pagination from '@/components/common/Pagination';
+import axios from 'axios';
 import InfoDialog from '@/components/common/InfoDialog';
 
 
@@ -64,6 +65,18 @@ export default function VendorsPage() {
     title: '',
     message: '',
     variant: 'info'
+  });
+
+  const [inUseModal, setInUseModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    item: Vendor | null;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    item: null
   });
 
   const showInfo = (title: string, message: string, variant: 'success' | 'error' | 'info' = 'info') => {
@@ -124,9 +137,40 @@ export default function VendorsPage() {
 
   const handleConfirmDelete = async () => {
     if (vendorToDelete) {
-      await deleteVendor.mutateAsync(vendorToDelete.id);
-      setIsDeleteOpen(false);
-      setVendorToDelete(null);
+      try {
+        await deleteVendor.mutateAsync(vendorToDelete.id);
+        setIsDeleteOpen(false);
+        setVendorToDelete(null);
+        showInfo('Success', 'Vendor deleted successfully!', 'success');
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.status === 409) {
+          setIsDeleteOpen(false);
+          setInUseModal({
+            isOpen: true,
+            title: 'Vendor In Use',
+            message: error?.response?.data?.message || 'This vendor is in use (by orders or ordersheet items) and cannot be physically deleted. Would you like to mark it as inactive instead?',
+            item: vendorToDelete
+          });
+        } else {
+          setIsDeleteOpen(false);
+          showInfo('Error', 'Failed to delete vendor.', 'error');
+        }
+      }
+    }
+  };
+
+  const handleMarkInactive = async () => {
+    if (inUseModal.item) {
+      try {
+        await updateVendor.mutateAsync({ 
+          id: inUseModal.item.id, 
+          data: { is_active: 0 } 
+        });
+        setInUseModal(prev => ({ ...prev, isOpen: false, item: null }));
+        showInfo('Success', 'Vendor marked as inactive!', 'success');
+      } catch {
+        showInfo('Error', 'Failed to mark vendor as inactive.', 'error');
+      }
     }
   };
 
@@ -189,14 +233,21 @@ export default function VendorsPage() {
             {vendors?.map((vendor: Vendor) => (
               <tr 
                 key={vendor.id} 
-                className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer ${!vendor.is_active ? 'opacity-60' : ''}`}
                 onClick={() => handleEdit(vendor)}
               >
                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {vendor.vendor_code}
                 </td>
                 <td className="px-3 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                    {vendor.vendor_name}
+                    <div className="flex flex-col gap-1">
+                        <span>{vendor.vendor_name}</span>
+                        {vendor.is_active == 0 && (
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800 w-fit uppercase tracking-wider">
+                                Inactive
+                            </span>
+                        )}
+                    </div>
                 </td>
                 <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
                     {vendor.vendortype?.vendortype_name || '-'}
@@ -264,6 +315,17 @@ export default function VendorsPage() {
         isLoading={deleteVendor.isPending}
       />
 
+
+      <ConfirmDialog
+        isOpen={inUseModal.isOpen}
+        onClose={() => setInUseModal(prev => ({ ...prev, isOpen: false, item: null }))}
+        onConfirm={handleMarkInactive}
+        title={inUseModal.title}
+        message={inUseModal.message}
+        confirmLabel="Mark Inactive"
+        variant="warning"
+        isLoading={updateVendor.isPending}
+      />
 
       <InfoDialog
         isOpen={infoModal.isOpen}
