@@ -183,7 +183,10 @@ class ContractController extends Controller
                 'sheetgroup_seqno', 'sheet_seqno', 'is_active'
             ])->toArray();
 
-            $filteredHeaderData['is_active'] = 1;
+            // Only set is_active to 1 if it's not explicitly provided as 0
+            if (!isset($filteredHeaderData['is_active'])) {
+                $filteredHeaderData['is_active'] = 1;
+            }
 
             if ($isNewHeader) {
                 $newHeader = $contract->contractSheets()->create($filteredHeaderData);
@@ -226,7 +229,10 @@ class ContractController extends Controller
                 'sheetgroup_seqno', 'sheet_seqno', 'is_active'
             ])->toArray();
 
-            $filteredItemData['is_active'] = 1;
+            // Only set is_active to 1 if it's not explicitly provided as 0
+            if (!isset($filteredItemData['is_active'])) {
+                $filteredItemData['is_active'] = 1;
+            }
 
             if (!is_numeric($itemId)) {
                 $contract->contractSheets()->create($filteredItemData);

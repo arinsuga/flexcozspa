@@ -191,7 +191,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       sheet.sheet_type === 0 ? null : sheet.sheet_price,
       sheet.sheet_grossamt, // Total (calculated)
       sheet.is_active,
-      sheet.ordersheets_count || 0
+      sheet.ordersheets_count || 0,
+      sheet.sheet_type || 0 // Index 9
     ]);
   }, []);
 
@@ -207,14 +208,17 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     };
 
     const requiredCols = [1, 2, 4]; // Code, Description, Sat
+    const allVisibleCols = [1, 2, 3, 4, 5, 6]; 
 
     rawData.forEach((row: any, y: number) => {
       const isActive = row[7] === 0;
       const inUse = (row[8] || 0) > 0;
       
-      requiredCols.forEach((x) => {
+      allVisibleCols.forEach((x) => {
         const value = row[x];
-        const isValid = hasValue(value);
+        const isRequired = requiredCols.includes(x);
+        const isValid = !isRequired || hasValue(value);
+        
         let color = isValid ? '' : 'red';
         
         // If inactive, use gray color
@@ -224,7 +228,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           const cellName = String.fromCharCode(65 + x) + (y + 1);
           instance.setStyle(cellName, 'color', color);
           
-          // Background for in-use
+          // Background for in-use: Amber
           if (inUse) {
              instance.setStyle(cellName, 'background-color', '#fffbeb'); // Amber 50
           } else {
@@ -232,7 +236,26 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           }
           
           // Strikethrough for inactive
-          instance.setStyle(cellName, 'text-decoration', isActive ? 'line-through' : '');
+          // Decoupled logic: Skip columns 1 (Code) and 2 (Description) as they handle it in their custom renderers
+          if (isActive && x !== 1 && x !== 2) {
+            instance.setStyle(cellName, 'text-decoration', 'line-through');
+          } else {
+            instance.setStyle(cellName, 'text-decoration', 'none');
+          }
+          
+          // Set Code column (x=1) as read-only if item is in use
+          if (x === 1 && inUse) {
+            instance.setReadOnly(cellName, true);
+          } else if (x === 1 && !inUse) {
+            instance.setReadOnly(cellName, false);
+          }
+          
+         // Set all visible columns read-only for header rows
+          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
+          const isHeaderRow = sheetType === 0;
+          if (isHeaderRow && x >= 1 && x <= 6) {
+            instance.setReadOnly(cellName, true);
+          }
         }
       });
     });
@@ -243,10 +266,25 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     
     const nx = parseInt(x);
     const ny = parseInt(y);
+    const codeCol = 1;
+    const descCol = 2;
     const qtyCol = 3;
+    const satCol = 4;
     const priceCol = 5;
     const totalCol = 6;
-    const requiredCols = [1, 2, 4]; // Code, Description, Sat
+    const requiredCols = [codeCol, descCol, satCol];
+
+    // Requirement: When Code is cleared, clear all other columns in the row
+    if (nx === codeCol && (!value || String(value).trim() === '')) {
+      instance.setValueFromCoords(descCol, ny, '', true);
+      instance.setValueFromCoords(qtyCol, ny, '', true);
+      instance.setValueFromCoords(satCol, ny, '', true);
+      instance.setValueFromCoords(priceCol, ny, '', true);
+      instance.setValueFromCoords(totalCol, ny, 0, true);
+      
+      // Refresh styling for the cleared row
+      setTimeout(() => validateTable(instance), 50);
+    }
 
     // Visual Validation Feedback
     if (requiredCols.includes(nx)) {
@@ -265,16 +303,14 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       }
     }
 
-    // UOM Normalization (Column 4: Sat)
-    if (nx === 4 && value && normalizerRef.current) {
+    // UOM Normalization (Column 5: Sat)
+    if (nx === satCol && value && normalizerRef.current) {
       const normalized = normalizerRef.current.normalize(value);
       if (normalized !== value) {
-        // Use a small timeout or check to prevent recursive loops if necessary
-        // but normalized === value check should handle it.
-        instance.setValueFromCoords(4, ny, normalized, true);
+        instance.setValueFromCoords(satCol, ny, normalized, true);
         
         // Visual feedback
-        const cellName = String.fromCharCode(65 + 4) + (ny + 1);
+        const cellName = String.fromCharCode(65 + satCol) + (ny + 1);
         instance.setStyle(cellName, 'background-color', '#fef3c7');
         setTimeout(() => {
           instance.setStyle(cellName, 'background-color', '');
@@ -299,7 +335,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       }
     }
     if (onchange) onchange(instance, cell, x, y, value);
-  }, [onchange]);
+  }, [onchange, validateTable]);
 
   useEffect(() => {
     const container = jRef.current;
@@ -312,12 +348,273 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     // Use Array.from to avoid shared references between rows
     const initialData = Array.isArray(data) && data.length > 0 
       ? transformToSheetData(data)
-      : Array.from({ length: 100 }, () => [null, '', '', null, '', null, null]);
+      : Array.from({ length: 100 }, () => [null, '', '', null, '', null, null, 1, 0, 1]);
 
     const columns = [
       { type: 'hidden', name: 'id', title: 'ID', width: 0 },
-      { type: 'text', name: 'sheet_code', title: 'Code', width: 130, align: 'left' },
-      { type: 'text', name: 'description', title: 'Description', width: 540, align: 'left', wordWrap: true },
+      { 
+        type: 'text', 
+        name: 'sheet_code', 
+        title: 'Code', 
+        width: 150, 
+        align: 'left',
+        render: (cell: HTMLElement, value: string | number, x: string | number, y: string | number) => {
+          const instance = getJInstance();
+          if (!instance) return cell;
+          
+          const row = instance.getRowData(parseInt(y as string));
+          const isActive = row[7] === 0;
+          const inUse = (row[8] || 0) > 0;
+          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
+          const isHeader = sheetType === 0;
+          
+          const wrapper = document.createElement('div');
+          wrapper.className = 'flex items-center justify-between w-full h-full';
+          wrapper.style.display = 'flex';
+          wrapper.style.justifyContent = 'space-between';
+          wrapper.style.alignItems = 'center';
+          
+          const text = document.createElement('span');
+          text.innerText = String(value || '');
+          text.className = 'truncate pr-2';
+          if (isActive) {
+            text.style.textDecoration = 'line-through';
+          }
+          // Bold text for header rows
+          if (isHeader) {
+            text.style.fontWeight = 'bold';
+          }
+          
+          const btnContainer = document.createElement('div');
+          btnContainer.style.display = 'flex';
+          btnContainer.style.gap = '4px';
+          
+          const hasData = value && String(value).trim() !== '';
+          if (hasData) {
+            if (isHeader) {
+              // --- HEADER ROW LOGIC ---
+              const currentDataArr = instance.getData();
+              const currentCode = String(value || '').trim();
+              
+              // Check if any other row has this code as a parent
+              const hasChildren = currentCode !== '' && currentDataArr.some((r: any[]) => {
+                if (!r || !r[1]) return false;
+                const otherCode = String(r[1]).trim();
+                return otherCode !== '' && otherCode !== currentCode && otherCode.startsWith(currentCode + '.');
+              });
+              
+              if (!hasChildren) {
+                // Empty Header -> Can be deleted
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<span class="material-icons-outlined" style="font-size: 18px; color: #dc2626;">delete</span>';
+                deleteBtn.style.padding = '3px';
+                deleteBtn.style.borderRadius = '4px';
+                deleteBtn.style.display = 'flex';
+                deleteBtn.style.alignItems = 'center';
+                deleteBtn.style.justifyContent = 'center';
+                deleteBtn.style.cursor = 'pointer';
+                deleteBtn.style.border = '1px solid #dc2626';
+                deleteBtn.style.backgroundColor = 'transparent';
+                deleteBtn.style.transition = 'all 0.2s';
+                deleteBtn.title = 'Delete Header (No children)';
+                deleteBtn.onclick = (e) => {
+                  e.stopPropagation();
+                  const currentDataNow = instance.getData();
+                  const nonEmptyRows = currentDataNow.filter((r: any[]) => r && r[1] && String(r[1]).trim() !== '');
+                  if (nonEmptyRows.length <= 1) {
+                    alert('Cannot delete the last item. At least one row must remain.');
+                    return;
+                  }
+                  instance.deleteRow(parseInt(y as string));
+                };
+                btnContainer.appendChild(deleteBtn);
+              } else {
+                // Protected Header -> Disabled delete
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<span class="material-icons-outlined" style="font-size: 18px; color: #9ca3af;">delete_outline</span>';
+                deleteBtn.style.padding = '3px';
+                deleteBtn.style.borderRadius = '4px';
+                deleteBtn.style.display = 'flex';
+                deleteBtn.style.alignItems = 'center';
+                deleteBtn.style.justifyContent = 'center';
+                deleteBtn.style.cursor = 'not-allowed';
+                deleteBtn.style.opacity = '0.5';
+                deleteBtn.style.border = '1px solid #d1d5db';
+                deleteBtn.style.backgroundColor = 'transparent';
+                deleteBtn.title = 'Cannot delete: Header still has children items';
+                btnContainer.appendChild(deleteBtn);
+              }
+            } else {
+              // --- NORMAL ITEM LOGIC ---
+              if (inUse) {
+                // In-use item -> Toggle only
+                const toggleBtn = document.createElement('button');
+                const toggleIcon = isActive ? 'toggle_off' : 'toggle_on';
+                const toggleColor = '#f59e0b';
+                
+                toggleBtn.innerHTML = `<span class="material-icons-outlined" style="font-size: 18px; color: ${toggleColor};">${toggleIcon}</span>`;
+                toggleBtn.style.padding = '3px';
+                toggleBtn.style.borderRadius = '4px';
+                toggleBtn.style.display = 'flex';
+                toggleBtn.style.alignItems = 'center';
+                toggleBtn.style.justifyContent = 'center';
+                toggleBtn.style.cursor = 'pointer';
+                toggleBtn.style.border = '1px solid #f59e0b';
+                toggleBtn.style.backgroundColor = 'transparent';
+                toggleBtn.style.transition = 'all 0.2s';
+                toggleBtn.title = isActive ? 'Inactive - Click to Activate' : 'Active - Click to Deactivate';
+                toggleBtn.onclick = (e) => {
+                  e.stopPropagation();
+                  const newValue = isActive ? 1 : 0;
+                  instance.setValueFromCoords(7, parseInt(y as string), newValue, true);
+                  setTimeout(() => {
+                    validateTable(instance);
+                    const rowIdx = parseInt(y as string);
+                    
+                    const colOptions = instance.options.columns;
+                    // Re-render Code cell
+                    const codeRender = colOptions[1].render;
+                    if (codeRender && cell) codeRender(cell, instance.getValueFromCoords(1, rowIdx), 1, y);
+                    
+                    // Re-render Description cell
+                    const descRender = colOptions[2].render;
+                    const descCell = instance.getCell(2, rowIdx);
+                    if (descRender && descCell) descRender(descCell, instance.getValueFromCoords(2, rowIdx), 2, y);
+                    
+                    // Re-render Total cell
+                    const totalRender = colOptions[6].render;
+                    const totalCell = instance.getCell(6, rowIdx);
+                    if (totalRender && totalCell) totalRender(totalCell, instance.getValueFromCoords(6, rowIdx), 6, y);
+                  }, 50);
+                };
+                btnContainer.appendChild(toggleBtn);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<span class="material-icons-outlined" style="font-size: 18px; color: #9ca3af;">delete_forever</span>';
+                deleteBtn.style.padding = '3px';
+                deleteBtn.style.borderRadius = '4px';
+                deleteBtn.style.display = 'flex';
+                deleteBtn.style.alignItems = 'center';
+                deleteBtn.style.justifyContent = 'center';
+                deleteBtn.style.cursor = 'not-allowed';
+                deleteBtn.style.opacity = '0.6';
+                deleteBtn.style.border = '1px solid #d1d5db';
+                deleteBtn.style.backgroundColor = 'transparent';
+                deleteBtn.title = 'Cannot delete: Item is used in orders';
+                btnContainer.appendChild(deleteBtn);
+              } else {
+                // Unused item -> Standard delete
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<span class="material-icons-outlined" style="font-size: 18px; color: #dc2626;">delete</span>';
+                deleteBtn.style.padding = '3px';
+                deleteBtn.style.borderRadius = '4px';
+                deleteBtn.style.display = 'flex';
+                deleteBtn.style.alignItems = 'center';
+                deleteBtn.style.justifyContent = 'center';
+                deleteBtn.style.cursor = 'pointer';
+                deleteBtn.style.border = '1px solid #dc2626';
+                deleteBtn.style.backgroundColor = 'transparent';
+                deleteBtn.style.transition = 'all 0.2s';
+                deleteBtn.title = 'Click to Delete Row';
+                deleteBtn.onclick = (e) => {
+                  e.stopPropagation();
+                  const currentDataNow = instance.getData();
+                  const nonEmptyRows = currentDataNow.filter((r: any[]) => r && r[1] && String(r[1]).trim() !== '');
+                  if (nonEmptyRows.length <= 1) {
+                    alert('Cannot delete the last item. At least one row must remain.');
+                    return;
+                  }
+                  instance.deleteRow(parseInt(y as string));
+                };
+                btnContainer.appendChild(deleteBtn);
+              }
+            }
+          }
+          
+          wrapper.appendChild(text);
+          wrapper.appendChild(btnContainer);
+          cell.innerHTML = '';
+          cell.appendChild(wrapper);
+          return cell;
+        }
+      },
+      { 
+        type: 'text', 
+        name: 'description', 
+        title: 'Description', 
+        width: 540, 
+        align: 'left', 
+        wordWrap: true,
+        render: (cell: HTMLElement, value: string | number, x: string | number, y: string | number) => {
+          const instance = getJInstance();
+          if (!instance) return cell;
+          
+          const row = instance.getRowData(parseInt(y as string));
+          const isActive = row[7] === 0;
+          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
+          const isHeader = sheetType === 0;
+          
+          const wrapper = document.createElement('div');
+          wrapper.style.display = 'flex';
+          wrapper.style.alignItems = 'center';
+          wrapper.style.gap = '8px';
+          wrapper.style.width = '100%';
+          
+          const text = document.createElement('span');
+          text.innerText = String(value || '');
+          text.style.flex = '1';
+          if (isActive) {
+            text.style.textDecoration = 'line-through';
+          }
+          // Bold text for header rows
+          if (isHeader) {
+            text.style.fontWeight = 'bold';
+          }
+          wrapper.appendChild(text);
+          
+          // Add HEADER badge for header rows
+          if (isHeader) {
+            const headerBadge = document.createElement('span');
+            headerBadge.style.fontSize = '9px';
+            headerBadge.style.fontWeight = '900';
+            headerBadge.style.padding = '2px 6px';
+            headerBadge.style.borderRadius = '4px';
+            headerBadge.style.whiteSpace = 'nowrap';
+            headerBadge.style.flexShrink = '0';
+            headerBadge.style.textTransform = 'uppercase';
+            headerBadge.style.letterSpacing = '-0.05em';
+            headerBadge.innerText = 'Header';
+            headerBadge.style.backgroundColor = 'rgba(73, 110, 146, 0.1)'; 
+            headerBadge.style.setProperty('color', '#496E92', 'important'); 
+            headerBadge.style.border = '1px solid rgba(73, 110, 146, 0.2)'; 
+            wrapper.appendChild(headerBadge);
+          }
+          
+          // Add status badge
+          if (isActive) {
+            const badge = document.createElement('span');
+            badge.style.fontSize = '11px';
+            badge.style.fontWeight = '500';
+            badge.style.padding = '3px 8px';
+            badge.style.borderRadius = '6px';
+            badge.style.whiteSpace = 'nowrap';
+            badge.style.flexShrink = '0';
+            
+            // Inactive badge - Toggle color (Amber) - OUTLINE STYLE
+            badge.innerText = 'INACTIVE';
+            badge.style.backgroundColor = 'transparent';
+            badge.style.color = '#f59e0b'; // Amber-500
+            badge.style.border = '1px solid #f59e0b'; // Amber border
+            badge.style.textDecoration = 'none'; // Ensure badge text doesn't have strikethrough
+            
+            wrapper.appendChild(badge);
+          }
+          
+          cell.innerHTML = '';
+          cell.appendChild(wrapper);
+          return cell;
+        }
+      },
       { type: 'numeric', name: 'qty', title: 'Vol', width: 80, mask: '#,##0.00', align: 'right' },
       { 
         type: 'text', 
@@ -336,9 +633,46 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         readOnly: true, 
         align: 'right',
         background: '#106bc5ff',
+        render: (cell: HTMLElement, value: any, x: any, y: any) => {
+          const instance = getJInstance();
+          if (!instance) return cell;
+          
+          const row = instance.getRowData(parseInt(y as string));
+          const isActive = row[7] === 0;
+          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
+          const isHeader = sheetType === 0;
+          
+          // Formatting to match #,##0.00
+          const numValue = parseFloat(value) || 0;
+          const formatted = new Intl.NumberFormat('en-US', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+          }).format(numValue);
+          
+          const wrapper = document.createElement('div');
+          wrapper.style.textAlign = 'right';
+          wrapper.style.width = '100%';
+          wrapper.style.color = 'inherit'; // Inherit color from cell (usually white on blue)
+          
+          const text = document.createElement('span');
+          text.innerText = formatted;
+          if (isActive) {
+            text.style.textDecoration = 'line-through';
+          }
+          // Bold text for header rows
+          if (isHeader) {
+            text.style.fontWeight = 'bold';
+          }
+          
+          wrapper.appendChild(text);
+          cell.innerHTML = '';
+          cell.appendChild(wrapper);
+          return cell;
+        }
       },
       { type: 'hidden', name: 'is_active', title: 'Active', width: 0 },
       { type: 'hidden', name: 'ordersheets_count', title: 'Orders_Count', width: 0 },
+      { type: 'hidden', name: 'sheet_type', title: 'Sheet_Type', width: 0 },
     ];
 
     if (readOnly) {
@@ -351,33 +685,134 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
 
     // jspreadsheet-ce v5 stable initialization
     const options = {
-      // Event at top level is often preferred in JSS CE
       onchange: handleCellChange,
       worksheets: [{
         data: initialData,
         columns: columns,
-        minDimensions: [6, 1000], 
+        minDimensions: [9, 1000], 
         tableOverflow: true,
         tableWidth: '100%',
         tableHeight: '600px',
-        // Also keep it here for specific worksheet handling if version requires it
         onchange: handleCellChange,
-      }],
-      allowComments: true,
-      search: true,
-      pagination: 50,
-      copyCompatibility: true,
-      defaultColWidth: 100,
-      onselection: () => {},
-      contextMenu: (obj: any, x: any, y: any, e: any) => {
+        onbeforechange: (instance: any, cell: any, x: any, y: any, value: any) => {
+          const nx = parseInt(x);
+          const ny = parseInt(y);
+          if (nx === 1) { // Code column
+            const row = instance.getRowData(ny);
+            const inUse = (row[8] || 0) > 0;
+            if (inUse) {
+              return false; // Prevent change if in use
+            }
+          }
+          return value;
+        },
+        onbeforeedition: (instance: any, cell: any, x: any, y: any) => {
+          const nx = parseInt(x);
+          const ny = parseInt(y);
+          
+          // Block editing for header rows (sheet_type = 0)
+          const row = instance.getRowData(ny);
+          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
+          const isHeader = sheetType === 0;
+          if (isHeader) {
+            return false; // Block all editing for header rows
+          }
+          
+          // Block editing Code column for in-use items
+          if (nx === 1) {
+            const inUse = (row[8] || 0) > 0;
+            if (inUse) {
+              return false;
+            }
+          }
+          return true;
+        },
+        updateTable: (instance: any, cell: any, x: any, y: any, value: any) => {
+          const nx = parseInt(x);
+          const ny = parseInt(y);
+          const row = instance.getRowData(ny);
+          const isActive = row[7] === 0;
+          const inUse = (row[8] || 0) > 0;
+          
+          // Style visible data columns (1-6)
+          if (nx >= 1 && nx <= 6) {
+             const requiredCols = [1, 2, 4];
+             const isRequired = requiredCols.includes(nx);
+             const hasVal = (val: any) => {
+               if (val === null || val === undefined) return false;
+               const strVal = String(val).trim();
+               return strVal !== '' && strVal !== 'null' && strVal !== 'undefined' && strVal !== '0' && strVal !== '0.00';
+             };
+             const isValid = !isRequired || hasVal(value);
+             
+             // Color
+             if (isActive) {
+               cell.style.color = '#6b7280'; // Gray-500 for inactive
+             } else if (!isValid) {
+               cell.style.color = 'red';
+             } else {
+               cell.style.color = '#000000'; // Black for active and valid
+             }
+
+             // Background: Amber for in-use, Light gray for inactive
+             if (isActive) {
+               // Inactive row - light gray background
+               cell.style.backgroundColor = '#f3f4f6'; // Gray-100
+             } else if (inUse) {
+               // Active and in-use - amber background
+               cell.style.backgroundColor = '#fef3c7'; // Amber-100
+             } else {
+               // Active and not in-use - white/default
+               cell.style.backgroundColor = '#ffffff';
+             }
+
+             // Text decoration: Strikethrough for inactive
+             // Columns 1, 2, and 6 handle it in custom renderers, 3-5 handled here
+             if (isActive && nx >= 3 && nx <= 5) {
+               cell.style.textDecoration = 'line-through';
+             } else {
+               cell.style.textDecoration = 'none';
+             }
+
+             // Visual feedback for read-only Code column
+             if (nx === 1) {
+               if (inUse) {
+                 cell.style.cursor = 'not-allowed';
+                 cell.title = 'Code cannot be changed as it is already in use by orders';
+               } else {
+                 cell.style.cursor = '';
+                 cell.title = '';
+               }
+             }
+          }
+        },
+        contextMenu: (obj: any, x: any, y: any, e: any) => {
           if (readOnly) return false;
           
           const items = [];
           const rowData = obj.getRowData(y);
           const inUse = (rowData[8] || 0) > 0;
-          const isActive = rowData[7] !== 0;
+          const isActiveValue = rowData[7]; // 1 for active, 0 for inactive
+          const isActive = isActiveValue !== 0;
+          const sheetType = (rowData[9] !== undefined && rowData[9] !== null) ? rowData[9] : 1;
+          const isHeader = sheetType === 0;
+          
+          // Context menu logic for header rows
+          if (isHeader) {
+            const allData = obj.getData();
+            const code = String(rowData[1] || '').trim();
+            const hasChildren = code !== '' && allData.some((r: any[]) => {
+              const otherCode = String(r[1] || '').trim();
+              return otherCode !== code && otherCode.startsWith(code + '.');
+            });
+            
+            if (hasChildren) {
+              // Block deletion menu if has children
+              return false;
+            }
+          }
 
-          // Standard JSS items (simplified/customized)
+          // Standard JSS items
           items.push({
               title: obj.options.text.insertANewRowBefore,
               onclick: () => obj.insertRow(1, parseInt(y), 1)
@@ -392,15 +827,14 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           if (inUse) {
               // In-use rows cannot be deleted, only inactivated
               items.push({
-                  title: isActive ? 'Mark as Inactive (Mark to Delete)' : 'Mark as Active',
+                  title: isActive ? 'Mark as Inactive' : 'Mark as Active',
                   onclick: () => {
                       const newValue = isActive ? 0 : 1;
                       obj.setValueFromCoords(7, y, newValue, true);
-                      validateTable(obj);
                   }
               });
               items.push({
-                  title: 'Delete Row (Disabled - Item in use)',
+                  title: 'Delete Row (Item in use)',
                   disabled: true
               });
           } else {
@@ -412,6 +846,70 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           }
 
           return items;
+        },
+      }],
+      allowComments: true,
+      search: true,
+      pagination: 50,
+      copyCompatibility: true,
+      defaultColWidth: 100,
+      onselection: () => {},
+      ondeleterow: (instance: any) => {
+        // When a row is deleted, parent headers might become empty.
+        // We MUST force a re-render of the Code column to update the hierarchical delete button.
+        setTimeout(() => {
+          if (instance) {
+             // Refresh read-only states
+             validateTable(instance);
+             
+             // Refresh Code column (index 1) for all rows
+             const numRows = instance.getData().length;
+             const codeColIdx = 1;
+             const colOptions = instance.options.columns;
+             if (colOptions && colOptions[codeColIdx] && colOptions[codeColIdx].render) {
+               const codeRenderFn = colOptions[codeColIdx].render;
+               for (let yIdx = 0; yIdx < numRows; yIdx++) {
+                 // Force re-render of the action cell and its children
+                 const cell = instance.getCell(codeColIdx, yIdx);
+                 if (cell) {
+                   const cellVal = instance.getValueFromCoords(codeColIdx, yIdx);
+                   codeRenderFn(cell as HTMLElement, cellVal, codeColIdx, yIdx);
+                 }
+               }
+             }
+
+             if (typeof instance.refresh === 'function') {
+               instance.refresh();
+             }
+          }
+        }, 300); // 300ms delay to ensure JSS internal data and DOM are fully settled
+      },
+      oninsertrow: (instance: any) => {
+        // Similarly for insertion, we might create something that blocks a header
+        setTimeout(() => {
+          if (instance) {
+            validateTable(instance);
+            
+            // Refresh Code column (index 1) for all rows
+            const numRows = instance.getData().length;
+            const codeColIdx = 1;
+            const colOptions = instance.options.columns;
+            if (colOptions && colOptions[codeColIdx] && colOptions[codeColIdx].render) {
+              const codeRenderFn = colOptions[codeColIdx].render;
+              for (let yIdx = 0; yIdx < numRows; yIdx++) {
+                const cell = instance.getCell(codeColIdx, yIdx);
+                if (cell) {
+                  const cellVal = instance.getValueFromCoords(codeColIdx, yIdx);
+                  codeRenderFn(cell as HTMLElement, cellVal, codeColIdx, yIdx);
+                }
+              }
+            }
+
+            if (typeof instance.refresh === 'function') {
+              instance.refresh();
+            }
+          }
+        }, 300);
       },
     };
 
@@ -419,8 +917,6 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       // @ts-expect-error - jspreadsheet-ce types can be tricky
       const el = jspreadsheet(container, options);
       jInstance.current = el;
-      // Initial validation
-      validateTable(getJInstance());
     } catch (err) {
       console.error('JSS Init error:', err);
     }
