@@ -104,4 +104,12 @@ class ContractSheet extends Model
         return $this->belongsTo('App\UomNormalization', 'uom_code', 'uom_code');
     }
 
+    /**
+     * Get the order summary associated with the contract sheet.
+     */
+    public function orderSummary()
+    {
+        return $this->hasOne('App\ContractOrderSummary', 'contractsheet_id', 'id');
+    }
+
 }

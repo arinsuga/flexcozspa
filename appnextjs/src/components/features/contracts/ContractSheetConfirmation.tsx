@@ -49,7 +49,8 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
   useEffect(() => {
     if (sheetGroups.length > 0 && activeTabId === null) {
       const firstTabId = sheetGroups[0].id;
-      setActiveTabId(firstTabId);
+      // Use requestAnimationFrame or setTimeout to avoid synchronous setState inside effect warning
+      requestAnimationFrame(() => setActiveTabId(firstTabId));
     }
   }, [sheetGroups, activeTabId]);
   
@@ -132,13 +133,21 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
           return sum;
         }, 0);
 
+        const subExpense = result.reduce((sum, other) => {
+          if (other.sheet_code.startsWith(prefix)) {
+            return sum + (other.order_summary?.order_amount || 0);
+          }
+          return sum;
+        }, 0);
+
         return {
           ...item,
           sheet_grossamt: subTotal,
           sheet_grossamt2: subTotal,
           sheet_netamt: subTotal,
           sheet_netamt2: subTotal,
-          sheet_realamt: subTotal
+          sheet_realamt: subTotal,
+          order_summary: { order_amount: subExpense }
         };
       }
       return item;
@@ -303,6 +312,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
                   <th className="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase">Sat</th>
                   <th className="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase">H.Satuan</th>
                   <th className="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase">Total</th>
+                  <th className="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase">Pengeluaran</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -373,6 +383,9 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
                         </td>
                         <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-bold ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-primary') : 'text-gray-400 line-through'}`}>
                           {formatNumeric(sheet.sheet_grossamt?.toString() || '0')}
+                        </td>
+                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-bold ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-amber-600') : 'text-gray-400 line-through'}`}>
+                          {formatNumeric(sheet.order_summary?.order_amount?.toString() || '0')}
                         </td>
                       </tr>
                     );

@@ -30,6 +30,10 @@ export interface ContractSheet {
   sheet_seqno: number;
   is_active: number;
   ordersheets_count?: number;
+  order_summary?: {
+    order_amount: number;
+  };
+  ordersheets_sum_sheet_netamt?: number;
   created_at: string;
   updated_at: string;
 }

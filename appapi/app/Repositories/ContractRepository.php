@@ -70,8 +70,11 @@ class ContractRepository extends EloquentRepository implements ContractRepositor
 
     public function findWithSheets($id)
     {
-        return $this->data->with(['contractStatus', 'project', 'contractSheets' => function($q) {
-            $q->withCount('ordersheets');
+        return $this->data->with(['contractStatus', 'project', 'contractSheets' => function($query) {
+            $query->orderBy('sheetgroup_seqno', 'asc')
+                  ->orderBy('sheet_seqno', 'asc')
+                  ->withCount('ordersheets')
+                  ->with('orderSummary');
         }, 'orderSummaries'])->find($id);
     }
 }

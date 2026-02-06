@@ -169,8 +169,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
             uom_id: originalSheet?.uom_id ? parseInt(originalSheet.uom_id as unknown as string) : 1,
             uom_code: uom_code ? String(uom_code) : (originalSheet?.uom_code || ''),
             sheet_seqno: index + 1,
-            is_active: row[7] !== undefined ? parseInt(row[7]) : 1,
-            ordersheets_count: row[8] !== undefined ? parseInt(row[8]) : 0,
+            is_active: row[8] !== undefined ? parseInt(row[8]) : 1,
+            ordersheets_count: row[9] !== undefined ? parseInt(row[9]) : 0,
           };
 
           return sheet;
@@ -178,6 +178,42 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         .filter(Boolean);
     },
   }));
+
+  // Recursive calculation for PENGELUARAN column (Index 7)
+  const calculateRecursiveExpenses = useCallback((dataArr: any[]) => {
+    if (!Array.isArray(dataArr)) return dataArr;
+    
+    // 1. Reset all header expenses (Index 7) to 0
+    dataArr.forEach(row => {
+      if (Array.isArray(row)) {
+        const sheetType = row[10];
+        if (sheetType === 0) row[7] = 0;
+      }
+    });
+
+    // 2. Aggregate leaf expenses to parents
+    dataArr.forEach(row => {
+      if (!Array.isArray(row)) return;
+      const code = String(row[1] || '').trim();
+      const sheetType = row[10];
+      const amount = parseFloat(row[7]) || 0;
+
+      if (sheetType === 1 && code !== '' && amount > 0) {
+        let currentCode = code;
+        while (currentCode.includes('.')) {
+          const lastDot = currentCode.lastIndexOf('.');
+          const parentCode = currentCode.substring(0, lastDot);
+          
+          const parentRow = dataArr.find(r => Array.isArray(r) && String(r[1]).trim() === parentCode && r[10] === 0);
+          if (parentRow) {
+            parentRow[7] = (parseFloat(parentRow[7]) || 0) + amount;
+          }
+          currentCode = parentCode;
+        }
+      }
+    });
+    return dataArr;
+  }, []);
 
   // Transform ContractSheet data to jspreadsheet format
   const transformToSheetData = useCallback((sheets: ContractSheet[]) => {
@@ -190,9 +226,10 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
       sheet.uom_code,
       sheet.sheet_type === 0 ? null : sheet.sheet_price,
       sheet.sheet_grossamt, // Total (calculated)
-      sheet.is_active,
-      sheet.ordersheets_count || 0,
-      sheet.sheet_type || 0 // Index 9
+      sheet.order_summary?.order_amount || 0, // PENGELUARAN (Index 7)
+      sheet.is_active, // Index 8
+      sheet.ordersheets_count || 0, // Index 9
+      sheet.sheet_type || 0 // Index 10
     ]);
   }, []);
 
@@ -211,8 +248,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     const allVisibleCols = [1, 2, 3, 4, 5, 6]; 
 
     rawData.forEach((row: any, y: number) => {
-      const isActive = row[7] === 0;
-      const inUse = (row[8] || 0) > 0;
+      const isActive = row[8] === 0;
+      const inUse = (row[9] || 0) > 0;
       
       allVisibleCols.forEach((x) => {
         const value = row[x];
@@ -251,9 +288,9 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           }
           
          // Set all visible columns read-only for header rows
-          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
+          const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
           const isHeaderRow = sheetType === 0;
-          if (isHeaderRow && x >= 1 && x <= 6) {
+          if (isHeaderRow && x >= 1 && x <= 7) {
             instance.setReadOnly(cellName, true);
           }
         }
@@ -346,9 +383,11 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     jInstance.current = null;
 
     // Use Array.from to avoid shared references between rows
-    const initialData = Array.isArray(data) && data.length > 0 
+    const initialDataTemplate = Array.isArray(data) && data.length > 0 
       ? transformToSheetData(data)
-      : Array.from({ length: 100 }, () => [null, '', '', null, '', null, null, 1, 0, 1]);
+      : Array.from({ length: 100 }, () => [null, '', '', null, '', null, null, 0, 1, 0, 1]);
+
+    const initialData = calculateRecursiveExpenses(initialDataTemplate);
 
     const columns = [
       { type: 'hidden', name: 'id', title: 'ID', width: 0 },
@@ -363,9 +402,9 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           if (!instance) return cell;
           
           const row = instance.getRowData(parseInt(y as string));
-          const isActive = row[7] === 0;
-          const inUse = (row[8] || 0) > 0;
-          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
+          const isActive = row[8] === 0;
+          const inUse = (row[9] || 0) > 0;
+          const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
           const isHeader = sheetType === 0;
           
           const wrapper = document.createElement('div');
@@ -466,7 +505,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
                 toggleBtn.onclick = (e) => {
                   e.stopPropagation();
                   const newValue = isActive ? 1 : 0;
-                  instance.setValueFromCoords(7, parseInt(y as string), newValue, true);
+                  instance.setValueFromCoords(8, parseInt(y as string), newValue, true);
                   setTimeout(() => {
                     validateTable(instance);
                     const rowIdx = parseInt(y as string);
@@ -485,6 +524,11 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
                     const totalRender = colOptions[6].render;
                     const totalCell = instance.getCell(6, rowIdx);
                     if (totalRender && totalCell) totalRender(totalCell, instance.getValueFromCoords(6, rowIdx), 6, y);
+
+                    // Re-render Pengeluaran cell
+                    const expRender = colOptions[7].render;
+                    const expCell = instance.getCell(7, rowIdx);
+                    if (expRender && expCell) expRender(expCell, instance.getValueFromCoords(7, rowIdx), 7, y);
                   }, 50);
                 };
                 btnContainer.appendChild(toggleBtn);
@@ -670,6 +714,47 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           return cell;
         }
       },
+      { 
+        type: 'numeric', 
+        name: 'pengeluaran', 
+        title: 'PENGELUARAN', 
+        width: 200, 
+        mask: '#,##0.00', 
+        readOnly: true, 
+        align: 'right',
+        render: (cell: HTMLElement, value: any, x: any, y: any) => {
+          const instance = getJInstance();
+          if (!instance) return cell;
+          
+          const row = instance.getRowData(parseInt(y as string));
+          const isActive = row[8] === 0;
+          const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
+          const isHeader = sheetType === 0;
+          
+          const numValue = parseFloat(value) || 0;
+          const formatted = new Intl.NumberFormat('en-US', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+          }).format(numValue);
+          
+          const wrapper = document.createElement('div');
+          wrapper.style.textAlign = 'right';
+          wrapper.style.width = '100%';
+          wrapper.innerText = formatted;
+          
+          if (isActive) {
+            wrapper.style.textDecoration = 'line-through';
+            wrapper.style.color = '#9ca3af';
+          }
+          if (isHeader) {
+            wrapper.style.fontWeight = 'bold';
+          }
+          
+          cell.innerHTML = '';
+          cell.appendChild(wrapper);
+          return cell;
+        }
+      },
       { type: 'hidden', name: 'is_active', title: 'Active', width: 0 },
       { type: 'hidden', name: 'ordersheets_count', title: 'Orders_Count', width: 0 },
       { type: 'hidden', name: 'sheet_type', title: 'Sheet_Type', width: 0 },
@@ -699,7 +784,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           const ny = parseInt(y);
           if (nx === 1) { // Code column
             const row = instance.getRowData(ny);
-            const inUse = (row[8] || 0) > 0;
+            const inUse = (row[9] || 0) > 0;
             if (inUse) {
               return false; // Prevent change if in use
             }
@@ -712,7 +797,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           
           // Block editing for header rows (sheet_type = 0)
           const row = instance.getRowData(ny);
-          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
+          const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
           const isHeader = sheetType === 0;
           if (isHeader) {
             return false; // Block all editing for header rows
@@ -720,7 +805,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           
           // Block editing Code column for in-use items
           if (nx === 1) {
-            const inUse = (row[8] || 0) > 0;
+            const inUse = (row[9] || 0) > 0;
             if (inUse) {
               return false;
             }
@@ -731,11 +816,11 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           const nx = parseInt(x);
           const ny = parseInt(y);
           const row = instance.getRowData(ny);
-          const isActive = row[7] === 0;
-          const inUse = (row[8] || 0) > 0;
+          const isActive = row[8] === 0;
+          const inUse = (row[9] || 0) > 0;
           
-          // Style visible data columns (1-6)
-          if (nx >= 1 && nx <= 6) {
+          // Style visible data columns (1-7)
+          if (nx >= 1 && nx <= 7) {
              const requiredCols = [1, 2, 4];
              const isRequired = requiredCols.includes(nx);
              const hasVal = (val: any) => {
@@ -791,10 +876,10 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           
           const items = [];
           const rowData = obj.getRowData(y);
-          const inUse = (rowData[8] || 0) > 0;
-          const isActiveValue = rowData[7]; // 1 for active, 0 for inactive
+          const inUse = (rowData[9] || 0) > 0;
+          const isActiveValue = rowData[8]; // 1 for active, 0 for inactive
           const isActive = isActiveValue !== 0;
-          const sheetType = (rowData[9] !== undefined && rowData[9] !== null) ? rowData[9] : 1;
+          const sheetType = (rowData[10] !== undefined && rowData[10] !== null) ? rowData[10] : 1;
           const isHeader = sheetType === 0;
           
           // Context menu logic for header rows
@@ -830,7 +915,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
                   title: isActive ? 'Mark as Inactive' : 'Mark as Active',
                   onclick: () => {
                       const newValue = isActive ? 0 : 1;
-                      obj.setValueFromCoords(7, y, newValue, true);
+                      obj.setValueFromCoords(8, y, newValue, true);
                   }
               });
               items.push({
@@ -861,6 +946,11 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           if (instance) {
              // Refresh read-only states
              validateTable(instance);
+
+             // RE-CALCULATE RECURSIVE EXPENSES
+             const dataNow = instance.getData();
+             calculateRecursiveExpenses(dataNow);
+             instance.setData(dataNow);
              
              // Refresh Code column (index 1) for all rows
              const numRows = instance.getData().length;
@@ -890,6 +980,11 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           if (instance) {
             validateTable(instance);
             
+            // RE-CALCULATE RECURSIVE EXPENSES
+            const dataNow = instance.getData();
+            calculateRecursiveExpenses(dataNow);
+            instance.setData(dataNow);
+
             // Refresh Code column (index 1) for all rows
             const numRows = instance.getData().length;
             const codeColIdx = 1;
@@ -932,21 +1027,22 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         jInstance.current = null;
       }
     };
-  }, [onchange, validateTable, handleCellChange, transformToSheetData]); // Re-init only when critical options change
+  }, [onchange, validateTable, handleCellChange, transformToSheetData, calculateRecursiveExpenses, data, readOnly]); // Re-init correctly
 
   // Watch for external data changes
   useEffect(() => {
     const instance = getJInstance();
     if (instance && typeof instance.getData === 'function' && Array.isArray(data) && data.length > 0) {
       const currentData = instance.getData();
-      const newData = transformToSheetData(data);
+      let newData = transformToSheetData(data);
+      newData = calculateRecursiveExpenses(newData);
       
       if (JSON.stringify(currentData) !== JSON.stringify(newData)) {
         instance.setData(newData);
         validateTable(instance);
       }
     }
-  }, [data, transformToSheetData, validateTable]);
+  }, [data, transformToSheetData, validateTable, calculateRecursiveExpenses]);
 
   return (
     <>
