@@ -6,7 +6,7 @@ import { useContractStatuses } from '@/hooks/useContractStatuses';
 import { useProject } from '@/hooks/useProjects';
 import Button from '@/components/common/Button';
 import ContractSheetTable from '@/components/features/contracts/ContractSheetTable';
-import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
+import { useRef, useState, useMemo, useCallback } from 'react';
 import { useSheetGroupsByType } from '@/hooks/useSheetGroups';
 import { ContractSheet } from '@/services/contractSheetService';
 import { SheetGroup } from '@/services/sheetGroupService';
@@ -37,18 +37,14 @@ export default function ContractDetailClient({
   readOnlyInfo = false 
 }: ContractDetailClientProps) {
   const router = useRouter();
-  const { data: contractData, isLoading: isContractLoading } = useContract(id);
+  const { isLoading: isContractLoading } = useContract(id);
   const { data: workSheetGroupsData, isLoading: isWorkSheetGroupsLoading } = useSheetGroupsByType(0);
   const { data: costSheetGroupsData, isLoading: isCostSheetGroupsLoading } = useSheetGroupsByType(1);
   const { data: statusesData, isLoading: isStatusesLoading } = useContractStatuses();
   const { updateContract: updateContractMutation, createContract: createContractMutation } = useContractMutations();
   
-  // Resolve contract data: prefer initialData (containing potential Step 1 edits) or fallback to fetched
-  const fetchedContract = contractData?.data || contractData;
-  const [contract, setContract] = useState<Partial<Contract> | null>(initialData || null);
-
   // Sync contract state with fetched data if not already initialized from initialData
-  const [isContractInitialized, setIsContractInitialized] = useState(!!(initialData && Object.keys(initialData).length > 2));
+  const [contract, setContract] = useState<Partial<Contract> | null>(initialData || null);
   
   // No changes to effect order, but ensure we don't have loop
 
@@ -79,7 +75,7 @@ export default function ContractDetailClient({
     isOpen: boolean;
     title: string;
     message: string;
-    variant: 'success' | 'error' | 'info';
+    variant: 'success' | 'error' | 'info' | 'warning';
   }>({
     isOpen: false,
     title: '',
@@ -105,20 +101,15 @@ export default function ContractDetailClient({
 
 
   // Sync localSheets with API data if not already provided via initialData
-  useEffect(() => {
-    const sheetsFromContract = contract?.contract_sheets;
-    if (sheetsFromContract && !hasInitialized) {
-      setHasInitialized(true);
-      setLocalSheets(sheetsFromContract);
-    }
-  }, [contract, hasInitialized]);
+  if (contract?.contract_sheets && !hasInitialized) {
+    setHasInitialized(true);
+    setLocalSheets(contract.contract_sheets);
+  }
 
   // Initialize activeTabId when sheetGroups are loaded
-  useEffect(() => {
-    if (Array.isArray(sheetGroups) && sheetGroups.length > 0 && activeTabId === null) {
-      setActiveTabId(sheetGroups[0].id);
-    }
-  }, [sheetGroups, activeTabId]);
+  if (Array.isArray(sheetGroups) && sheetGroups.length > 0 && activeTabId === null) {
+    setActiveTabId(sheetGroups[0].id);
+  }
 
 
   // Sync current tab data to localSheets
@@ -155,7 +146,7 @@ export default function ContractDetailClient({
       .sort((a, b) => (a.sheet_seqno || 0) - (b.sheet_seqno || 0));
   }, [localSheets, activeTabId]);
 
-  const handleHeaderChange = (field: keyof Contract, value: any) => {
+  const handleHeaderChange = (field: keyof Contract, value: string | number | boolean | null) => {
     setContract(prev => prev ? ({ ...prev, [field]: value }) : null);
   };
 
@@ -218,7 +209,7 @@ export default function ContractDetailClient({
           isOpen: true,
           title: 'Items In Use',
           message: error?.response?.data?.message || 'Some items are in use and cannot be physically deleted. Would you like to mark them as inactive instead?',
-          payload: { ...payload, force_soft_delete: true } as any
+          payload: { ...payload, force_soft_delete: true } as Partial<Contract> & { force_soft_delete: boolean }
         });
       } else {
         console.error('Save failed', error);

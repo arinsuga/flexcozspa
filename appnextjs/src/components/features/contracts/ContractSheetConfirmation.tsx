@@ -327,7 +327,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
                     const hasErrors = (sheet.validation_errors?.length || 0) > 0;
                     const isHeader = sheet.sheet_type === 0;
                     const inUse = (sheet.ordersheets_count || 0) > 0;
-                    const isActive = sheet.is_active !== 0;
+                    const isActive = sheet.is_active !== 0 || !sheet.id || typeof sheet.id === 'string';
   
                     return (
                       <tr 
@@ -347,7 +347,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
                         <td className="px-4 py-2 whitespace-nowrap text-xs font-mono text-gray-400">
                           {sheet.parent_code || ''}
                         </td>
-                        <td className={`px-4 py-2 whitespace-nowrap text-sm font-mono font-bold ${hasErrors ? 'text-red-600 dark:text-red-400' : (isActive ? 'text-gray-900 dark:text-white' : 'text-gray-400')} ${!isActive ? 'line-through' : ''}`}>
+                        <td className={`px-4 py-2 whitespace-nowrap text-sm font-mono font-bold ${hasErrors ? 'text-red-600 dark:text-red-400' : (isActive ? 'text-gray-900 dark:text-white' : 'text-gray-400')}`}>
                           {sheet.sheet_code}
                           {hasErrors && (
                             <div className="mt-1 flex flex-col gap-1">
@@ -359,7 +359,7 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
                             </div>
                           )}
                         </td>
-                        <td className={`px-4 py-2 text-sm ${isHeader ? 'font-black flex items-center gap-2' : ''} ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300') : 'text-gray-400 line-through'}`}>
+                        <td className={`px-4 py-2 text-sm ${isHeader ? 'font-black flex items-center gap-2' : ''} ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300') : 'text-gray-400'}`}>
                           {sheet.sheet_name}
                           {isHeader && (
                             <span className="text-[9px] bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">
@@ -372,19 +372,19 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
                             </span>
                           )}
                         </td>
-                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 line-through'}`}>
+                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}`}>
                           {isHeader ? '-' : (sheet.sheet_qty || '0')}
                         </td>
-                        <td className={`px-4 py-2 whitespace-nowrap text-xs text-center ${isActive ? 'text-gray-500' : 'text-gray-400 line-through'}`}>
+                        <td className={`px-4 py-2 whitespace-nowrap text-xs text-center ${isActive ? 'text-gray-500' : 'text-gray-400'}`}>
                           {isHeader ? '-' : (sheet.uom_code || '-')}
                         </td>
-                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 line-through'}`}>
+                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right ${isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}`}>
                           {isHeader ? '-' : (sheet.sheet_price ? formatNumeric(sheet.sheet_price.toString()) : '0')}
                         </td>
-                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-bold ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-primary') : 'text-gray-400 line-through'}`}>
+                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-bold ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-primary') : 'text-gray-400'}`}>
                           {formatNumeric(sheet.sheet_grossamt?.toString() || '0')}
                         </td>
-                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-bold ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-amber-600') : 'text-gray-400 line-through'}`}>
+                        <td className={`px-4 py-2 whitespace-nowrap text-sm text-right font-bold ${isActive ? (isHeader ? 'text-gray-900 dark:text-white' : 'text-amber-600') : 'text-gray-400'}`}>
                           {formatNumeric(sheet.order_summary?.order_amount?.toString() || '0')}
                         </td>
                       </tr>

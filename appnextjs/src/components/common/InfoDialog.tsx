@@ -33,6 +33,12 @@ export default function InfoDialog({
             <span className="material-icons text-red-600 dark:text-red-400">error</span>
           </div>
         );
+      case 'warning':
+        return (
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+            <span className="material-icons text-yellow-600 dark:text-yellow-400">warning</span>
+          </div>
+        );
       case 'info':
       default:
         return (

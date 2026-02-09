@@ -248,7 +248,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
     const allVisibleCols = [1, 2, 3, 4, 5, 6]; 
 
     rawData.forEach((row: any, y: number) => {
-      const isActive = row[8] === 0;
+      const hasRealId = row[0] && typeof row[0] === 'number';
+      const isInactive = row[8] === 0 && hasRealId;
       const inUse = (row[9] || 0) > 0;
       
       allVisibleCols.forEach((x) => {
@@ -259,7 +260,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         let color = isValid ? '' : 'red';
         
         // If inactive, use gray color
-        if (isActive) color = '#9ca3af';
+        if (isInactive) color = '#9ca3af';
 
         if (typeof instance.setStyle === 'function') {
           const cellName = String.fromCharCode(65 + x) + (y + 1);
@@ -272,13 +273,9 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
              instance.setStyle(cellName, 'background-color', '');
           }
           
-          // Strikethrough for inactive
-          // Decoupled logic: Skip columns 1 (Code) and 2 (Description) as they handle it in their custom renderers
-          if (isActive && x !== 1 && x !== 2) {
-            instance.setStyle(cellName, 'text-decoration', 'line-through');
-          } else {
-            instance.setStyle(cellName, 'text-decoration', 'none');
-          }
+          // Strikethrough for inactive - REMOVED per requirement
+          // Skip columns 1 (Code) and 2 (Description) as they handle it in their custom renderers
+          instance.setStyle(cellName, 'text-decoration', 'none');
           
           // Set Code column (x=1) as read-only if item is in use
           if (x === 1 && inUse) {
@@ -402,7 +399,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           if (!instance) return cell;
           
           const row = instance.getRowData(parseInt(y as string));
-          const isActive = row[8] === 0;
+          const hasRealId = row[0] && typeof row[0] === 'number';
+          const isInactive = row[8] === 0 && hasRealId;
           const inUse = (row[9] || 0) > 0;
           const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
           const isHeader = sheetType === 0;
@@ -416,8 +414,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           const text = document.createElement('span');
           text.innerText = String(value || '');
           text.className = 'truncate pr-2';
-          if (isActive) {
-            text.style.textDecoration = 'line-through';
+          if (isInactive) {
+            // text.style.textDecoration = 'line-through';
           }
           // Bold text for header rows
           if (isHeader) {
@@ -488,7 +486,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
               if (inUse) {
                 // In-use item -> Toggle only
                 const toggleBtn = document.createElement('button');
-                const toggleIcon = isActive ? 'toggle_off' : 'toggle_on';
+                const toggleIcon = isInactive ? 'toggle_off' : 'toggle_on';
                 const toggleColor = '#f59e0b';
                 
                 toggleBtn.innerHTML = `<span class="material-icons-outlined" style="font-size: 18px; color: ${toggleColor};">${toggleIcon}</span>`;
@@ -501,10 +499,10 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
                 toggleBtn.style.border = '1px solid #f59e0b';
                 toggleBtn.style.backgroundColor = 'transparent';
                 toggleBtn.style.transition = 'all 0.2s';
-                toggleBtn.title = isActive ? 'Inactive - Click to Activate' : 'Active - Click to Deactivate';
+                toggleBtn.title = isInactive ? 'Inactive - Click to Activate' : 'Active - Click to Deactivate';
                 toggleBtn.onclick = (e) => {
                   e.stopPropagation();
-                  const newValue = isActive ? 1 : 0;
+                  const newValue = isInactive ? 1 : 0;
                   instance.setValueFromCoords(8, parseInt(y as string), newValue, true);
                   setTimeout(() => {
                     validateTable(instance);
@@ -594,8 +592,9 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           if (!instance) return cell;
           
           const row = instance.getRowData(parseInt(y as string));
-          const isActive = row[7] === 0;
-          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
+          const hasRealId = row[0] && typeof row[0] === 'number';
+          const isInactive = row[8] === 0 && hasRealId;
+          const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
           const isHeader = sheetType === 0;
           
           const wrapper = document.createElement('div');
@@ -607,8 +606,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           const text = document.createElement('span');
           text.innerText = String(value || '');
           text.style.flex = '1';
-          if (isActive) {
-            text.style.textDecoration = 'line-through';
+          if (isInactive) {
+            // text.style.textDecoration = 'line-through';
           }
           // Bold text for header rows
           if (isHeader) {
@@ -635,7 +634,7 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           }
           
           // Add status badge
-          if (isActive) {
+          if (isInactive) {
             const badge = document.createElement('span');
             badge.style.fontSize = '11px';
             badge.style.fontWeight = '500';
@@ -682,8 +681,9 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           if (!instance) return cell;
           
           const row = instance.getRowData(parseInt(y as string));
-          const isActive = row[7] === 0;
-          const sheetType = (row[9] !== undefined && row[9] !== null) ? row[9] : 1;
+          const hasRealId = row[0] && typeof row[0] === 'number';
+          const isInactive = row[8] === 0 && hasRealId;
+          const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
           const isHeader = sheetType === 0;
           
           // Formatting to match #,##0.00
@@ -700,8 +700,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           
           const text = document.createElement('span');
           text.innerText = formatted;
-          if (isActive) {
-            text.style.textDecoration = 'line-through';
+          if (isInactive) {
+            // text.style.textDecoration = 'line-through';
           }
           // Bold text for header rows
           if (isHeader) {
@@ -727,7 +727,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           if (!instance) return cell;
           
           const row = instance.getRowData(parseInt(y as string));
-          const isActive = row[8] === 0;
+          const hasRealId = row[0] && typeof row[0] === 'number';
+          const isInactive = row[8] === 0 && hasRealId;
           const sheetType = (row[10] !== undefined && row[10] !== null) ? row[10] : 1;
           const isHeader = sheetType === 0;
           
@@ -742,8 +743,8 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
           wrapper.style.width = '100%';
           wrapper.innerText = formatted;
           
-          if (isActive) {
-            wrapper.style.textDecoration = 'line-through';
+          if (isInactive) {
+            // wrapper.style.textDecoration = 'line-through';
             wrapper.style.color = '#9ca3af';
           }
           if (isHeader) {

@@ -18,7 +18,7 @@ class RefftypesTableSeeder extends Seeder
         $refftypes = [
             [
                 'refftype_code' => 'PO',
-                'refftype_name' => 'Purchase Order',
+                'refftype_name' => 'PO',
                 'refftype_description' => 'Purchase Order document',
                 'is_active' => 1,
                 'display_order' => 1,
@@ -27,7 +27,7 @@ class RefftypesTableSeeder extends Seeder
             ],
             [
                 'refftype_code' => 'SPK',
-                'refftype_name' => 'Work Order',
+                'refftype_name' => 'SPK',
                 'refftype_description' => 'Work Order document',
                 'is_active' => 1,
                 'display_order' => 2,
