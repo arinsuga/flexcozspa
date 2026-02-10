@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Contract;
+use App\ContractOrderSummary;
 use App\ContractSheet;
 use App\Ordersheet;
 use App\SheetGroup;
@@ -34,20 +35,22 @@ class ReportController extends Controller
             ->orderBy('sheetgroup_code')
             ->get();
 
-        // Calculate RAP (Contract Sheets) by Sheet Group
-        // Column C: sheet_netamt from contractsheet and group by sheetgroup_id
-        $rapData = ContractSheet::where('contract_id', $contractId)
-            ->select('sheetgroup_id', DB::raw('SUM(sheet_netamt) as total_rap'))
+        // Calculate RAP (Contract Sheets) and Project Expenses (Order Sheets) by Sheet Group
+        // Use ContractOrderSummary which is based on view_contract_order_summary
+        // This ensures only sheet_type = 1 (Unit Price) items are included.
+        $summaryData = ContractOrderSummary::where('project_id', $projectId)
+            ->where('contract_id', $contractId)
+            ->select(
+                'sheetgroup_id',
+                DB::raw('SUM(contract_amount) as total_rap'),
+                DB::raw('SUM(order_amount) as total_expense')
+            )
             ->groupBy('sheetgroup_id')
-            ->pluck('total_rap', 'sheetgroup_id');
+            ->get()
+            ->keyBy('sheetgroup_id');
 
-        // Calculate Project Expenses (Order Sheets) by Sheet Group
-        // Column E : sheet_netamt from ordersheet and group by sheetgroup_id
-        // Filter by contract_id. Since ordersheets have contract_id, we can use it directly.
-        $expenseData = Ordersheet::where('contract_id', $contractId)
-            ->select('sheetgroup_id', DB::raw('SUM(sheet_netamt) as total_expense'))
-            ->groupBy('sheetgroup_id')
-            ->pluck('total_expense', 'sheetgroup_id');
+        $rapData = $summaryData->map->total_rap;
+        $expenseData = $summaryData->map->total_expense;
 
         $reportRows = [];
         $totalRap = 0;
