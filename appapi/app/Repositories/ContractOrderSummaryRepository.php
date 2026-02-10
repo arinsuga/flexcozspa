@@ -35,42 +35,30 @@ class ContractOrderSummaryRepository implements ContractOrderSummaryRepositoryIn
 
     public function getSummaryByContractExcludingOrder($contractId, $excludeOrderId)
     {
-        return \DB::table('contractsheets as cs')
-            ->select([
-                'cs.project_id',
-                'p.project_number',
-                'p.project_name',
-                'cs.contract_id',
-                'c.contract_number',
-                'cs.id as contractsheet_id',
-                'cs.sheetgroup_type',
-                'cs.sheetgroup_id',
-                'sg.sheetgroup_code',
-                'cs.sheet_code',
-                'cs.sheet_name',
-                'cs.uom_id',
-                'cs.uom_code',
-                'cs.sheet_netamt as contract_amount',
-                \DB::raw('SUM(IFNULL(os.sheet_netamt, 0)) as order_amount'),
-                \DB::raw('cs.sheet_netamt - SUM(IFNULL(os.sheet_netamt, 0)) as available_amount')
-            ])
-            ->join('projects as p', 'cs.project_id', '=', 'p.id')
-            ->join('contracts as c', 'cs.contract_id', '=', 'c.id')
-            ->leftJoin('sheetgroups as sg', 'cs.sheetgroup_id', '=', 'sg.id')
-            ->leftJoin('ordersheets as os', function($join) use ($excludeOrderId) {
-                $join->on('os.contractsheets_id', '=', 'cs.id')
-                     ->where('os.sheet_type', '=', 1)
-                     ->where('os.order_id', '!=', $excludeOrderId);
-            })
-            ->where('cs.contract_id', $contractId)
-            ->where('cs.sheet_type', 1)
-            ->groupBy([
-                'cs.project_id', 'p.project_number', 'p.project_name',
-                'cs.contract_id', 'c.contract_number', 'cs.id',
-                'cs.sheetgroup_type', 'cs.sheetgroup_id', 'sg.sheetgroup_code',
-                'cs.sheet_code', 'cs.sheet_name', 'cs.uom_id', 'cs.uom_code',
-                'cs.sheet_netamt'
-            ])
-            ->get();
+        // 1. Get the total summary for all orders from the view (cached/pre-calculated by the database engine)
+        $summaries = $this->model->where('contract_id', $contractId)->get();
+
+        // 2. Get the specific amounts for the order we want to exclude
+        $orderItems = \DB::table('ordersheets')
+            ->select('contractsheets_id', 'sheet_netamt')
+            ->where('order_id', $excludeOrderId)
+            ->where('sheet_type', 1)
+            ->get()
+            ->keyBy('contractsheets_id');
+
+        // 3. Adjust the totals to "exclude" the current order's amounts
+        foreach ($summaries as $summary) {
+            $itemId = $summary->contractsheet_id;
+            $currentOrderAmt = isset($orderItems[$itemId]) ? (float)$orderItems[$itemId]->sheet_netamt : 0;
+            
+            // Subtract current order's amount from the total order amount
+            $summary->order_amount = (float)$summary->order_amount - $currentOrderAmt;
+            
+            // Recalculate available amount: Total Contract - (Total Order - Current Order)
+            $summary->available_amount = (float)$summary->contract_amount - $summary->order_amount;
+        }
+
+        return $summaries;
     }
 }
+

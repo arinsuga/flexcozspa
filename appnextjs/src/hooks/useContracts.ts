@@ -8,11 +8,12 @@ export const useContracts = (params?: any) => {
   });
 };
 
-export const useContract = (id: string | number) => {
+export const useContract = (id: string | number, options: any = {}) => {
   return useQuery({
     queryKey: ['contract', id],
     queryFn: () => contractService.getById(id),
     enabled: !!id && id !== 'new',
+    ...options
   });
 };
 

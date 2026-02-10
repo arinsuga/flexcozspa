@@ -24,7 +24,7 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
   const { data: projectData } = useProject(order.project_id || '');
   const project = projectData?.data || projectData;
   const { data: contractData } = useContract(order.contract_id || '');
-  const contract = contractData?.data || contractData;
+  const contract = (contractData as any)?.data || contractData;
   const { data: summaryDataResponse } = useContractOrderSummary(order.contract_id || 0, order.id);
 
   const summaryData = useMemo(() => {

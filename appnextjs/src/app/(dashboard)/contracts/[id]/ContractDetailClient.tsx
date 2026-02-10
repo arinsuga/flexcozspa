@@ -6,7 +6,7 @@ import { useContractStatuses } from '@/hooks/useContractStatuses';
 import { useProject } from '@/hooks/useProjects';
 import Button from '@/components/common/Button';
 import ContractSheetTable from '@/components/features/contracts/ContractSheetTable';
-import { useRef, useState, useMemo, useCallback } from 'react';
+import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import { useSheetGroupsByType } from '@/hooks/useSheetGroups';
 import { ContractSheet } from '@/services/contractSheetService';
 import { SheetGroup } from '@/services/sheetGroupService';
@@ -100,11 +100,31 @@ export default function ContractDetailClient({
   };
 
 
-  // Sync localSheets with API data if not already provided via initialData
-  if (contract?.contract_sheets && !hasInitialized) {
-    setHasInitialized(true);
-    setLocalSheets(contract.contract_sheets);
-  }
+  // Sync localSheets with API data if not already provided or if data has changed (Surgical sync)
+  useEffect(() => {
+    if (contract?.contract_sheets && contract.contract_sheets.length > 0) {
+      if (!hasInitialized) {
+        setHasInitialized(true);
+        setLocalSheets(contract.contract_sheets);
+      } else {
+        // Surgical update of expenses (order_summary) and active status while preserving other fields
+        setLocalSheets(prev => {
+          return prev.map(localSheet => {
+            const serverSheet = contract.contract_sheets?.find((s: ContractSheet) => s.id === localSheet.id);
+            if (serverSheet) {
+              return {
+                ...localSheet,
+                order_summary: serverSheet.order_summary,
+                ordersheets_count: serverSheet.ordersheets_count,
+                is_active: serverSheet.is_active
+              };
+            }
+            return localSheet;
+          });
+        });
+      }
+    }
+  }, [contract?.contract_sheets, hasInitialized]);
 
   // Initialize activeTabId when sheetGroups are loaded
   if (Array.isArray(sheetGroups) && sheetGroups.length > 0 && activeTabId === null) {

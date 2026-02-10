@@ -19,22 +19,53 @@ export default function ContractDetailPage() {
   const id = params.id as string;
   const mode = searchParams.get('mode') || 'view';
 
-  const { data: contractResponse, isLoading: isContractLoading } = useContract(id);
-  const { updateContract } = useContractMutations();
   const [step, setStep] = useState(1);
+  const [isDataInitialized, setIsDataInitialized] = useState(false);
+  const { data: contractResponse, isLoading: isContractLoading } = useContract(id, {
+    refetchInterval: (mode === 'view' || step === 2 || step === 3) ? 10000 : false,
+    refetchOnWindowFocus: true,
+    staleTime: 5000,
+  });
+  const { updateContract } = useContractMutations();
   const [contractData, setContractData] = useState<Partial<Contract>>({});
   
-  // Initialize contractData from fetched contract
-  const [isDataInitialized, setIsDataInitialized] = useState(false);
+  // Sync contractData from fetched contract
+  // Note: we use a separate state to handle the 3-step form process
   useEffect(() => {
-    if (contractResponse?.data && !isDataInitialized) {
-      setContractData(contractResponse.data);
-      setIsDataInitialized(true);
-    } else if (contractResponse && !contractResponse.data && !isDataInitialized) {
-      setContractData(contractResponse);
+    const fetchedData = (contractResponse as any)?.data || contractResponse;
+    if (!fetchedData || !fetchedData.id) return;
+
+    if (mode === 'view') {
+      // In view mode, always sync the latest data from server
+      setContractData(fetchedData);
+      if (!isDataInitialized) setIsDataInitialized(true);
+    } else if (step === 2 || step === 3) {
+      // In Step 2 & 3, sync only the newest expense (order_summary) data 
+      // while keeping the edited data from current session
+      if (!isDataInitialized) setIsDataInitialized(true);
+      setContractData(prev => {
+        if (!prev.contract_sheets || !fetchedData.contract_sheets) return fetchedData;
+        
+        const updatedSheets = prev.contract_sheets.map(localSheet => {
+          const serverSheet = fetchedData.contract_sheets.find((s: ContractSheet) => s.id === localSheet.id);
+          if (serverSheet) {
+            return {
+              ...localSheet,
+              order_summary: serverSheet.order_summary,
+              ordersheets_count: serverSheet.ordersheets_count
+            };
+          }
+          return localSheet;
+        });
+        
+        return { ...prev, contract_sheets: updatedSheets };
+      });
+    } else if (!isDataInitialized) {
+      // Step 1 & 2: Only initialize once to avoid wiping out user edits
+      setContractData(fetchedData);
       setIsDataInitialized(true);
     }
-  }, [contractResponse, isDataInitialized]);
+  }, [contractResponse, mode, step, isDataInitialized]);
 
   // Info dialog state
   const [infoDialog, setInfoDialog] = useState<{

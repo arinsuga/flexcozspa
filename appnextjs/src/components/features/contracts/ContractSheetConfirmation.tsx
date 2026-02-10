@@ -125,29 +125,31 @@ export default function ContractSheetConfirmation({ contract, onBack, onSave, is
     return result.map(item => {
       if (item.sheet_type === 0) { // It's a header
         const prefix = item.sheet_code + '.';
+        // Sum only leaf nodes (sheet_type === 1) to avoid double counting intermediate headers
         const subTotal = result.reduce((sum, other) => {
-          // Rule: sum up items that are descendants
-          if (other.sheet_code.startsWith(prefix)) {
-            return sum + (other.sheet_grossamt || 0);
+          if (other.sheet_type === 1 && other.sheet_code.startsWith(prefix)) {
+            const val = typeof other.sheet_grossamt === 'string' ? parseFloat(other.sheet_grossamt) : (other.sheet_grossamt || 0);
+            return sum + val;
           }
           return sum;
         }, 0);
 
         const subExpense = result.reduce((sum, other) => {
-          if (other.sheet_code.startsWith(prefix)) {
-            return sum + (other.order_summary?.order_amount || 0);
+          if (other.sheet_type === 1 && other.sheet_code.startsWith(prefix)) {
+            const val = typeof other.order_summary?.order_amount === 'string' ? parseFloat(other.order_summary.order_amount) : (other.order_summary?.order_amount || 0);
+            return sum + val;
           }
           return sum;
         }, 0);
 
         return {
           ...item,
-          sheet_grossamt: subTotal,
-          sheet_grossamt2: subTotal,
-          sheet_netamt: subTotal,
-          sheet_netamt2: subTotal,
-          sheet_realamt: subTotal,
-          order_summary: { order_amount: subExpense }
+          sheet_grossamt: parseFloat(subTotal.toFixed(2)),
+          sheet_grossamt2: parseFloat(subTotal.toFixed(2)),
+          sheet_netamt: parseFloat(subTotal.toFixed(2)),
+          sheet_netamt2: parseFloat(subTotal.toFixed(2)),
+          sheet_realamt: parseFloat(subTotal.toFixed(2)),
+          order_summary: { ...item.order_summary, order_amount: parseFloat(subExpense.toFixed(2)) }
         };
       }
       return item;

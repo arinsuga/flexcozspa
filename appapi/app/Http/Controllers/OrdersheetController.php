@@ -38,7 +38,15 @@ class OrdersheetController extends Controller
         return response()->json(['data' => $ordersheets], 200);
     }
 
+    public function getByOrderOptimized($orderId)
+    {
+        // Only load vendor and uom relationships for performance
+        $ordersheets = $this->repository->getOrdersheetsByOrderWithRelations($orderId, ['vendor', 'uom']);
+        return response()->json(['data' => $ordersheets], 200);
+    }
+
     public function getByProject($projectId)
+
     {
         $ordersheets = $this->repository->getOrdersheetsByProject($projectId);
         return response()->json(['data' => $ordersheets], 200);

@@ -33,13 +33,13 @@ export interface OrderSheet {
 
 export const orderSheetService = {
   getByOrderId: async (orderId: number | string) => {
-    // Correct endpoint based on prompts usually is by orderId
-    // Prompt says: GET http://appapi.localhost/ordersheets/order/{orderId}
-    const response = await appApi.get(`ordersheets/order/${orderId}`);
+    // Use optimized endpoint that only loads vendor and uom relationships
+    const response = await appApi.get(`ordersheets/order/${orderId}/optimized`);
     return response.data;
   },
   
   saveSheet: async (orderId: number | string, data: any[]) => {
+
       // Similar implementation to contract sheets, handling bulk or iterative save
       // Prompt says: POST http://appapi.localhost/ordersheets (Create?)
       // PUT http://appapi.localhost/ordersheets/{ordersheet} (Update)

@@ -1028,22 +1028,62 @@ const ContractSheetTable = forwardRef((props: ContractSheetTableProps, ref) => {
         jInstance.current = null;
       }
     };
-  }, [onchange, validateTable, handleCellChange, transformToSheetData, calculateRecursiveExpenses, data, readOnly]); // Re-init correctly
+  }, [onchange, validateTable, handleCellChange, transformToSheetData, calculateRecursiveExpenses, readOnly]); // Removed 'data' to prevent re-init
 
-  // Watch for external data changes
+  // Watch for external data changes - SURGICAL ZERO-FLICKER UPDATE
   useEffect(() => {
     const instance = getJInstance();
-    if (instance && typeof instance.getData === 'function' && Array.isArray(data) && data.length > 0) {
-      const currentData = instance.getData();
-      let newData = transformToSheetData(data);
-      newData = calculateRecursiveExpenses(newData);
+    if (!instance || typeof instance.getData !== 'function' || !Array.isArray(data) || data.length === 0) return;
+
+    // Get current UI data
+    const currentData = instance.getData();
+    
+    // Iterate through server data and update ONLY specific columns surgically
+    // Column 7: Pengeluaran, Column 8: is_active, Column 9: ordersheets_count, Column 10: sheet_type
+    let hasChanges = false;
+    
+    data.forEach((serverSheet) => {
+      // Find the row index in the spreadsheet by ID (Column 0)
+      const rowIndex = currentData.findIndex((row: any) => row[0] === serverSheet.id);
       
-      if (JSON.stringify(currentData) !== JSON.stringify(newData)) {
-        instance.setData(newData);
-        validateTable(instance);
+      if (rowIndex !== -1) {
+        const row = currentData[rowIndex];
+        const serverExpense = serverSheet.order_summary?.order_amount || 0;
+        const serverActive = serverSheet.is_active;
+        const serverOrderCount = serverSheet.ordersheets_count || 0;
+        
+        // Surgically update if values changed
+        if (parseFloat(row[7]) !== serverExpense) {
+          instance.setValueFromCoords(7, rowIndex, serverExpense, true);
+          hasChanges = true;
+        }
+        if (row[8] !== serverActive) {
+          instance.setValueFromCoords(8, rowIndex, serverActive, true);
+          hasChanges = true;
+        }
+        if (row[9] !== serverOrderCount) {
+          instance.setValueFromCoords(9, rowIndex, serverOrderCount, true);
+          hasChanges = true;
+        }
       }
+    });
+
+    if (hasChanges) {
+       // Re-calculate headers based on surgical updates
+       const dataNow = instance.getData();
+       calculateRecursiveExpenses(dataNow);
+       // We use setData(dataNow, true) to update the table data without triggering a full re-render if possible,
+       // or just rely on the setValueFromCoords calls above. 
+       // For headers, we might need to update them too:
+       dataNow.forEach((row: any, idx: number) => {
+         if (row[10] === 0) { // Header
+           instance.setValueFromCoords(7, idx, row[7], true);
+         }
+       });
+       
+       validateTable(instance);
     }
-  }, [data, transformToSheetData, validateTable, calculateRecursiveExpenses]);
+  }, [data, calculateRecursiveExpenses, validateTable]);
 
   return (
     <>
