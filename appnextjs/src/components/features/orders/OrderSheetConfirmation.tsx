@@ -136,9 +136,13 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
       return;
     }
 
-    const hasErrors = sheets.some(s => (s.validation_errors?.length || 0) > 0);
-    if (hasErrors) {
-      showInfo('Validation Error', 'Please fix validation errors before saving.', 'error');
+    // Relaxed validation: Allow saving even if amount exceeds balance, but block other hard errors
+    const hasHardErrors = sheets.some(s => 
+      (s.validation_errors || []).some(err => !err.includes('Amount exceeds'))
+    );
+
+    if (hasHardErrors) {
+      showInfo('Validation Error', 'Please fix validation errors before saving. (Only amount warnings can be bypassed)', 'error');
       return;
     }
 
