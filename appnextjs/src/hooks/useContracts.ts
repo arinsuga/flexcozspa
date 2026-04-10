@@ -5,6 +5,7 @@ export const useContracts = (params?: any) => {
   return useQuery({
     queryKey: ['contracts', params],
     queryFn: () => contractService.getAll(params),
+    staleTime: 60000,
   });
 };
 
@@ -13,6 +14,7 @@ export const useContract = (id: string | number, options: any = {}) => {
     queryKey: ['contract', id],
     queryFn: () => contractService.getById(id),
     enabled: !!id && id !== 'new',
+    staleTime: 60000,
     ...options
   });
 };

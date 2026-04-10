@@ -17,6 +17,7 @@ class RefftypesTableSeeder extends Seeder
         // Insert reference type data
         $refftypes = [
             [
+                'vendortype_id' => 1,
                 'refftype_code' => 'PO',
                 'refftype_name' => 'PO',
                 'refftype_description' => 'Purchase Order document',
@@ -26,6 +27,7 @@ class RefftypesTableSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'vendortype_id' => 2,
                 'refftype_code' => 'SPK',
                 'refftype_name' => 'SPK',
                 'refftype_description' => 'Work Order document',

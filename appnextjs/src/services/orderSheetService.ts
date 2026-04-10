@@ -6,7 +6,6 @@ export interface OrderSheet {
   sheet_code: string;
   sheet_refftypeid?: number;
   sheet_reffno?: string;
-  sheet_reffnodate?: string;
   vendor_id?: number;
   vendor_name?: string;
   sheet_description?: string;

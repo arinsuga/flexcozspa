@@ -12,7 +12,7 @@ import { ContractOrderSummary } from '@/services/contractOrderSummaryService';
 import InfoDialog from '@/components/common/InfoDialog';
 
 
-interface OrderSheetConfirmationProps {
+interface ExpenseSheetConfirmationProps {
   order: Partial<Order> & { order_items?: Partial<OrderSheet>[]; ordersheets?: Partial<OrderSheet>[] };
   onBack: () => void;
   onSave: (processedSheets: OrderSheet[]) => void;
@@ -20,7 +20,7 @@ interface OrderSheetConfirmationProps {
   mode?: 'edit' | 'view';
 }
 
-export default function OrderSheetConfirmation({ order, onBack, onSave, isLoading, mode = 'edit' }: OrderSheetConfirmationProps) {
+export default function ExpenseSheetConfirmation({ order, onBack, onSave, isLoading, mode = 'edit' }: ExpenseSheetConfirmationProps) {
   const { data: projectData } = useProject(order.project_id || '');
   const project = projectData?.data || projectData;
   const { data: contractData } = useContract(order.contract_id || '');
@@ -86,6 +86,8 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
       
       // 1. Mandatory Field Checks
       if (!code) errors.push('Code is required');
+      if (!s.sheet_refftypeid) errors.push('Reff Type is required');
+      if (!s.sheet_reffno) errors.push('Reff No is required');
       if (!vendorId) errors.push('Vendor (S/SM) is required');
       if (!s.uom_code) errors.push('UOM (Sat) is required');
 
@@ -130,7 +132,7 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
   const handleSaveClick = () => {
     const sheets = processedSheets || [];
     if (sheets.length === 0) {
-      showInfo('Attention', 'Please add at least one item to the order sheet.', 'info');
+      showInfo('Attention', 'Please add at least one item to the expense sheet.', 'info');
       return;
     }
 
@@ -152,8 +154,8 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
       {mode === 'edit' ? (
         <div className="flex justify-between items-center border-b pb-4 dark:border-gray-700">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Step 3: Order Sheet Confirmation</h2>
-            <p className="text-sm text-gray-500 mt-1">Review and validate your order sheet structure before saving.</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Step 3: Expense Sheet Confirmation</h2>
+            <p className="text-sm text-gray-500 mt-1">Review and validate your expense sheet structure before saving.</p>
           </div>
           <div className="flex gap-3">
             <Button variant="ghost" onClick={onBack} leftIcon="arrow_back" disabled={isLoading}>
@@ -167,8 +169,8 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
       ) : (
         <div className="flex justify-between items-center border-b pb-4 dark:border-gray-700">
            <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Order Summary</h2>
-            <p className="text-sm text-gray-500 mt-1">Read-only view of the order and its items.</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Expense Summary</h2>
+            <p className="text-sm text-gray-500 mt-1">Read-only view of the expense and its items.</p>
           </div>
           <Button variant="ghost" onClick={onBack} leftIcon="arrow_back">
             Back to List
@@ -188,11 +190,11 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
           <div className="mt-1 text-sm text-gray-900 dark:text-white font-bold">{contract?.contract_number} - {contract?.contract_name}</div>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Order Number</label>
+          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Expense Number</label>
           <div className="mt-1 text-sm text-gray-900 dark:text-white font-bold">{order.order_number}</div>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Order Date</label>
+          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Expense Date</label>
           <div className="mt-1 text-sm text-gray-900 dark:text-white font-bold">{order.order_dt?.split('T')[0]}</div>
         </div>
         <div className="col-span-1 lg:col-span-2">
@@ -220,7 +222,7 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
-                  <span>Mandatory: <strong>Code, S/SM, Vol, Sat, Price, Total</strong></span>
+                  <span>Mandatory: <strong>Code, Reff Type/No, S/SM, Vol, Sat, Price, Total</strong></span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
@@ -233,7 +235,7 @@ export default function OrderSheetConfirmation({ order, onBack, onSave, isLoadin
       )}
 
       <div className="mt-8">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Order Sheets Preview</h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Expense Sheets Preview</h3>
         
         <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">

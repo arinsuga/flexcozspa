@@ -3,18 +3,16 @@
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import OrderDetailClient from './OrderDetailClient';
-import OrderForm from '@/components/features/orders/OrderForm';
-import OrderSheetConfirmation from '@/components/features/orders/OrderSheetConfirmation';
+import ExpenseForm from '@/components/features/expenses/ExpenseForm';
+import ExpenseSheetConfirmation from '@/components/features/expenses/ExpenseSheetConfirmation';
 import Stepper from '@/components/common/Stepper';
 import { useOrder, useOrderMutations } from '@/hooks/useOrders';
 import { Order } from '@/services/orderService';
 import { OrderSheet } from '@/services/orderSheetService';
 import InfoDialog from '@/components/common/InfoDialog';
 import { TableSkeleton } from '@/components/common/Skeleton';
-import { useQueryClient } from '@tanstack/react-query';
-import { contractOrderSummaryService } from '@/services/contractOrderSummaryService';
 
-export default function OrderDetailPage() {
+export default function ExpenseDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -23,7 +21,6 @@ export default function OrderDetailPage() {
 
   const { data: orderResponse, isLoading: isOrderLoading } = useOrder(id);
   const { updateOrder } = useOrderMutations();
-  const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   const [orderData, setOrderData] = useState<Partial<Order>>({});
   
@@ -31,42 +28,13 @@ export default function OrderDetailPage() {
   const [isDataInitialized, setIsDataInitialized] = useState(false);
   useEffect(() => {
     if (orderResponse?.data && !isDataInitialized) {
-      const data = orderResponse.data;
-      // Map ordersheets to order_items if needed
-      if (data.ordersheets && !data.order_items) {
-        data.order_items = data.ordersheets;
-      }
-      setOrderData(data);
+      setOrderData(orderResponse.data);
       setIsDataInitialized(true);
     } else if (orderResponse && !orderResponse.data && !isDataInitialized) {
-      const data = { ...orderResponse };
-      if (data.ordersheets && !data.order_items) {
-        data.order_items = data.ordersheets;
-      }
-      setOrderData(data);
+      setOrderData(orderResponse);
       setIsDataInitialized(true);
     }
   }, [orderResponse, isDataInitialized]);
-
-  // Background Pre-fetching for Step 2
-  useEffect(() => {
-    if (orderData?.contract_id) {
-      const contractId = orderData.contract_id;
-      const orderId = id;
-      
-      // Prefetch contract summary
-      queryClient.prefetchQuery({
-        queryKey: ['contract-order-summary', contractId, orderId],
-        queryFn: () => {
-          if (orderId && orderId !== 'new') {
-            return contractOrderSummaryService.getByContractExcludingOrder(contractId, orderId);
-          }
-          return contractOrderSummaryService.getByContract(contractId);
-        },
-        staleTime: 60000,
-      });
-    }
-  }, [orderData?.contract_id, id, queryClient]);
 
   // Info dialog state
   const [infoDialog, setInfoDialog] = useState<{
@@ -86,10 +54,10 @@ export default function OrderDetailPage() {
 
   if (mode === 'view') {
     return (
-      <OrderSheetConfirmation 
+      <ExpenseSheetConfirmation 
         order={orderData} 
         mode="view" 
-        onBack={() => router.push('/orders')} 
+        onBack={() => router.push('/expenses')} 
         onSave={() => {}} 
         isLoading={false} 
       />
@@ -107,13 +75,6 @@ export default function OrderDetailPage() {
     setStep(3);
   };
 
-  const handleStep2Back = (data?: Partial<Order>) => {
-    if (data) {
-      setOrderData(prev => ({ ...prev, ...data }));
-    }
-    setStep(1);
-  };
-
   const handleFinalSave = async (processedSheets: OrderSheet[]) => {
     try {
       const payload = {
@@ -124,11 +85,11 @@ export default function OrderDetailPage() {
       setInfoDialog({
         isOpen: true,
         title: 'Success',
-        message: 'Order updated successfully!',
+        message: 'Expense updated successfully!',
         variant: 'success',
         onClose: () => {
           setInfoDialog(prev => ({ ...prev, isOpen: false }));
-          router.push('/orders');
+          router.push('/expenses');
         }
       });
     } catch (error) {
@@ -136,26 +97,26 @@ export default function OrderDetailPage() {
       setInfoDialog({
         isOpen: true,
         title: 'Error',
-        message: 'Failed to update order. Please try again.',
+        message: 'Failed to update expense. Please try again.',
         variant: 'error',
       });
     }
   };
 
-  const steps = ['Order Details', 'Order Sheet Input', 'Order Sheet Confirmation'];
+  const steps = ['Expense Details', 'Expense Sheet Input', 'Expense Sheet Confirmation'];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Order: {orderData.order_number}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Expense: {orderData.order_number}</h1>
         <Stepper steps={steps} currentStep={step} />
       </div>
       
       {step === 1 && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-gray-800 p-6 shadow sm:rounded-lg">
-             <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Step 1: Order Details</h2>
-             <OrderForm 
+             <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Step 1: Expense Details</h2>
+             <ExpenseForm 
                 onSubmit={handleStep1Submit} 
                 submitLabel="Next Step" 
                 initialData={orderData} 
@@ -170,7 +131,7 @@ export default function OrderDetailPage() {
               id={id} 
               initialData={orderData} 
               mode="edit" 
-              onBack={handleStep2Back}
+              onBack={() => setStep(1)}
               onSubmit={handleStep2Submit}
               submitLabel="Next Step"
               readOnlyInfo={true}
@@ -180,7 +141,7 @@ export default function OrderDetailPage() {
 
       {step === 3 && (
         <div className="space-y-6">
-          <OrderSheetConfirmation 
+          <ExpenseSheetConfirmation 
             order={orderData}
             onBack={() => setStep(2)}
             onSave={handleFinalSave}

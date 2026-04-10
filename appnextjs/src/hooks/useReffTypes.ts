@@ -5,6 +5,7 @@ export const useReffTypes = (params?: any) => {
   return useQuery({
     queryKey: ['refftypes', params],
     queryFn: () => refftypeService.getAll(params),
+    staleTime: 60000,
   });
 };
 

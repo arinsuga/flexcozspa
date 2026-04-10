@@ -1,42 +1,54 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useOrderMutations } from '@/hooks/useOrders';
+import { useOrder, useOrderMutations } from '@/hooks/useOrders';
+import { useProjects } from '@/hooks/useProjects';
+import { useContracts } from '@/hooks/useContracts';
 import Button from '@/components/common/Button';
-import OrderSheetTable from '@/components/features/orders/OrderSheetTable';
+import ExpenseSheetTable from '@/components/features/expenses/ExpenseSheetTable';
 import InfoDialog from '@/components/common/InfoDialog';
-import { useRef, useState, useEffect } from 'react';
-import { Order } from '@/services/orderService';
-import { OrderSheet } from '@/services/orderSheetService';
+import { useRef, useState, useMemo, useEffect } from 'react';
+import { Order } from '@/services/expenseservice';
+import { useOrderSheets } from '@/hooks/useOrderSheets';
+import { OrderSheet } from '@/services/expensesheetService';
 
-interface OrderDetailClientProps {
+interface ExpenseDetailClientProps {
   id: string;
   initialData?: Partial<Order>;
   mode?: 'create' | 'edit';
-  onBack?: (data?: Partial<Order>) => void;
+  onBack?: () => void;
   onSubmit?: (data: Partial<Order>) => void;
   submitLabel?: string;
   readOnlyInfo?: boolean;
 }
 
-export default function OrderDetailClient({ id, initialData, mode = 'edit', onBack, onSubmit, submitLabel, readOnlyInfo = false }: OrderDetailClientProps) {
+export default function ExpenseDetailClient({ id, initialData, mode = 'edit', onBack, onSubmit, submitLabel, readOnlyInfo = false }: ExpenseDetailClientProps) {
   const router = useRouter();
+  const { data: orderResponse, isLoading: isOrderLoading } = useOrder(id);
+  const { data: projectsData } = useProjects();
+  const { data: contractsData } = useContracts();
+  const { data: sheetsData, isLoading: isSheetsLoading } = useOrderSheets(id);
   const { updateOrder: updateOrderMutation, createOrder: createOrderMutation } = useOrderMutations();
 
-  // Use initialData directly or as a starting point for state
-  const [order, setOrder] = useState<Partial<Order>>(initialData || {});
-  const [localSheets, setLocalSheets] = useState<OrderSheet[]>([]);
-  const sheetRef = useRef<any>(null);
+  const projects = useMemo(() => projectsData?.data || [], [projectsData]);
+  const contracts = useMemo(() => contractsData?.data || [], [contractsData]);
 
-  // Sync localSheets with initialData once OR when initialData significantly changes
-  // This is important because the parent (Wizard) might have updated initialData
+  // Resolve order data: prefer initialData (for create mode) or fetched data
+  const fetchedOrder = orderResponse?.data || orderResponse;
+  const [order, setOrder] = useState<Partial<Order> | null>(initialData || null);
+  const [isDataInitialized, setIsDataInitialized] = useState(false);
+
+  // Initialize order data when it becomes available
   useEffect(() => {
-    const items = (initialData as any)?.order_items || (initialData as any)?.ordersheets || [];
-    setLocalSheets(items);
-    if (initialData) {
-      setOrder(initialData);
+    if (fetchedOrder && !isDataInitialized) {
+      setOrder(fetchedOrder);
+      setIsDataInitialized(true);
     }
-  }, [initialData]);
+  }, [fetchedOrder, isDataInitialized]);
+
+  const [localSheets, setLocalSheets] = useState<OrderSheet[]>([]);
+  const [hasInitializedSheets, setHasInitializedSheets] = useState(false);
+  const sheetRef = useRef<any>(null);
 
   // Info dialog state
   const [infoDialog, setInfoDialog] = useState<{
@@ -52,30 +64,42 @@ export default function OrderDetailClient({ id, initialData, mode = 'edit', onBa
     variant: 'info',
   });
 
-  const handleHeaderChange = (field: keyof Order, value: any) => {
-    setOrder(prev => ({ ...prev, [field]: value }));
-  };
 
-  const getLatestPayload = () => {
-    const allRowsToSave: Partial<OrderSheet>[] = sheetRef.current?.getSheetData() || [];
-    return {
-      ...order,
-      project_id: order.project_id ? Number(order.project_id) : undefined,
-      contract_id: order.contract_id ? Number(order.contract_id) : undefined,
-      order_items: allRowsToSave 
-    };
-  };
+  // Sync localSheets with API data once
+  useEffect(() => {
+    if (hasInitializedSheets) return;
 
-  const handleBack = () => {
-    if (onBack) {
-      onBack(getLatestPayload());
-    } else {
-      router.back();
+    const itemsFromProps = (initialData as any)?.order_items || (initialData as any)?.ordersheets;
+    
+    if (Array.isArray(itemsFromProps)) {
+       setLocalSheets(itemsFromProps);
+       setHasInitializedSheets(true);
+    } else if (sheetsData && id !== 'new') {
+       const sheets = Array.isArray(sheetsData) ? sheetsData : (sheetsData as any).data || [];
+       setLocalSheets(sheets);
+       setHasInitializedSheets(true);
+    } else if (fetchedOrder?.ordersheets && id !== 'new') {
+       setLocalSheets(fetchedOrder.ordersheets);
+       setHasInitializedSheets(true);
     }
+  }, [sheetsData, initialData, hasInitializedSheets, id, fetchedOrder]);
+
+  const handleHeaderChange = (field: keyof Order, value: any) => {
+    setOrder(prev => prev ? ({ ...prev, [field]: value }) : null);
   };
 
   const handleSave = async () => {
-    const payload = getLatestPayload();
+    if (!order) return;
+    
+    // Latest data from the table
+    const allRowsToSave: Partial<OrderSheet>[] = sheetRef.current?.getSheetData() || [];
+
+    const payload = {
+       ...order,
+       project_id: order.project_id ? Number(order.project_id) : undefined,
+       contract_id: order.contract_id ? Number(order.contract_id) : undefined,
+       order_items: allRowsToSave // Transitioning to order_items for consistency
+    };
 
     if (onSubmit) {
       onSubmit(payload);
@@ -88,11 +112,11 @@ export default function OrderDetailClient({ id, initialData, mode = 'edit', onBa
          setInfoDialog({
            isOpen: true,
            title: 'Success',
-           message: 'Order created successfully!',
+           message: 'Expense created successfully!',
            variant: 'success',
            onClose: () => {
              setInfoDialog(prev => ({ ...prev, isOpen: false }));
-             router.push('/orders');
+             router.push('/expenses');
            }
          });
       } else {
@@ -103,7 +127,7 @@ export default function OrderDetailClient({ id, initialData, mode = 'edit', onBa
          setInfoDialog({
            isOpen: true,
            title: 'Success',
-           message: 'Order saved successfully!',
+           message: 'Expense saved successfully!',
            variant: 'success',
          });
       }
@@ -112,14 +136,18 @@ export default function OrderDetailClient({ id, initialData, mode = 'edit', onBa
       setInfoDialog({
         isOpen: true,
         title: 'Error',
-        message: 'Failed to save order. Please try again.',
+        message: 'Failed to save expense. Please try again.',
         variant: 'error',
       });
     }
   };
 
+  if ((isOrderLoading && id !== 'new') || (isSheetsLoading && id !== 'new')) {
+    return <div className="p-6">Loading...</div>;
+  }
+  
   if (!order && id !== 'new') {
-    return <div className="p-6 text-error">Order not found</div>;
+    return <div className="p-6 text-error">Expense not found</div>;
   }
 
   const safeOrder = order || {};
@@ -130,11 +158,11 @@ export default function OrderDetailClient({ id, initialData, mode = 'edit', onBa
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-2 dark:border-gray-700">
           <div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-              {mode === 'create' ? 'New Order' : 'Order Details'}
+              {mode === 'create' ? 'New Expense' : 'Expense Details'}
             </h3>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={handleBack} leftIcon="arrow_back">Back</Button>
+            <Button variant="ghost" onClick={onBack || (() => router.back())} leftIcon="arrow_back">Back</Button>
             <Button 
               variant="primary" 
               leftIcon={onSubmit ? 'arrow_forward' : 'save'} 
@@ -148,7 +176,7 @@ export default function OrderDetailClient({ id, initialData, mode = 'edit', onBa
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm font-medium">
             <div>
-              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Order Number</label>
+              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Expense Number</label>
               <input 
                 type="text" 
                 value={safeOrder.order_number || ''} 
@@ -159,21 +187,31 @@ export default function OrderDetailClient({ id, initialData, mode = 'edit', onBa
             </div>
             <div>
                <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Project</label>
-               <input 
-                 type="text"
-                 value={safeOrder.project?.project_name || ''}
-                 disabled
-                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 bg-gray-100 dark:bg-gray-700 dark:border-gray-600 cursor-not-allowed opacity-75"
-               />
+               <select
+                  value={safeOrder.project_id || ''}
+                  onChange={(e) => handleHeaderChange('project_id', e.target.value)}
+                  disabled={readOnlyInfo}
+                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+               >
+                  <option value="">Select Project</option>
+                  {projects.map((p: any) => (
+                    <option key={p.id} value={p.id}>{p.project_name}</option>
+                  ))}
+               </select>
             </div>
             <div>
                <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Contract</label>
-               <input 
-                 type="text"
-                 value={safeOrder.contract?.contract_name || ''}
-                 disabled
-                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 bg-gray-100 dark:bg-gray-700 dark:border-gray-600 cursor-not-allowed opacity-75"
-               />
+               <select
+                  value={safeOrder.contract_id || ''}
+                  onChange={(e) => handleHeaderChange('contract_id', e.target.value)}
+                  disabled={readOnlyInfo}
+                  className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
+               >
+                  <option value="">Select Contract</option>
+                  {contracts.map((c: any) => (
+                    <option key={c.id} value={c.id}>{c.contract_name}</option>
+                  ))}
+               </select>
             </div>
             <div>
                <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Status</label>
@@ -189,7 +227,7 @@ export default function OrderDetailClient({ id, initialData, mode = 'edit', onBa
                </select>
             </div>
             <div>
-              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Order Date</label>
+              <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Expense Date</label>
               <input 
                 type="date"
                 value={safeOrder.order_dt ? safeOrder.order_dt.split('T')[0] : ''}
@@ -221,7 +259,7 @@ export default function OrderDetailClient({ id, initialData, mode = 'edit', onBa
         </div>
 
         <div className="pt-4 space-y-4">
-                <OrderSheetTable 
+                <ExpenseSheetTable 
                   ref={sheetRef} 
                   data={localSheets} 
                   orderId={id} 

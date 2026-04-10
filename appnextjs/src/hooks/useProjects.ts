@@ -5,6 +5,7 @@ export const useProjects = (params?: any) => {
   return useQuery({
     queryKey: ['projects', params],
     queryFn: () => projectService.getAll(params),
+    staleTime: 60000,
   });
 };
 
@@ -13,6 +14,7 @@ export const useProject = (id: string | number) => {
     queryKey: ['project', id],
     queryFn: () => projectService.getById(id),
     enabled: !!id,
+    staleTime: 60000,
   });
 };
 

@@ -14,17 +14,18 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { name: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
-  { name: 'Project Management', path: '/projects', icon: 'business_center' },
-  { name: 'Vendor Management', path: '/vendors', icon: 'store' },
-  { name: 'Contract Management', path: '/contracts', icon: 'description' },
-  { name: 'Order Management', path: '/orders', icon: 'shopping_cart' },
+  { name: 'Project', path: '/projects', icon: 'business_center' },
+  { name: 'Vendor', path: '/vendors', icon: 'store' },
+  { name: 'Contract', path: '/contracts', icon: 'description' },
+  { name: 'Order', path: '/orders', icon: 'shopping_cart' },
+  { name: 'Expense', path: '/expenses', icon: 'payments' },
   { 
     name: 'System Data', 
     icon: 'storage',
     subItems: [
-      { name: 'Vendor Type Management', path: '/vendor-types', icon: 'category' },
-      { name: 'Reff Type Management', path: '/reff-types', icon: 'label' },
-      { name: 'Sheet Group Management', path: '/sheet-groups', icon: 'view_module' },
+      { name: 'Vendor Type', path: '/vendor-types', icon: 'category' },
+      { name: 'Reff Type', path: '/reff-types', icon: 'label' },
+      { name: 'Sheet Group', path: '/sheet-groups', icon: 'view_module' },
     ]
   },
   {

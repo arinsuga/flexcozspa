@@ -21,7 +21,7 @@ const getColumnName = (x: number): string => {
   return name;
 };
 
-interface OrderSheetTableProps {
+interface ExpenseSheetTableProps {
   data: any[];
   orderId: number | string;
   projectId: number;
@@ -30,7 +30,7 @@ interface OrderSheetTableProps {
   readOnly?: boolean;
 }
 
-const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
+const ExpenseSheetTable = forwardRef((props: ExpenseSheetTableProps, ref) => {
   const { data, orderId, projectId, contractId, onchange, readOnly = false } = props;
   const jRef = useRef<HTMLDivElement>(null);
   const jInstance = useRef<any>(null);
@@ -58,7 +58,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
   const reffOptions = useMemo(() => {
     const normalizedReffTypes = Array.isArray(reffTypes) ? reffTypes : (reffTypes as any)?.data || [];
     return normalizedReffTypes.map((t: any) => ({
-      id: t.refftype_code, // Use code as ID to match string storage in DB
+      id: t.id,
       name: t.refftype_name
     }));
   }, [reffTypes]);
@@ -111,19 +111,20 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
             sheet_code,
             sheet_refftypeid,
             sheet_reffno,
+            sheet_reffnodate,
             vendor_name,
             sheet_description,
-            _available_amount, // 6
-            sheet_qty,        // 7
-            uom_code,         // 8
-            sheet_price,      // 9
-            ,                 // 10 (total - unused)
-            vendor_id,        // 11
-            contractsheets_id, // 12
-            contract_amount,   // 13
-            order_amount,      // 14
-            sheetgroup_id,     // 15
-            sheetgroup_type    // 16
+            _available_amount, // 7
+            sheet_qty,        // 8
+            uom_code,         // 9
+            sheet_price,      // 10
+            ,                 // 11 (total - unused)
+            vendor_id,        // 12
+            contractsheets_id, // 13
+            contract_amount,   // 14
+            order_amount,      // 15
+            sheetgroup_id,     // 16
+            sheetgroup_type    // 17
           ] = row;
 
           if (!hasValue(sheet_code)) {
@@ -140,6 +141,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
             sheet_code: String(sheet_code || '').trim(),
             sheet_refftypeid: sheet_refftypeid ? parseInt(sheet_refftypeid) : undefined,
             sheet_reffno: sheet_reffno ? String(sheet_reffno) : '',
+            sheet_reffnodate: sheet_reffnodate ? String(sheet_reffnodate) : null,
             vendor_id: vendor_id ? parseInt(vendor_id) : undefined,
             vendor_name: vendor_name ? String(vendor_name) : '',
             sheet_description: sheet_description ? String(sheet_description) : '',
@@ -175,12 +177,13 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
       return [
         item.id || null,
         item.sheet_code || '',
-        item.sheet_refftypeid || (item.sheet_reffno ? (item.vendor?.vendortype_id === 2 ? 'SPK' : 'PO') : null),
-        item.sheet_reffno || null,
+        item.sheet_refftypeid || '',
+        item.sheet_reffno || '',
+        item.sheet_reffnodate ? item.sheet_reffnodate.split('T')[0] : '',
         item.vendor_name || (item.vendor?.vendor_name) || '',
         item.sheet_description || (match?.sheet_name) || '',
-        availableAmt, // Index 6
-        item.sheet_qty || null,        // Index 7
+        availableAmt, // Index 7
+        item.sheet_qty || null,        // Index 8
         item.uom_code || (item.uom?.uom_code) || (match?.uom_code) || '',
         item.sheet_price || null,
         (item.sheet_qty && item.sheet_price) ? (item.sheet_qty * item.sheet_price) : null,
@@ -200,9 +203,9 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
     
     const nx = parseInt(x as string);
     const ny = parseInt(y as string);
-    const qtyCol = 7;
-    const priceCol = 9;
-    const totalCol = 10;
+    const qtyCol = 8;
+    const priceCol = 10;
+    const totalCol = 11;
 
     // 0. Fix for HTML Corruptions & Paste: Strip HTML from any string values
     if (typeof value === 'string' && (value.includes('<') || value.includes('&lt;'))) {
@@ -269,35 +272,41 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
       }
 
       if (match) {
-        instance.setValueFromCoords(5, ny, match.sheet_name, true); // Description/Name
-        instance.setValueFromCoords(6, ny, match.available_amount, true); // Available Amt (6)
-        instance.setValueFromCoords(8, ny, match.uom_code, true); // UOM (Sat) (8)
-        instance.setValueFromCoords(12, ny, match.contractsheet_id, true); // Hidden contractsheets_id (12)
-        instance.setValueFromCoords(13, ny, match.contract_amount || 0, true); // Contract Amt
-        instance.setValueFromCoords(14, ny, match.order_amount, true); // Order Amt
-        instance.setValueFromCoords(15, ny, match.sheetgroup_id, true); // SheetGroup ID
-        instance.setValueFromCoords(16, ny, match.sheetgroup_type, true); // SheetGroup Type
+        instance.setValueFromCoords(6, ny, match.sheet_name, true); // Description/Name
+        instance.setValueFromCoords(7, ny, match.available_amount, true); // Available Amt (7)
+        instance.setValueFromCoords(9, ny, match.uom_code, true); // UOM (Sat) (9)
+        instance.setValueFromCoords(13, ny, match.contractsheet_id, true); // Hidden contractsheets_id (13)
+        instance.setValueFromCoords(14, ny, match.contract_amount || 0, true); // Contract Amt
+        instance.setValueFromCoords(15, ny, match.order_amount, true); // Order Amt
+        instance.setValueFromCoords(16, ny, match.sheetgroup_id, true); // SheetGroup ID
+        instance.setValueFromCoords(17, ny, match.sheetgroup_type, true); // SheetGroup Type
 
-        // Auto-infer Reference Type based on vendor type if present
-        // 1=Material (PO), 2=Subcon (SPK)
-        const vendorId = instance.getValueFromCoords(11, ny);
-        const inferredType = match.vendortype_id === 2 ? 'SPK' : 'PO';
-        instance.setValueFromCoords(2, ny, inferredType, true); 
+        // 2. Set default Reff Type to "Work Order" if currently empty
+        const currentReffType = instance.getValueFromCoords(2, ny);
+        if (!currentReffType || String(currentReffType).trim() === '') {
+          const workOrderType = reffOptionsRef.current.find(opt => 
+            String(opt.name).toLowerCase().includes('work order')
+          );
+          if (workOrderType) {
+            instance.setValueFromCoords(2, ny, workOrderType.id, true);
+          }
+        }
       } else if (trimmedValue === '') {
         // CLEANUP: If code is deleted, clear the row
         instance.setValueFromCoords(2, ny, '', true); // Reff Type
         instance.setValueFromCoords(3, ny, '', true); // Reff No
-        instance.setValueFromCoords(4, ny, '', true); // Vendor Name
-        instance.setValueFromCoords(5, ny, '', true); // Description
-        instance.setValueFromCoords(6, ny, null, true); // Available Amt
-        instance.setValueFromCoords(7, ny, null, true); // Vol
-        instance.setValueFromCoords(8, ny, '', true); // UOM
-        instance.setValueFromCoords(9, ny, null, true); // H.Satuan
-        instance.setValueFromCoords(10, ny, null, true); // Total
-        instance.setValueFromCoords(11, ny, null, true); // Vendor ID
-        instance.setValueFromCoords(12, ny, null, true); // ContractSheet ID
-        instance.setValueFromCoords(13, ny, null, true); // Contract Amt
-        instance.setValueFromCoords(14, ny, null, true); // Order Amt
+        instance.setValueFromCoords(4, ny, '', true); // Reff No Date
+        instance.setValueFromCoords(5, ny, '', true); // Vendor Name
+        instance.setValueFromCoords(6, ny, '', true); // Description
+        instance.setValueFromCoords(7, ny, null, true); // Available Amt
+        instance.setValueFromCoords(8, ny, null, true); // Vol
+        instance.setValueFromCoords(9, ny, '', true); // UOM
+        instance.setValueFromCoords(10, ny, null, true); // H.Satuan
+        instance.setValueFromCoords(11, ny, null, true); // Total
+        instance.setValueFromCoords(12, ny, null, true); // Vendor ID
+        instance.setValueFromCoords(13, ny, null, true); // ContractSheet ID
+        instance.setValueFromCoords(14, ny, null, true); // Contract Amt
+        instance.setValueFromCoords(15, ny, null, true); // Order Amt
 
         // Reset visual state
         instance.setStyle(cellName, 'background-color', '');
@@ -307,12 +316,12 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
         }
       } else {
         // If code not found in summaryData, treat as validation error or clear auto-fills
-        instance.setValueFromCoords(5, ny, '', true); 
-        instance.setValueFromCoords(6, ny, null, true);
-        instance.setValueFromCoords(8, ny, '', true);
-        instance.setValueFromCoords(12, ny, null, true);
+        instance.setValueFromCoords(6, ny, '', true); 
+        instance.setValueFromCoords(7, ny, null, true);
+        instance.setValueFromCoords(9, ny, '', true);
         instance.setValueFromCoords(13, ny, null, true);
         instance.setValueFromCoords(14, ny, null, true);
+        instance.setValueFromCoords(15, ny, null, true);
 
         // Visual feedback for invalid code
         instance.setStyle(cellName, 'background-color', '#fee2e2'); // red-100
@@ -388,7 +397,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
       const sheet = getJInstance();
       if (sheet) {
         sheet.setValueFromCoords(x, y, vendor.vendor_name, true);
-        sheet.setValueFromCoords(11, y, vendor.id, true); // Hidden vendor_id (11)
+        sheet.setValueFromCoords(12, y, vendor.id, true); // Hidden vendor_id (12)
       }
     }
     setIsVendorModalOpen(false);
@@ -419,7 +428,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
     
     const initialData = currentData.length > 0
       ? transformToSheetData(currentData)
-      : Array.from({ length: 5 }, () => [null, '', '', '', '', '', null, '', '', null, null, null, null, null, null, null, null]);
+      : Array.from({ length: 5 }, () => [null, '', '', '', '', '', '', null, '', null, null, null, null, null, null, null]);
 
     const normalizedReffTypes = Array.isArray(reffTypes) ? reffTypes : (reffTypes as any)?.data || [];
     const reffOptions = normalizedReffTypes.map((t: any) => ({
@@ -465,10 +474,10 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
         title: 'Reff Type', 
         width: 120, 
         source: reffOptions,
-        align: 'left',
-        readOnly: true
+        align: 'left'
       },
-      { type: 'text', name: 'sheet_reffno', title: 'Reff No', width: 120, readOnly: true },
+      { type: 'text', name: 'sheet_reffno', title: 'Reff No', width: 120 },
+      { type: 'calendar', name: 'sheet_reffnodate', title: 'Reff No Date', width: 120, options: { format: 'DD/MM/YYYY' } },
       { 
         type: 'text', 
         name: 'vendor_name', 
@@ -595,7 +604,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
         jInstance.current = null;
       }
     };
-  }, [transformToSheetData, handleCellChange]); // Removed reffOptions dependency. Dropdown labels won't change at runtime normally.
+  }, [handleCellChange, transformToSheetData, reffOptions]); // reffOptions added back to ensure dropdown updates correctly if they change
 
   // Effect to update data without re-initializing the whole sheet
   useEffect(() => {
@@ -642,6 +651,6 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
   );
 });
 
-OrderSheetTable.displayName = 'OrderSheetTable';
+ExpenseSheetTable.displayName = 'ExpenseSheetTable';
 
-export default OrderSheetTable;
+export default ExpenseSheetTable;

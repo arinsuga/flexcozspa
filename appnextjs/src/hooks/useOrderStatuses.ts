@@ -5,7 +5,7 @@ export const useOrderStatuses = (params?: Record<string, unknown>) => {
   return useQuery({
     queryKey: ['order-statuses', params],
     queryFn: () => orderStatusService.getAll(params),
-    staleTime: 0,
+    staleTime: 60000,
   });
 };
 
@@ -14,5 +14,6 @@ export const useOrderStatus = (id: string | number) => {
     queryKey: ['order-status', id],
     queryFn: () => orderStatusService.getById(id),
     enabled: !!id,
+    staleTime: 60000,
   });
 };
