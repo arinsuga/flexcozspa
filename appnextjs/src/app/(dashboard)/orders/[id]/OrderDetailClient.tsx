@@ -32,6 +32,10 @@ export default function OrderDetailClient({ id, initialData, mode = 'edit', onBa
   // This is important because the parent (Wizard) might have updated initialData
   useEffect(() => {
     const items = (initialData as any)?.order_items || (initialData as any)?.ordersheets || [];
+    
+    console.log("order detail client")
+    console.log(items);
+
     setLocalSheets(items);
     if (initialData) {
       setOrder(initialData);
@@ -192,7 +196,7 @@ export default function OrderDetailClient({ id, initialData, mode = 'edit', onBa
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Order Date</label>
               <input 
                 type="date"
-                value={safeOrder.order_dt ? safeOrder.order_dt.split('T')[0] : ''}
+                value={safeOrder.order_dt ? safeOrder.order_dt.split(/[ T]/)[0] : ''}
                 onChange={(e) => handleHeaderChange('order_dt', e.target.value)}
                 disabled={readOnlyInfo}
                 className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}

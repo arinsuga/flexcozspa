@@ -5,7 +5,7 @@ export const useOrders = (params?: any) => {
   return useQuery({
     queryKey: ['orders', params],
     queryFn: () => orderService.getAll(params),
-    staleTime: 60000,
+    staleTime: 0,
   });
 };
 
@@ -14,7 +14,7 @@ export const useOrder = (id: string | number) => {
     queryKey: ['order', id],
     queryFn: () => orderService.getById(id),
     enabled: !!id,
-    staleTime: 60000,
+    staleTime: 0,
   });
 };
 

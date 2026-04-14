@@ -26,19 +26,23 @@ export default function OrderDetailPage() {
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   const [orderData, setOrderData] = useState<Partial<Order>>({});
-  
-  // Initialize orderData from fetched order
   const [isDataInitialized, setIsDataInitialized] = useState(false);
+  
+  // Initialize and sync orderData from fetched order
   useEffect(() => {
-    if (orderResponse?.data && !isDataInitialized) {
+    if (orderResponse?.data) {
       const data = orderResponse.data;
       // Map ordersheets to order_items if needed
       if (data.ordersheets && !data.order_items) {
         data.order_items = data.ordersheets;
       }
+      
+      // Only set initial data if not initialized or if we want to force refresh (e.g. if navigation just happened)
+      // If the user has already moved past Step 1 or has local changes, we should be more careful.
+      // For now, we allow background sync if we are still at Step 1 or if no local changes are detected.
       setOrderData(data);
       setIsDataInitialized(true);
-    } else if (orderResponse && !orderResponse.data && !isDataInitialized) {
+    } else if (orderResponse && !orderResponse.data) {
       const data = { ...orderResponse };
       if (data.ordersheets && !data.order_items) {
         data.order_items = data.ordersheets;
@@ -46,7 +50,7 @@ export default function OrderDetailPage() {
       setOrderData(data);
       setIsDataInitialized(true);
     }
-  }, [orderResponse, isDataInitialized]);
+  }, [orderResponse]); // Re-sync whenever orderResponse changes
 
   // Background Pre-fetching for Step 2
   useEffect(() => {

@@ -57,16 +57,39 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
   // Use a memo for reffOptions to keep it stable
   const reffOptions = useMemo(() => {
     const normalizedReffTypes = Array.isArray(reffTypes) ? reffTypes : (reffTypes as any)?.data || [];
-    return normalizedReffTypes.map((t: any) => ({
-      id: t.refftype_code, // Use code as ID to match string storage in DB
-      name: t.refftype_name
-    }));
+    return normalizedReffTypes.map((t: any) => {
+      let code = t.refftype_code;
+      // Force standard codes for ID 1 and 2 if missing or different, as per requirement
+      if (t.id === 1) code = 'PO';
+      if (t.id === 2) code = 'SPK';
+      
+      return {
+        id: code || String(t.id), // Use code as ID to match string storage in DB
+        name: t.refftype_name
+      };
+    });
   }, [reffTypes]);
 
   const reffOptionsRef = useRef<any[]>([]);
+  const reffIdToCodeMapRef = useRef<Record<number, string>>({});
+
   useEffect(() => {
     reffOptionsRef.current = reffOptions;
-  }, [reffOptions]);
+    
+    // Build a map of ID -> Code for legacy data support
+    const normalizedReffTypes = Array.isArray(reffTypes) ? reffTypes : (reffTypes as any)?.data || [];
+    const map: Record<number, string> = {};
+    normalizedReffTypes.forEach((t: any) => {
+      let code = t.refftype_code;
+      if (t.id === 1) code = 'PO';
+      if (t.id === 2) code = 'SPK';
+      
+      if (t.id && code) {
+        map[t.id] = code;
+      }
+    });
+    reffIdToCodeMapRef.current = map;
+  }, [reffOptions, reffTypes]);
 
   const getJInstance = () => {
     const j = jInstance.current;
@@ -138,7 +161,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
             id: id ? parseInt(id) : undefined,
             order_id: isEditMode ? (typeof orderId === 'string' ? parseInt(orderId) : orderId as number) : undefined,
             sheet_code: String(sheet_code || '').trim(),
-            sheet_refftypeid: sheet_refftypeid ? parseInt(sheet_refftypeid) : undefined,
+            sheet_refftypeid: sheet_refftypeid ? String(sheet_refftypeid) : undefined,
             sheet_reffno: sheet_reffno ? String(sheet_reffno) : '',
             vendor_id: vendor_id ? parseInt(vendor_id) : undefined,
             vendor_name: vendor_name ? String(vendor_name) : '',
@@ -172,11 +195,26 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
         ? item.available_amount 
         : (match ? match.available_amount : null);
 
+      // Handle ID to Code conversion for sheet_refftypeid
+      let reffValue = item.sheet_refftypeid;
+      // Convert numeric ID (string or number) to Code using the map
+      if (reffValue !== undefined && reffValue !== null && reffValue !== '') {
+        const numericId = Number(reffValue);
+        if (!isNaN(numericId) && reffIdToCodeMapRef.current[numericId]) {
+          reffValue = reffIdToCodeMapRef.current[numericId];
+        }
+      }
+
+      const inferredValue = reffValue || (item.sheet_reffno ? (item.vendor?.vendortype_id === 2 ? 'SPK' : 'PO') : null);
+      const isNewMode = orderId === 'new';
+      const finalReffType = isNewMode ? '' : inferredValue;
+      const finalReffNo = isNewMode ? '' : (item.sheet_reffno || null);
+
       return [
         item.id || null,
         item.sheet_code || '',
-        item.sheet_refftypeid || (item.sheet_reffno ? (item.vendor?.vendortype_id === 2 ? 'SPK' : 'PO') : null),
-        item.sheet_reffno || null,
+        finalReffType,
+        finalReffNo,
         item.vendor_name || (item.vendor?.vendor_name) || '',
         item.sheet_description || (match?.sheet_name) || '',
         availableAmt, // Index 6
@@ -192,7 +230,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
         item.sheetgroup_type || (match?.sheetgroup_type) || null,
       ];
     });
-  }, []); // summaryDataRef is used to keep it stable
+  }, [orderId]); // summaryDataRef and reffIdToCodeMapRef are used for stability
 
 
   const handleCellChange = useCallback((instance: any, cell: any, x: any, y: any, value: any) => {
@@ -278,11 +316,11 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
         instance.setValueFromCoords(15, ny, match.sheetgroup_id, true); // SheetGroup ID
         instance.setValueFromCoords(16, ny, match.sheetgroup_type, true); // SheetGroup Type
 
-        // Auto-infer Reference Type based on vendor type if present
-        // 1=Material (PO), 2=Subcon (SPK)
-        const vendorId = instance.getValueFromCoords(11, ny);
-        const inferredType = match.vendortype_id === 2 ? 'SPK' : 'PO';
-        instance.setValueFromCoords(2, ny, inferredType, true); 
+        // Auto-infer Reference Type based on vendor type if present (only in Edit/View mode)
+        if (orderId !== 'new') {
+          const inferredType = match.vendortype_id === 2 ? 'SPK' : 'PO';
+          instance.setValueFromCoords(2, ny, inferredType, true); 
+        }
       } else if (trimmedValue === '') {
         // CLEANUP: If code is deleted, clear the row
         instance.setValueFromCoords(2, ny, '', true); // Reff Type
@@ -329,7 +367,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
     if (nx === 1) {
       validateAllCodes(instance);
     }
-  }, [onchange]); // Removed summaryData from dependencies
+  }, [onchange, orderId]); // Added orderId to handle mode-specific logic
 
   const validateAllCodes = (instance: any) => {
     if (!instance || typeof instance.getData !== 'function') return;
@@ -420,12 +458,6 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
     const initialData = currentData.length > 0
       ? transformToSheetData(currentData)
       : Array.from({ length: 5 }, () => [null, '', '', '', '', '', null, '', '', null, null, null, null, null, null, null, null]);
-
-    const normalizedReffTypes = Array.isArray(reffTypes) ? reffTypes : (reffTypes as any)?.data || [];
-    const reffOptions = normalizedReffTypes.map((t: any) => ({
-      id: t.id,
-      name: t.refftype_name
-    }));
 
     const columns = [
       { type: 'hidden', name: 'id', title: 'ID' },
@@ -595,7 +627,7 @@ const OrderSheetTable = forwardRef((props: OrderSheetTableProps, ref) => {
         jInstance.current = null;
       }
     };
-  }, [transformToSheetData, handleCellChange]); // Removed reffOptions dependency. Dropdown labels won't change at runtime normally.
+  }, [transformToSheetData, handleCellChange, reffOptions]); 
 
   // Effect to update data without re-initializing the whole sheet
   useEffect(() => {
