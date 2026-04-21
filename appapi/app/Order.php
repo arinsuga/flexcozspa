@@ -83,4 +83,12 @@ class Order extends Model
     {
         return $this->belongsTo('App\OrderStatus', 'orderstatus_id');
     }
+
+    /**
+     * Expenses that belong to this order.
+     */
+    public function expenses()
+    {
+        return $this->hasMany('App\Expense', 'order_id');
+    }
 }

@@ -31,6 +31,12 @@ class OrdersheetRepository extends EloquentRepository implements OrdersheetRepos
         return $query->get();
     }
 
+    public function getOrdersheetsByExpense($expenseId)
+    {
+        return $this->data->with(['project', 'contract', 'contractsheet', 'order', 'sheetgroup', 'vendortype', 'vendor'])
+            ->where('expenses_id', $expenseId)->get();
+    }
+
     public function getOrdersheetsByProject($projectId)
     {
         return $this->data->with(['project', 'contract', 'contractsheet', 'order', 'sheetgroup', 'vendortype', 'vendor'])

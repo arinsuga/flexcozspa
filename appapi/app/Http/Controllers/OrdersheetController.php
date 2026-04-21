@@ -45,6 +45,12 @@ class OrdersheetController extends Controller
         return response()->json(['data' => $ordersheets], 200);
     }
 
+    public function getByExpense($expenseId)
+    {
+        $ordersheets = $this->repository->getOrdersheetsByExpense($expenseId);
+        return response()->json(['data' => $ordersheets], 200);
+    }
+
     public function getByProject($projectId)
 
     {

@@ -2,20 +2,23 @@
 
 import React, { useState } from 'react';
 import ExpenseForm from '@/components/features/expenses/ExpenseForm';
-import OrderDetailClient from '../[id]/OrderDetailClient';
+import ExpenseDetailClient from '../[id]/ExpenseDetailClient';
 import ExpenseSheetConfirmation from '@/components/features/expenses/ExpenseSheetConfirmation';
-import { Order } from '@/services/orderService';
+import { Expense } from '@/services/expenseService';
 import { OrderSheet } from '@/services/orderSheetService';
 import Stepper from '@/components/common/Stepper';
-import { useOrderMutations } from '@/hooks/useOrders';
+import { useExpenseMutations } from '@/hooks/useExpenses';
 import { useRouter } from 'next/navigation';
 import InfoDialog from '@/components/common/InfoDialog';
 
 export default function NewExpensePage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [orderData, setOrderData] = useState<Partial<Order>>({});
-  const { createOrder } = useOrderMutations();
+  const [expenseData, setExpenseData] = useState<Partial<Expense>>({
+    expense_dt: new Date().toISOString().split('T')[0],
+    expensestatus_id: 1, // Open/Pending
+  });
+  const { createExpense } = useExpenseMutations();
 
   // Info dialog state
   const [infoDialog, setInfoDialog] = useState<{
@@ -31,23 +34,23 @@ export default function NewExpensePage() {
     variant: 'info',
   });
 
-  const handleStep1Submit = (data: Partial<Order>) => {
-    setOrderData(prev => ({ ...prev, ...data }));
+  const handleStep1Submit = (data: Partial<Expense>) => {
+    setExpenseData(prev => ({ ...prev, ...data }));
     setStep(2);
   };
 
-  const handleStep2Submit = (data: Partial<Order>) => {
-    setOrderData(prev => ({ ...prev, ...data }));
+  const handleStep2Submit = (data: Partial<Expense>) => {
+    setExpenseData(prev => ({ ...prev, ...data }));
     setStep(3);
   };
 
   const handleFinalSave = async (processedSheets: OrderSheet[]) => {
     try {
       const payload = {
-        ...orderData,
-        order_items: processedSheets
+        ...expenseData,
+        expense_items: processedSheets
       };
-      await createOrder.mutateAsync(payload);
+      await createExpense.mutateAsync(payload);
       setInfoDialog({
         isOpen: true,
         title: 'Success',
@@ -82,7 +85,7 @@ export default function NewExpensePage() {
              <ExpenseForm 
                 onSubmit={handleStep1Submit} 
                 submitLabel="Next Step" 
-                initialData={orderData} 
+                initialData={expenseData} 
              />
           </div>
         </div>
@@ -90,9 +93,9 @@ export default function NewExpensePage() {
 
       {step === 2 && (
          <div className="space-y-6">
-            <OrderDetailClient 
+            <ExpenseDetailClient 
               id="new" 
-              initialData={orderData} 
+              initialData={expenseData} 
               mode="create" 
               onBack={() => setStep(1)}
               onSubmit={handleStep2Submit}
@@ -105,10 +108,10 @@ export default function NewExpensePage() {
       {step === 3 && (
         <div className="space-y-6">
           <ExpenseSheetConfirmation 
-            order={orderData}
+            order={expenseData}
             onBack={() => setStep(2)}
             onSave={handleFinalSave}
-            isLoading={createOrder.isPending}
+            isLoading={createExpense.isPending}
           />
         </div>
       )}

@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
         $this->call('ProjectstatusesTableSeeder');
         $this->call('ContractstatusesTableSeeder');
         $this->call('OrderstatusesTableSeeder');
+        $this->call('ExpenseStatusesTableSeeder');
 
         // $this->call('VendorsTableSeeder');
         // $this->call('ProjectsTableSeeder');

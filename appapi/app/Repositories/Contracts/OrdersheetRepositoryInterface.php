@@ -8,6 +8,7 @@ interface OrdersheetRepositoryInterface extends DataRepositoryInterface
 {
     function getOrdersheetsByOrder($orderId);
     function getOrdersheetsByOrderWithRelations($orderId, array $relations = []);
+    function getOrdersheetsByExpense($expenseId);
     function getOrdersheetsByProject($projectId);
     function getOrdersheetsByContract($contractId);
     function getOrdersheetsByContractsheet($contractsheetId);

@@ -1,50 +1,50 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useOrder, useOrderMutations } from '@/hooks/useOrders';
+import { useExpense, useExpenseMutations } from '@/hooks/useExpenses';
 import { useProjects } from '@/hooks/useProjects';
 import { useContracts } from '@/hooks/useContracts';
 import Button from '@/components/common/Button';
 import ExpenseSheetTable from '@/components/features/expenses/ExpenseSheetTable';
 import InfoDialog from '@/components/common/InfoDialog';
 import { useRef, useState, useMemo, useEffect } from 'react';
-import { Order } from '@/services/expenseservice';
-import { useOrderSheets } from '@/hooks/useOrderSheets';
-import { OrderSheet } from '@/services/expensesheetService';
+import { Expense } from '@/services/expenseService';
+import { useExpenseSheets } from '@/hooks/useOrderSheets';
+import { OrderSheet } from '@/services/orderSheetService';
 
 interface ExpenseDetailClientProps {
   id: string;
-  initialData?: Partial<Order>;
+  initialData?: Partial<Expense>;
   mode?: 'create' | 'edit';
   onBack?: () => void;
-  onSubmit?: (data: Partial<Order>) => void;
+  onSubmit?: (data: Partial<Expense>) => void;
   submitLabel?: string;
   readOnlyInfo?: boolean;
 }
 
 export default function ExpenseDetailClient({ id, initialData, mode = 'edit', onBack, onSubmit, submitLabel, readOnlyInfo = false }: ExpenseDetailClientProps) {
   const router = useRouter();
-  const { data: orderResponse, isLoading: isOrderLoading } = useOrder(id);
+  const { data: expenseResponse, isLoading: isExpenseLoading } = useExpense(id);
   const { data: projectsData } = useProjects();
   const { data: contractsData } = useContracts();
-  const { data: sheetsData, isLoading: isSheetsLoading } = useOrderSheets(id);
-  const { updateOrder: updateOrderMutation, createOrder: createOrderMutation } = useOrderMutations();
+  const { data: sheetsData, isLoading: isSheetsLoading } = useExpenseSheets(id);
+  const { updateExpense: updateExpenseMutation, createExpense: createExpenseMutation } = useExpenseMutations();
 
   const projects = useMemo(() => projectsData?.data || [], [projectsData]);
   const contracts = useMemo(() => contractsData?.data || [], [contractsData]);
 
-  // Resolve order data: prefer initialData (for create mode) or fetched data
-  const fetchedOrder = orderResponse?.data || orderResponse;
-  const [order, setOrder] = useState<Partial<Order> | null>(initialData || null);
+  // Resolve expense data: prefer initialData (for create mode) or fetched data
+  const fetchedExpense = expenseResponse?.data || expenseResponse;
+  const [expense, setExpense] = useState<Partial<Expense> | null>(initialData || null);
   const [isDataInitialized, setIsDataInitialized] = useState(false);
 
-  // Initialize order data when it becomes available
+  // Initialize expense data when it becomes available
   useEffect(() => {
-    if (fetchedOrder && !isDataInitialized) {
-      setOrder(fetchedOrder);
+    if (fetchedExpense && !isDataInitialized) {
+      setExpense(fetchedExpense);
       setIsDataInitialized(true);
     }
-  }, [fetchedOrder, isDataInitialized]);
+  }, [fetchedExpense, isDataInitialized]);
 
   const [localSheets, setLocalSheets] = useState<OrderSheet[]>([]);
   const [hasInitializedSheets, setHasInitializedSheets] = useState(false);
@@ -69,7 +69,7 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
   useEffect(() => {
     if (hasInitializedSheets) return;
 
-    const itemsFromProps = (initialData as any)?.order_items || (initialData as any)?.ordersheets;
+    const itemsFromProps = (initialData as any)?.expense_items || (initialData as any)?.ordersheets;
     
     if (Array.isArray(itemsFromProps)) {
        setLocalSheets(itemsFromProps);
@@ -78,27 +78,27 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
        const sheets = Array.isArray(sheetsData) ? sheetsData : (sheetsData as any).data || [];
        setLocalSheets(sheets);
        setHasInitializedSheets(true);
-    } else if (fetchedOrder?.ordersheets && id !== 'new') {
-       setLocalSheets(fetchedOrder.ordersheets);
+    } else if (fetchedExpense?.ordersheets && id !== 'new') {
+       setLocalSheets(fetchedExpense.ordersheets);
        setHasInitializedSheets(true);
     }
-  }, [sheetsData, initialData, hasInitializedSheets, id, fetchedOrder]);
+  }, [sheetsData, initialData, hasInitializedSheets, id, fetchedExpense]);
 
-  const handleHeaderChange = (field: keyof Order, value: any) => {
-    setOrder(prev => prev ? ({ ...prev, [field]: value }) : null);
+  const handleHeaderChange = (field: keyof Expense, value: any) => {
+    setExpense(prev => prev ? ({ ...prev, [field]: value }) : null);
   };
 
   const handleSave = async () => {
-    if (!order) return;
+    if (!expense) return;
     
     // Latest data from the table
     const allRowsToSave: Partial<OrderSheet>[] = sheetRef.current?.getSheetData() || [];
 
     const payload = {
-       ...order,
-       project_id: order.project_id ? Number(order.project_id) : undefined,
-       contract_id: order.contract_id ? Number(order.contract_id) : undefined,
-       order_items: allRowsToSave // Transitioning to order_items for consistency
+       ...expense,
+       project_id: expense.project_id ? Number(expense.project_id) : undefined,
+       contract_id: expense.contract_id ? Number(expense.contract_id) : undefined,
+       expense_items: allRowsToSave
     };
 
     if (onSubmit) {
@@ -108,28 +108,28 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
 
     try {
       if (mode === 'create' || id === 'new') {
-         await createOrderMutation.mutateAsync(payload);
-         setInfoDialog({
-           isOpen: true,
-           title: 'Success',
-           message: 'Expense created successfully!',
-           variant: 'success',
-           onClose: () => {
-             setInfoDialog(prev => ({ ...prev, isOpen: false }));
-             router.push('/expenses');
-           }
-         });
+          await createExpenseMutation.mutateAsync(payload);
+          setInfoDialog({
+            isOpen: true,
+            title: 'Success',
+            message: 'Expense created successfully!',
+            variant: 'success',
+            onClose: () => {
+              setInfoDialog(prev => ({ ...prev, isOpen: false }));
+              router.push('/expenses');
+            }
+          });
       } else {
-         await updateOrderMutation.mutateAsync({ 
-           id, 
-           data: payload
-         });
-         setInfoDialog({
-           isOpen: true,
-           title: 'Success',
-           message: 'Expense saved successfully!',
-           variant: 'success',
-         });
+          await updateExpenseMutation.mutateAsync({ 
+            id, 
+            data: payload
+          });
+          setInfoDialog({
+            isOpen: true,
+            title: 'Success',
+            message: 'Expense saved successfully!',
+            variant: 'success',
+          });
       }
     } catch (error) {
       console.error('Save failed', error);
@@ -142,15 +142,15 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
     }
   };
 
-  if ((isOrderLoading && id !== 'new') || (isSheetsLoading && id !== 'new')) {
+  if ((isExpenseLoading && id !== 'new') || (isSheetsLoading && id !== 'new')) {
     return <div className="p-6">Loading...</div>;
   }
   
-  if (!order && id !== 'new') {
+  if (!expense && id !== 'new') {
     return <div className="p-6 text-error">Expense not found</div>;
   }
 
-  const safeOrder = order || {};
+  const safeExpense = expense || {};
 
   return (
     <div className="space-y-6">
@@ -167,9 +167,9 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
               variant="primary" 
               leftIcon={onSubmit ? 'arrow_forward' : 'save'} 
               onClick={handleSave} 
-              isLoading={updateOrderMutation.isPending || createOrderMutation.isPending}
+              isLoading={updateExpenseMutation.isPending || createExpenseMutation.isPending}
             >
-              {submitLabel || (mode === 'create' ? 'Save Order' : 'Save Changes')}
+              {submitLabel || (mode === 'create' ? 'Save Expense' : 'Save Changes')}
             </Button>
           </div>
         </div>
@@ -179,8 +179,8 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Expense Number</label>
               <input 
                 type="text" 
-                value={safeOrder.order_number || ''} 
-                onChange={(e) => handleHeaderChange('order_number', e.target.value)}
+                value={safeExpense.expense_number || ''} 
+                onChange={(e) => handleHeaderChange('expense_number', e.target.value)}
                 disabled={readOnlyInfo}
                 className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
               />
@@ -188,7 +188,7 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
             <div>
                <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Project</label>
                <select
-                  value={safeOrder.project_id || ''}
+                  value={safeExpense.project_id || ''}
                   onChange={(e) => handleHeaderChange('project_id', e.target.value)}
                   disabled={readOnlyInfo}
                   className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
@@ -202,7 +202,7 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
             <div>
                <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Contract</label>
                <select
-                  value={safeOrder.contract_id || ''}
+                  value={safeExpense.contract_id || ''}
                   onChange={(e) => handleHeaderChange('contract_id', e.target.value)}
                   disabled={readOnlyInfo}
                   className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
@@ -216,22 +216,22 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
             <div>
                <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Status</label>
                <select
-                  value={safeOrder.orderstatus_id || '0'}
-                  onChange={(e) => handleHeaderChange('orderstatus_id', e.target.value)}
+                  value={safeExpense.expensestatus_id || '1'}
+                  onChange={(e) => handleHeaderChange('expensestatus_id', e.target.value)}
                   disabled={readOnlyInfo}
                   className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
                >
-                  <option value="0">Open/Pending</option>
-                  <option value="1">Approved</option>
-                  <option value="2">Rejected</option>
+                  <option value="1">Open/Pending</option>
+                  <option value="2">Approved</option>
+                  <option value="3">Rejected</option>
                </select>
             </div>
             <div>
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Expense Date</label>
               <input 
                 type="date"
-                value={safeOrder.order_dt ? safeOrder.order_dt.split('T')[0] : ''}
-                onChange={(e) => handleHeaderChange('order_dt', e.target.value)}
+                value={safeExpense.expense_dt ? safeExpense.expense_dt.split(/[ T]/)[0] : ''}
+                onChange={(e) => handleHeaderChange('expense_dt', e.target.value)}
                 disabled={readOnlyInfo}
                 className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
               />
@@ -240,8 +240,8 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">PIC</label>
                <input 
                 type="text"
-                value={safeOrder.order_pic || ''}
-                onChange={(e) => handleHeaderChange('order_pic', e.target.value)}
+                value={safeExpense.expense_pic || ''}
+                onChange={(e) => handleHeaderChange('expense_pic', e.target.value)}
                 disabled={readOnlyInfo}
                 className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
               />
@@ -250,8 +250,8 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Description</label>
               <textarea
                 rows={1}
-                value={safeOrder.order_description || ''}
-                onChange={(e) => handleHeaderChange('order_description', e.target.value)}
+                value={safeExpense.expense_description || ''}
+                onChange={(e) => handleHeaderChange('expense_description', e.target.value)}
                 disabled={readOnlyInfo}
                 className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
               />
@@ -263,8 +263,8 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
                   ref={sheetRef} 
                   data={localSheets} 
                   orderId={id} 
-                  projectId={Number(safeOrder.project_id) || 0} 
-                  contractId={Number(safeOrder.contract_id) || 0}
+                  projectId={Number(safeExpense.project_id) || 0} 
+                  contractId={Number(safeExpense.contract_id) || 0}
                 />
         </div>
       </div>

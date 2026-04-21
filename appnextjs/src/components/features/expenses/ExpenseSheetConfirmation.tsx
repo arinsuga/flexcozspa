@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Order } from '@/services/orderService';
+import { Expense } from '@/services/expenseService';
 import { OrderSheet } from '@/services/orderSheetService';
 import Button from '@/components/common/Button';
 import { useProject } from '@/hooks/useProjects';
@@ -13,7 +13,7 @@ import InfoDialog from '@/components/common/InfoDialog';
 
 
 interface ExpenseSheetConfirmationProps {
-  order: Partial<Order> & { order_items?: Partial<OrderSheet>[]; ordersheets?: Partial<OrderSheet>[] };
+  order: Partial<Expense> & { expense_items?: Partial<OrderSheet>[]; ordersheets?: Partial<OrderSheet>[] };
   onBack: () => void;
   onSave: (processedSheets: OrderSheet[]) => void;
   isLoading: boolean;
@@ -51,7 +51,7 @@ export default function ExpenseSheetConfirmation({ order, onBack, onSave, isLoad
   
   // Refined processing logic
   const processedSheets = useMemo(() => {
-    const rawSheets = order.order_items || order.ordersheets || [];
+    const rawSheets = order.expense_items || order.ordersheets || [];
     const safeRawSheets: Partial<OrderSheet>[] = Array.isArray(rawSheets) ? rawSheets : [];
 
     // 1. Filter: sheet_code is not blank
@@ -117,8 +117,8 @@ export default function ExpenseSheetConfirmation({ order, onBack, onSave, isLoad
         ...s,
         sheetgroup_id: contractMatch?.sheetgroup_id || s.sheetgroup_id,
         sheetgroup_type: contractMatch?.sheetgroup_type || s.sheetgroup_type,
-        sheet_type: 1, // Treat all as items for orders
-        sheet_dt: order.order_dt || new Date().toISOString().split('T')[0],
+        sheet_type: 1, // Treat all as items for orders/expenses
+        sheet_dt: order.expense_dt || new Date().toISOString().split('T')[0],
         sheet_grossamt: grossAmt,
         sheet_netamt: grossAmt,
         sheetgroup_seqno: seqNo,
@@ -127,7 +127,7 @@ export default function ExpenseSheetConfirmation({ order, onBack, onSave, isLoad
         validation_errors: errors
       };
     });
-  }, [order.order_items, order.ordersheets, order.order_dt, summaryData, mode]); 
+  }, [order.expense_items, order.ordersheets, order.expense_dt, summaryData, mode]); 
 
   const handleSaveClick = () => {
     const sheets = processedSheets || [];
@@ -191,15 +191,15 @@ export default function ExpenseSheetConfirmation({ order, onBack, onSave, isLoad
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Expense Number</label>
-          <div className="mt-1 text-sm text-gray-900 dark:text-white font-bold">{order.order_number}</div>
+          <div className="mt-1 text-sm text-gray-900 dark:text-white font-bold">{order.expense_number}</div>
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Expense Date</label>
-          <div className="mt-1 text-sm text-gray-900 dark:text-white font-bold">{order.order_dt?.split('T')[0]}</div>
+          <div className="mt-1 text-sm text-gray-900 dark:text-white font-bold">{order.expense_dt?.split(/[ T]/)[0]}</div>
         </div>
         <div className="col-span-1 lg:col-span-2">
           <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Description</label>
-          <div className="mt-1 text-sm text-gray-700 dark:text-gray-300 italic">{order.order_description || '-'}</div>
+          <div className="mt-1 text-sm text-gray-700 dark:text-gray-300 italic">{order.expense_description || '-'}</div>
         </div>
       </div>
 
@@ -328,3 +328,5 @@ export default function ExpenseSheetConfirmation({ order, onBack, onSave, isLoad
 
   );
 }
+
+ExpenseSheetConfirmation.displayName = 'ExpenseSheetConfirmation';

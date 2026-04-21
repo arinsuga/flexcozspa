@@ -23,7 +23,7 @@ const getColumnName = (x: number): string => {
 
 interface ExpenseSheetTableProps {
   data: any[];
-  orderId: number | string;
+  expenseId: number | string;
   projectId: number;
   contractId: number;
   onchange?: (instance: any, cell: HTMLElement, x: string | number, y: string | number, value: any) => void;
@@ -31,7 +31,7 @@ interface ExpenseSheetTableProps {
 }
 
 const ExpenseSheetTable = forwardRef((props: ExpenseSheetTableProps, ref) => {
-  const { data, orderId, projectId, contractId, onchange, readOnly = false } = props;
+  const { data, expenseId, projectId, contractId, onchange, readOnly = false } = props;
   const jRef = useRef<HTMLDivElement>(null);
   const jInstance = useRef<any>(null);
   
@@ -41,7 +41,7 @@ const ExpenseSheetTable = forwardRef((props: ExpenseSheetTableProps, ref) => {
   const [itemTargetCoords, setItemTargetCoords] = useState<{ x: number, y: number } | null>(null);
 
   const { data: reffTypes } = useReffTypes();
-  const { data: summaryDataResponse } = useContractOrderSummary(contractId, orderId);
+  const { data: summaryDataResponse } = useContractOrderSummary(contractId, expenseId);
   
   const summaryData = useMemo(() => {
     const raw = summaryDataResponse?.data || summaryDataResponse;
@@ -137,7 +137,7 @@ const ExpenseSheetTable = forwardRef((props: ExpenseSheetTableProps, ref) => {
 
           return {
             id: id ? parseInt(id) : undefined,
-            order_id: isEditMode ? (typeof orderId === 'string' ? parseInt(orderId) : orderId as number) : undefined,
+            expenses_id: isEditMode ? (typeof expenseId === 'string' ? parseInt(expenseId) : expenseId as number) : undefined,
             sheet_code: String(sheet_code || '').trim(),
             sheet_refftypeid: sheet_refftypeid ? parseInt(sheet_refftypeid) : undefined,
             sheet_reffno: sheet_reffno ? String(sheet_reffno) : '',

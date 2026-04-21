@@ -2,12 +2,12 @@
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import OrderDetailClient from './OrderDetailClient';
+import ExpenseDetailClient from './ExpenseDetailClient';
 import ExpenseForm from '@/components/features/expenses/ExpenseForm';
 import ExpenseSheetConfirmation from '@/components/features/expenses/ExpenseSheetConfirmation';
 import Stepper from '@/components/common/Stepper';
-import { useOrder, useOrderMutations } from '@/hooks/useOrders';
-import { Order } from '@/services/orderService';
+import { useExpense, useExpenseMutations } from '@/hooks/useExpenses';
+import { Expense } from '@/services/expenseService';
 import { OrderSheet } from '@/services/orderSheetService';
 import InfoDialog from '@/components/common/InfoDialog';
 import { TableSkeleton } from '@/components/common/Skeleton';
@@ -19,22 +19,22 @@ export default function ExpenseDetailPage() {
   const id = params.id as string;
   const mode = searchParams.get('mode') || 'view';
 
-  const { data: orderResponse, isLoading: isOrderLoading } = useOrder(id);
-  const { updateOrder } = useOrderMutations();
+  const { data: expenseResponse, isLoading: isExpenseLoading } = useExpense(id);
+  const { updateExpense } = useExpenseMutations();
   const [step, setStep] = useState(1);
-  const [orderData, setOrderData] = useState<Partial<Order>>({});
+  const [expenseData, setExpenseData] = useState<Partial<Expense>>({});
   
-  // Initialize orderData from fetched order
+  // Initialize expenseData from fetched expense
   const [isDataInitialized, setIsDataInitialized] = useState(false);
   useEffect(() => {
-    if (orderResponse?.data && !isDataInitialized) {
-      setOrderData(orderResponse.data);
+    if (expenseResponse?.data && !isDataInitialized) {
+      setExpenseData(expenseResponse.data);
       setIsDataInitialized(true);
-    } else if (orderResponse && !orderResponse.data && !isDataInitialized) {
-      setOrderData(orderResponse);
+    } else if (expenseResponse && !expenseResponse.data && !isDataInitialized) {
+      setExpenseData(expenseResponse);
       setIsDataInitialized(true);
     }
-  }, [orderResponse, isDataInitialized]);
+  }, [expenseResponse, isDataInitialized]);
 
   // Info dialog state
   const [infoDialog, setInfoDialog] = useState<{
@@ -50,12 +50,12 @@ export default function ExpenseDetailPage() {
     variant: 'info',
   });
 
-  if (isOrderLoading || (id !== 'new' && !isDataInitialized)) return <div className="p-6"><TableSkeleton cols={1} rows={5} /></div>;
+  if (isExpenseLoading || (id !== 'new' && !isDataInitialized)) return <div className="p-6"><TableSkeleton cols={1} rows={5} /></div>;
 
   if (mode === 'view') {
     return (
       <ExpenseSheetConfirmation 
-        order={orderData} 
+        order={expenseData} 
         mode="view" 
         onBack={() => router.push('/expenses')} 
         onSave={() => {}} 
@@ -65,23 +65,23 @@ export default function ExpenseDetailPage() {
   }
 
   // Edit Mode Logic (3 steps)
-  const handleStep1Submit = (data: Partial<Order>) => {
-    setOrderData(prev => ({ ...prev, ...data }));
+  const handleStep1Submit = (data: Partial<Expense>) => {
+    setExpenseData(prev => ({ ...prev, ...data }));
     setStep(2);
   };
 
-  const handleStep2Submit = (data: Partial<Order>) => {
-    setOrderData(prev => ({ ...prev, ...data }));
+  const handleStep2Submit = (data: Partial<Expense>) => {
+    setExpenseData(prev => ({ ...prev, ...data }));
     setStep(3);
   };
 
   const handleFinalSave = async (processedSheets: OrderSheet[]) => {
     try {
       const payload = {
-        ...orderData,
-        order_items: processedSheets
+        ...expenseData,
+        expense_items: processedSheets
       };
-      await updateOrder.mutateAsync({ id, data: payload });
+      await updateExpense.mutateAsync({ id, data: payload });
       setInfoDialog({
         isOpen: true,
         title: 'Success',
@@ -108,7 +108,7 @@ export default function ExpenseDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Expense: {orderData.order_number}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Expense: {expenseData.expense_number}</h1>
         <Stepper steps={steps} currentStep={step} />
       </div>
       
@@ -119,7 +119,7 @@ export default function ExpenseDetailPage() {
              <ExpenseForm 
                 onSubmit={handleStep1Submit} 
                 submitLabel="Next Step" 
-                initialData={orderData} 
+                initialData={expenseData} 
              />
           </div>
         </div>
@@ -127,9 +127,9 @@ export default function ExpenseDetailPage() {
 
       {step === 2 && (
          <div className="space-y-6">
-            <OrderDetailClient 
+            <ExpenseDetailClient 
               id={id} 
-              initialData={orderData} 
+              initialData={expenseData} 
               mode="edit" 
               onBack={() => setStep(1)}
               onSubmit={handleStep2Submit}
@@ -142,10 +142,10 @@ export default function ExpenseDetailPage() {
       {step === 3 && (
         <div className="space-y-6">
           <ExpenseSheetConfirmation 
-            order={orderData}
+            order={expenseData}
             onBack={() => setStep(2)}
             onSave={handleFinalSave}
-            isLoading={updateOrder.isPending}
+            isLoading={updateExpense.isPending}
           />
         </div>
       )}

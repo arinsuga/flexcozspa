@@ -19,6 +19,8 @@ use App\Repositories\Contracts\ContractStatusRepositoryInterface;
 use App\Repositories\Contracts\ProjectStatusRepositoryInterface;
 use App\Repositories\Contracts\UomNormalizationRepositoryInterface;
 use App\Repositories\Contracts\ContractOrderSummaryRepositoryInterface;
+use App\Repositories\Contracts\ExpenseRepositoryInterface;
+use App\Repositories\Contracts\ExpenseStatusRepositoryInterface;
 
 // Repository Implementations
 use App\Repositories\ProjectRepository;
@@ -35,6 +37,8 @@ use App\Repositories\ContractStatusRepository;
 use App\Repositories\ProjectStatusRepository;
 use App\Repositories\UomNormalizationRepository;
 use App\Repositories\ContractOrderSummaryRepository;
+use App\Repositories\ExpenseRepository;
+use App\Repositories\ExpenseStatusRepository;
 
 // Models
 use App\Project;
@@ -50,7 +54,10 @@ use App\OrderStatus;
 use App\ContractStatus;
 use App\ProjectStatus;
 use App\UomNormalization;
+use App\App; // Import App facade if needed for bindings, but App\Order etc is used directly below.
 use App\ContractOrderSummary;
+use App\Expense;
+use App\ExpenseStatus;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -123,6 +130,16 @@ class RepositoryServiceProvider extends ServiceProvider
         // ContractOrderSummary Repository Binding
         $this->app->bind(ContractOrderSummaryRepositoryInterface::class, function ($app) {
             return new ContractOrderSummaryRepository(new ContractOrderSummary());
+        });
+
+        // Expense Repository Binding
+        $this->app->bind(ExpenseRepositoryInterface::class, function ($app) {
+            return new ExpenseRepository(new Expense(), $app->make(OrderRepositoryInterface::class));
+        });
+
+        // ExpenseStatus Repository Binding
+        $this->app->bind(ExpenseStatusRepositoryInterface::class, function ($app) {
+            return new ExpenseStatusRepository(new ExpenseStatus());
         });
     }
 

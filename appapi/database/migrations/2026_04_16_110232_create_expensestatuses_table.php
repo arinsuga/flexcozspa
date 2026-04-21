@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateContractstatusesTable extends Migration
+class CreateExpensestatusesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,13 @@ class CreateContractstatusesTable extends Migration
      */
     public function up()
     {
-        Schema::create('contractstatuses', function (Blueprint $table) {
+        Schema::create('expensestatuses', function (Blueprint $table) {
+
             $table->integer('id')->primary(); // we use the specific IDs 0,1,2
             $table->string('name');
             $table->string('description')->nullable();
             $table->timestamps();
+
         });
     }
 
@@ -28,6 +30,6 @@ class CreateContractstatusesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('contractstatuses');
+        Schema::dropIfExists('expensestatuses');
     }
 }

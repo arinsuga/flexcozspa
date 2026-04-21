@@ -1,10 +1,10 @@
 'use client';
 
-import { useOrders, useOrderMutations } from '@/hooks/useOrders';
+import { useExpenses, useExpenseMutations } from '@/hooks/useExpenses';
 import React, { useState } from 'react';
 import Button from '@/components/common/Button';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
-import { Order } from '@/services/orderService';
+import { Expense } from '@/services/expenseService';
 import { TableSkeleton } from '@/components/common/Skeleton';
 import { useRouter } from 'next/navigation';
 import Input from '@/components/common/Input';
@@ -30,7 +30,7 @@ export default function ExpensesPage() {
     }
   };
 
-  const { data: ordersResponse, isLoading, error } = useOrders({
+  const { data: expensesResponse, isLoading, error } = useExpenses({
     page,
     per_page: 10,
     search_query: searchQuery,
@@ -38,44 +38,44 @@ export default function ExpensesPage() {
     sort_by: 'id',
     sort_order: 'desc'
   });
-  const { deleteOrder } = useOrderMutations();
+  const { deleteExpense } = useExpenseMutations();
 
   // Handle both direct array and paginated response formats
-  const orders = ordersResponse?.data && Array.isArray(ordersResponse.data)
-    ? ordersResponse.data
-    : Array.isArray(ordersResponse)
-      ? ordersResponse
+  const expenses = expensesResponse?.data && Array.isArray(expensesResponse.data)
+    ? expensesResponse.data
+    : Array.isArray(expensesResponse)
+      ? expensesResponse
       : [];
     
-  const meta = ordersResponse?.current_page 
-    ? ordersResponse 
+  const meta = expensesResponse?.current_page 
+    ? expensesResponse 
     : { current_page: 1, last_page: 1 };
 
 
   const [appError, setAppError] = useState<string | null>(null);
   
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
 
   const handleCreate = () => {
     router.push('/expenses/new');
   };
 
-  const handleEdit = (order: Order) => {
-    router.push(`/expenses/${order.id}?mode=edit`);
+  const handleEdit = (expense: Expense) => {
+    router.push(`/expenses/${expense.id}?mode=edit`);
   };
 
-  const handleDeleteClick = (order: Order) => {
-    setOrderToDelete(order);
+  const handleDeleteClick = (expense: Expense) => {
+    setExpenseToDelete(expense);
     setIsDeleteOpen(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (orderToDelete) {
+    if (expenseToDelete) {
         try {
-            await deleteOrder.mutateAsync(orderToDelete.id);
+            await deleteExpense.mutateAsync(expenseToDelete.id);
             setIsDeleteOpen(false);
-            setOrderToDelete(null);
+            setExpenseToDelete(null);
         } catch (err: unknown) {
              console.error('App Error:', err);
              setAppError("An unexpected error occurred. Please try again later.");
@@ -137,8 +137,8 @@ export default function ExpensesPage() {
                 <SelectInput
                     options={[
                         {value: '', label: 'All Columns'},
-                        {value: 'order_number', label: 'Order No'},
-                        {value: 'order_description', label: 'Description'},
+                        {value: 'expense_number', label: 'Expense No'},
+                        {value: 'expense_description', label: 'Description'},
                         {value: 'project_number', label: 'Project Number'},
                         {value: 'project_name', label: 'Project Name'},
                         {value: 'contract_number', label: 'Contract Number'},
@@ -173,7 +173,7 @@ export default function ExpensesPage() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contract No</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contract Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Order No</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Expense No</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
@@ -181,47 +181,47 @@ export default function ExpensesPage() {
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {orders?.map((order: Order) => (
+            {expenses?.map((expense: Expense) => (
               <tr 
-                key={order.id} 
-                onClick={() => router.push(`/expenses/${order.id}?mode=view`)}
+                key={expense.id} 
+                onClick={() => router.push(`/expenses/${expense.id}?mode=view`)}
                 className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
               >
                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                    {order.project?.project_number || '-'}
+                    {expense.project?.project_number || '-'}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 font-medium">
-                    {order.project?.project_name || '-'}
+                    {expense.project?.project_name || '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                    {order.contract?.contract_number || '-'}
+                    {expense.contract?.contract_number || '-'}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                    {order.contract?.contract_name || '-'}
+                    {expense.contract?.contract_name || '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
-                    {order.order_number}
+                    {expense.expense_number}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{order.order_description}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{expense.expense_description}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.orderstatus_id)}`}>
-                        {order.status?.name || order.orderstatus_id}
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(expense.expensestatus_id)}`}>
+                        {expense.status?.name || expense.expensestatus_id}
                     </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                   {order.order_dt ? order.order_dt.split('T')[0] : 'N/A'}
+                   {expense.expense_dt ? expense.expense_dt.split('T')[0] : 'N/A'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-center gap-4">
                         <button 
-                            onClick={() => handleEdit(order)}
+                            onClick={() => handleEdit(expense)}
                             className="text-primary hover:text-indigo-900"
                             title="Edit"
                         >
                             <span className="material-icons">edit</span>
                         </button>
                         <button 
-                            onClick={() => handleDeleteClick(order)}
+                            onClick={() => handleDeleteClick(expense)}
                             className="text-error hover:text-red-900"
                             title="Delete"
                         >
@@ -231,7 +231,7 @@ export default function ExpensesPage() {
                 </td>
               </tr>
             ))}
-            {orders?.length === 0 && (
+            {expenses?.length === 0 && (
                 <tr>
                     <td colSpan={9} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                         No expenses found. Create one to get started.
@@ -256,9 +256,9 @@ export default function ExpensesPage() {
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Expense"
-        message={`Are you sure you want to delete ${orderToDelete?.order_number}? This action cannot be undone.`}
+        message={`Are you sure you want to delete ${expenseToDelete?.expense_number}? This action cannot be undone.`}
         variant="danger"
-        isLoading={deleteOrder.isPending}
+        isLoading={deleteExpense.isPending}
       />
     </div>
   );

@@ -36,6 +36,11 @@ export const orderSheetService = {
     const response = await appApi.get(`ordersheets/order/${orderId}/optimized`);
     return response.data;
   },
+
+  getByExpenseId: async (expenseId: number | string) => {
+    const response = await appApi.get(`ordersheets/expense/${expenseId}`);
+    return response.data;
+  },
   
   saveSheet: async (orderId: number | string, data: any[]) => {
 

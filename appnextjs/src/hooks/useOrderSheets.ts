@@ -9,6 +9,14 @@ export const useOrderSheets = (orderId: string | number) => {
   });
 };
 
+export const useExpenseSheets = (expenseId: string | number) => {
+  return useQuery({
+    queryKey: ['expense-sheets', expenseId],
+    queryFn: () => orderSheetService.getByExpenseId(expenseId),
+    enabled: !!expenseId,
+  });
+};
+
 export const useOrderSheetMutations = () => {
   const queryClient = useQueryClient();
 

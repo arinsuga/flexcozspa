@@ -96,8 +96,14 @@ Route::get('contracts/{contractId}/sheets', 'ContractSheetController@getByContra
 Route::apiResource('ordersheets', 'OrdersheetController');
 Route::get('ordersheets/order/{orderId}', 'OrdersheetController@getByOrder')->name('ordersheets.by.order');
 Route::get('ordersheets/order/{orderId}/optimized', 'OrdersheetController@getByOrderOptimized')->name('ordersheets.by.order.optimized');
+Route::get('ordersheets/expense/{expenseId}', 'OrdersheetController@getByExpense')->name('ordersheets.by.expense');
 Route::get('ordersheets/project/{projectId}', 'OrdersheetController@getByProject')->name('ordersheets.by.project');
 Route::get('ordersheets/contract/{contractId}', 'OrdersheetController@getByContract')->name('ordersheets.by.contract');
+
+// Expenses API
+Route::apiResource('expenses', 'ExpenseController');
+Route::get('expenses/project/{projectId}', 'ExpenseController@getByProject')->name('expenses.by.project');
+Route::get('expenses/contract/{contractId}', 'ExpenseController@getByContract')->name('expenses.by.contract');
 
 // Sheet Groups API
 Route::apiResource('sheetgroups', 'SheetGroupController');

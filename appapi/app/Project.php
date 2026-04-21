@@ -67,4 +67,12 @@ class Project extends Model
         return $this->hasMany('App\Contract', 'project_id');
     }
 
+    /**
+     * Expenses that belong to this project.
+     */
+    public function expenses()
+    {
+        return $this->hasMany('App\Expense', 'project_id');
+    }
+
 }

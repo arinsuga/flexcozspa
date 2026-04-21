@@ -89,4 +89,12 @@ class Contract extends Model
         return $this->hasMany('App\ContractOrderSummary', 'contract_id');
     }
 
+    /**
+     * Expenses that belong to this contract.
+     */
+    public function expenses()
+    {
+        return $this->hasMany('App\Expense', 'contract_id');
+    }
+
 }

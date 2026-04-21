@@ -142,4 +142,68 @@ class OrderRepository extends EloquentRepository implements OrderRepositoryInter
         $perPage = !empty($params['per_page']) ? $params['per_page'] : 10;
         return $query->paginate($perPage);
     }
+
+    /**
+     * Update or create ordersheets for an expense.
+     * Follows the business logic for expense items.
+     */
+    public function updateOrdersheetsForExpense($expense, $items)
+    {
+        return \DB::transaction(function () use ($expense, $items) {
+            $currentExpenseId = $expense->id;
+            $inputIds = collect($items)->pluck('id')->filter()->toArray();
+            
+            // 1. Handle unlinking items that are no longer in the request
+            // These are items currently linked to this expense but not present in the items array
+            $expense->ordersheets()
+                ->whereNotIn('id', $inputIds)
+                ->update([
+                    'expenses_id' => null,
+                    'sheet_refftypeid' => null,
+                    'sheet_reffno' => null
+                ]);
+
+            $processedIds = [];
+            foreach ($items as $item) {
+                if (isset($item['id'])) {
+                    // Scenario (b): Update existing order item
+                    $ordersheet = \App\Ordersheet::find($item['id']);
+                    if ($ordersheet) {
+                        // Condition: empty/null expenses_id OR matching current expense
+                        if (empty($ordersheet->expenses_id) || $ordersheet->expenses_id == $currentExpenseId) {
+                            $ordersheet->update([
+                                'expenses_id' => $currentExpenseId,
+                                'sheet_refftypeid' => $item['sheet_refftypeid'] ?? $ordersheet->sheet_refftypeid,
+                                'sheet_reffno' => $item['sheet_reffno'] ?? $ordersheet->sheet_reffno,
+                                // Also update other fields if they are in the input
+                                'sheet_name' => $item['sheet_name'] ?? $ordersheet->sheet_name,
+                                'sheet_qty' => $item['sheet_qty'] ?? $ordersheet->sheet_qty,
+                                'sheet_price' => $item['sheet_price'] ?? $ordersheet->sheet_price,
+                                'sheet_netamt' => $item['sheet_netamt'] ?? $ordersheet->sheet_netamt,
+                            ]);
+                            $processedIds[] = $ordersheet->id;
+                        }
+                    }
+                } else {
+                    // Scenario (c): Create new expense item without using existing order item
+                    // Ensure link to parent expense and relevant order/project info
+                    $item['expenses_id'] = $currentExpenseId;
+                    $item['project_id'] = $expense->project_id;
+                    $item['contract_id'] = $expense->contract_id;
+                    $item['order_id'] = $expense->order_id;
+                    
+                    // Fill order number/dt from the parent order if available
+                    if ($expense->order) {
+                        $item['order_number'] = $expense->order->order_number;
+                        $item['order_dt'] = $expense->order->order_dt;
+                    }
+
+                    $newItem = \App\Ordersheet::create($item);
+                    $processedIds[] = $newItem->id;
+                }
+            }
+            
+            return $processedIds;
+        });
+    }
 }

@@ -35,6 +35,7 @@ class Ordersheet extends Model
         'project_id',
         'contract_id',
         'contractsheets_id',
+        'expenses_id',
         'sheet_dt',
         'sheet_type',
         'sheetgroup_type',
@@ -131,6 +132,14 @@ class Ordersheet extends Model
     public function uomNormalization()
     {
         return $this->belongsTo('App\UomNormalization', 'uom_code', 'uom_code');
+    }
+
+    /**
+     * Expense that this ordersheet belongs to.
+     */
+    public function expense()
+    {
+        return $this->belongsTo('App\Expense', 'expenses_id');
     }
 
 }
