@@ -19,6 +19,7 @@ class CreateExpensesTable extends Migration
             $table->bigInteger('project_id');
             $table->bigInteger('contract_id');
             $table->bigInteger('order_id');
+            $table->unsignedBigInteger('refftype_id')->nullable();
 
             $table->date('expense_dt')->nullable();
             $table->string('expense_number')->nullable();

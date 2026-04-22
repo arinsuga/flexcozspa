@@ -4,6 +4,10 @@ import { useRouter } from 'next/navigation';
 import { useExpense, useExpenseMutations } from '@/hooks/useExpenses';
 import { useProjects } from '@/hooks/useProjects';
 import { useContracts } from '@/hooks/useContracts';
+import { useOrders } from '@/hooks/useOrders';
+import { useReffTypes } from '@/hooks/useReffTypes';
+import { ReffType } from '@/services/refftypeService';
+import { Order } from '@/services/orderService';
 import Button from '@/components/common/Button';
 import ExpenseSheetTable from '@/components/features/expenses/ExpenseSheetTable';
 import InfoDialog from '@/components/common/InfoDialog';
@@ -63,6 +67,12 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
     message: '',
     variant: 'info',
   });
+
+  const { data: ordersData } = useOrders(expense?.project_id ? { project_id: expense.project_id } : { enabled: false });
+  const { data: reffTypesData } = useReffTypes();
+  
+  const orders = useMemo(() => (ordersData?.data || []) as Order[], [ordersData]);
+  const reffTypes = useMemo(() => (reffTypesData?.data || []) as ReffType[], [reffTypesData]);
 
 
   // Sync localSheets with API data once
@@ -200,30 +210,39 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
                </select>
             </div>
             <div>
-               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Contract</label>
+               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Order</label>
                <select
-                  value={safeExpense.contract_id || ''}
-                  onChange={(e) => handleHeaderChange('contract_id', e.target.value)}
+                  value={safeExpense.order_id || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const selectedOrder = orders.find(o => String(o.id) === val);
+                    setExpense(prev => prev ? ({ 
+                      ...prev, 
+                      order_id: val ? parseInt(val) : undefined,
+                      contract_id: selectedOrder?.contract_id || prev.contract_id
+                    }) : null);
+                  }}
                   disabled={readOnlyInfo}
                   className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
                >
-                  <option value="">Select Contract</option>
-                  {contracts.map((c: any) => (
-                    <option key={c.id} value={c.id}>{c.contract_name}</option>
+                  <option value="">Select Order</option>
+                  {orders.map((o: any) => (
+                    <option key={o.id} value={o.id}>{o.order_number}</option>
                   ))}
                </select>
             </div>
             <div>
-               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Status</label>
+               <label className="block text-gray-500 dark:text-gray-400 text-xs uppercase">Ref Type</label>
                <select
-                  value={safeExpense.expensestatus_id || '1'}
-                  onChange={(e) => handleHeaderChange('expensestatus_id', e.target.value)}
+                  value={safeExpense.refftype_id || ''}
+                  onChange={(e) => handleHeaderChange('refftype_id', e.target.value ? parseInt(e.target.value) : undefined)}
                   disabled={readOnlyInfo}
                   className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-xs py-1 dark:bg-gray-700 dark:border-gray-600 ${readOnlyInfo ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''}`}
                >
-                  <option value="1">Open/Pending</option>
-                  <option value="2">Approved</option>
-                  <option value="3">Rejected</option>
+                  <option value="">Select Type</option>
+                  {reffTypes.map((rt: any) => (
+                    <option key={rt.id} value={rt.id}>{rt.refftype_name}</option>
+                  ))}
                </select>
             </div>
             <div>
@@ -262,9 +281,11 @@ export default function ExpenseDetailClient({ id, initialData, mode = 'edit', on
                 <ExpenseSheetTable 
                   ref={sheetRef} 
                   data={localSheets} 
-                  orderId={id} 
+                  expenseId={id} 
                   projectId={Number(safeExpense.project_id) || 0} 
                   contractId={Number(safeExpense.contract_id) || 0}
+                  reffTypeId={Number(safeExpense.refftype_id) || undefined}
+                  expenseNumber={safeExpense.expense_number}
                 />
         </div>
       </div>

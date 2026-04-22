@@ -55,7 +55,7 @@ export default function ExpenseDetailPage() {
   if (mode === 'view') {
     return (
       <ExpenseSheetConfirmation 
-        order={expenseData} 
+        expense={expenseData} 
         mode="view" 
         onBack={() => router.push('/expenses')} 
         onSave={() => {}} 
@@ -142,7 +142,7 @@ export default function ExpenseDetailPage() {
       {step === 3 && (
         <div className="space-y-6">
           <ExpenseSheetConfirmation 
-            order={expenseData}
+            expense={expenseData}
             onBack={() => setStep(2)}
             onSave={handleFinalSave}
             isLoading={updateExpense.isPending}

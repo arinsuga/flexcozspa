@@ -33,6 +33,8 @@ export const orderService = {
     return response.data;
   },
   create: async (data: Partial<Order>) => {
+    console.log("===== data order =====");
+    console.log(data);
     const response = await appApi.post('orders', data);
     return response.data;
   },

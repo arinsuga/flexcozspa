@@ -13,19 +13,19 @@ import InfoDialog from '@/components/common/InfoDialog';
 
 
 interface ExpenseSheetConfirmationProps {
-  order: Partial<Expense> & { expense_items?: Partial<OrderSheet>[]; ordersheets?: Partial<OrderSheet>[] };
+  expense: Partial<Expense> & { expense_items?: Partial<OrderSheet>[]; ordersheets?: Partial<OrderSheet>[] };
   onBack: () => void;
   onSave: (processedSheets: OrderSheet[]) => void;
   isLoading: boolean;
   mode?: 'edit' | 'view';
 }
 
-export default function ExpenseSheetConfirmation({ order, onBack, onSave, isLoading, mode = 'edit' }: ExpenseSheetConfirmationProps) {
-  const { data: projectData } = useProject(order.project_id || '');
+export default function ExpenseSheetConfirmation({ expense, onBack, onSave, isLoading, mode = 'edit' }: ExpenseSheetConfirmationProps) {
+  const { data: projectData } = useProject(expense.project_id || '');
   const project = projectData?.data || projectData;
-  const { data: contractData } = useContract(order.contract_id || '');
+  const { data: contractData } = useContract(expense.contract_id || '');
   const contract = (contractData as any)?.data || contractData;
-  const { data: summaryDataResponse } = useContractOrderSummary(order.contract_id || 0, order.id);
+  const { data: summaryDataResponse } = useContractOrderSummary(expense.contract_id || 0, expense.id);
 
   const summaryData = useMemo(() => {
     const raw = summaryDataResponse?.data || summaryDataResponse;
@@ -51,7 +51,7 @@ export default function ExpenseSheetConfirmation({ order, onBack, onSave, isLoad
   
   // Refined processing logic
   const processedSheets = useMemo(() => {
-    const rawSheets = order.expense_items || order.ordersheets || [];
+    const rawSheets = expense.expense_items || expense.ordersheets || [];
     const safeRawSheets: Partial<OrderSheet>[] = Array.isArray(rawSheets) ? rawSheets : [];
 
     // 1. Filter: sheet_code is not blank
@@ -118,7 +118,7 @@ export default function ExpenseSheetConfirmation({ order, onBack, onSave, isLoad
         sheetgroup_id: contractMatch?.sheetgroup_id || s.sheetgroup_id,
         sheetgroup_type: contractMatch?.sheetgroup_type || s.sheetgroup_type,
         sheet_type: 1, // Treat all as items for orders/expenses
-        sheet_dt: order.expense_dt || new Date().toISOString().split('T')[0],
+        sheet_dt: expense.expense_dt || new Date().toISOString().split('T')[0],
         sheet_grossamt: grossAmt,
         sheet_netamt: grossAmt,
         sheetgroup_seqno: seqNo,
@@ -127,7 +127,7 @@ export default function ExpenseSheetConfirmation({ order, onBack, onSave, isLoad
         validation_errors: errors
       };
     });
-  }, [order.expense_items, order.ordersheets, order.expense_dt, summaryData, mode]); 
+  }, [expense.expense_items, expense.ordersheets, expense.expense_dt, summaryData, mode]); 
 
   const handleSaveClick = () => {
     const sheets = processedSheets || [];
@@ -191,15 +191,15 @@ export default function ExpenseSheetConfirmation({ order, onBack, onSave, isLoad
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Expense Number</label>
-          <div className="mt-1 text-sm text-gray-900 dark:text-white font-bold">{order.expense_number}</div>
+          <div className="mt-1 text-sm text-gray-900 dark:text-white font-bold">{expense.expense_number}</div>
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Expense Date</label>
-          <div className="mt-1 text-sm text-gray-900 dark:text-white font-bold">{order.expense_dt?.split(/[ T]/)[0]}</div>
+          <div className="mt-1 text-sm text-gray-900 dark:text-white font-bold">{expense.expense_dt?.split(/[ T]/)[0]}</div>
         </div>
         <div className="col-span-1 lg:col-span-2">
           <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Description</label>
-          <div className="mt-1 text-sm text-gray-700 dark:text-gray-300 italic">{order.expense_description || '-'}</div>
+          <div className="mt-1 text-sm text-gray-700 dark:text-gray-300 italic">{expense.expense_description || '-'}</div>
         </div>
       </div>
 

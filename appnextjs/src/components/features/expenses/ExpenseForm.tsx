@@ -11,8 +11,10 @@ import { useContracts } from '@/hooks/useContracts';
 import { Project } from '@/services/projectService';
 import { Contract } from '@/services/contractService';
 import Link from 'next/link';
-import { useExpenseStatuses } from '@/hooks/useExpenseStatuses';
-import { ExpenseStatus } from '@/services/expenseStatusService';
+import { useReffTypes } from '@/hooks/useReffTypes';
+import { useOrders } from '@/hooks/useOrders';
+import { ReffType } from '@/services/refftypeService';
+import { Order } from '@/services/orderService';
 
 interface ExpenseFormProps {
   initialData?: Partial<Expense>;
@@ -24,18 +26,10 @@ interface ExpenseFormProps {
 
 export default function ExpenseForm({ initialData, onSubmit, isLoading, errors, submitLabel }: ExpenseFormProps) {
   const { data: projectsData } = useProjects();
-  const { data: contractsData } = useContracts();
-  const { data: statusData } = useExpenseStatuses();
+  const { data: reffTypesData } = useReffTypes();
   
   const projects = (projectsData?.data || []) as Project[];
-  const contracts = (contractsData?.data || []) as Contract[];
-  const statuses = Array.isArray(statusData) ? statusData : (statusData?.data || []);
-
-  // Get current date in YYYY-MM-DD format
-  const getCurrentDate = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  };
+  const reffTypes = (reffTypesData?.data || []) as ReffType[];
 
   const [formData, setFormData] = useState<Partial<Expense>>(() => ({
     expense_number: initialData?.expense_number || '',
@@ -45,7 +39,13 @@ export default function ExpenseForm({ initialData, onSubmit, isLoading, errors, 
     expensestatus_id: initialData?.expensestatus_id || 1,
     project_id: initialData?.project_id || undefined,
     contract_id: initialData?.contract_id || undefined,
+    order_id: initialData?.order_id || undefined,
+    refftype_id: initialData?.refftype_id || undefined,
   }));
+
+  // Fetch orders based on selected project
+  const { data: ordersData } = useOrders(formData.project_id ? { project_id: formData.project_id } : { enabled: false });
+  const orders = (ordersData?.data || []) as Order[];
 
   // Accurate initialization tracking
   const [isInitialized, setIsInitialized] = useState(!!(initialData && Object.keys(initialData).length > 2));
@@ -61,6 +61,8 @@ export default function ExpenseForm({ initialData, onSubmit, isLoading, errors, 
         expensestatus_id: initialData.expensestatus_id || 1,
         project_id: initialData.project_id || undefined,
         contract_id: initialData.contract_id || undefined,
+        order_id: initialData.order_id || undefined,
+        refftype_id: initialData.refftype_id || undefined,
       });
       setIsInitialized(true);
     }
@@ -109,6 +111,20 @@ export default function ExpenseForm({ initialData, onSubmit, isLoading, errors, 
             placeholder="Select Project"
             error={errors?.project_id?.[0]}
           />
+
+          <SelectInput
+            label="Expense Number Type *"
+            name="refftype_id"
+            required
+            options={reffTypes.map(rt => ({
+              value: rt.id,
+              label: rt.refftype_name
+            }))}
+            value={formData.refftype_id}
+            onChange={(value) => setFormData(prev => ({ ...prev, refftype_id: value as number }))}
+            placeholder="Select Type"
+            error={errors?.refftype_id?.[0]}
+          />
           
           <Input
             label="Expense Number *"
@@ -141,17 +157,25 @@ export default function ExpenseForm({ initialData, onSubmit, isLoading, errors, 
         {/* Column 2 */}
         <div className="space-y-4">
           <SelectInput
-            label="Contract Name *"
-            name="contract_id"
+            label="Order Name *"
+            name="order_id"
             required
-            options={contracts.map(contract => ({
-              value: contract.id,
-              label: contract.contract_name
+            options={orders.map(order => ({
+              value: order.id,
+              label: `${order.order_number} - ${order.order_description.substring(0, 30)}...`
             }))}
-            value={formData.contract_id}
-            onChange={(value) => setFormData(prev => ({ ...prev, contract_id: value as number }))}
-            placeholder="Select Contract"
-            error={errors?.contract_id?.[0]}
+            value={formData.order_id}
+            onChange={(value) => {
+              const selectedOrder = orders.find(o => o.id === value);
+              setFormData(prev => ({ 
+                ...prev, 
+                order_id: value as number,
+                contract_id: selectedOrder?.contract_id || prev.contract_id
+              }));
+            }}
+            placeholder={formData.project_id ? "Select Order" : "Select Project first"}
+            disabled={!formData.project_id}
+            error={errors?.order_id?.[0]}
           />
 
           <Input
@@ -161,19 +185,6 @@ export default function ExpenseForm({ initialData, onSubmit, isLoading, errors, 
             value={formData.expense_dt ? formData.expense_dt.split(/[ T]/)[0] : ''}
             onChange={handleChange}
             error={errors?.expense_dt?.[0]}
-          />
-
-          <SelectInput
-            label="Status"
-            name="expensestatus_id"
-            options={statuses.map((s: ExpenseStatus) => ({
-              value: s.id,
-              label: s.name
-            }))}
-            value={formData.expensestatus_id}
-            onChange={(value) => setFormData(prev => ({ ...prev, expensestatus_id: value as number }))}
-            error={errors?.expensestatus_id?.[0]}
-            placeholder="Select Status"
           />
         </div>
       </div>

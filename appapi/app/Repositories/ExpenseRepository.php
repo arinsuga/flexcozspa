@@ -19,19 +19,19 @@ class ExpenseRepository extends EloquentRepository implements ExpenseRepositoryI
 
     public function getByProject($projectId)
     {
-        return $this->data->with(['status', 'project', 'contract', 'order', 'ordersheets'])
+        return $this->data->with(['status', 'project', 'contract', 'order', 'ordersheets', 'refftype'])
             ->where('project_id', $projectId)->get();
     }
 
     public function getByContract($contractId)
     {
-        return $this->data->with(['status', 'project', 'contract', 'order', 'ordersheets'])
+        return $this->data->with(['status', 'project', 'contract', 'order', 'ordersheets', 'refftype'])
             ->where('contract_id', $contractId)->get();
     }
 
     public function find($id)
     {
-        return $this->data->with(['status', 'project', 'contract', 'order', 'ordersheets'])->find($id);
+        return $this->data->with(['status', 'project', 'contract', 'order', 'ordersheets', 'refftype'])->find($id);
     }
 
     public function create($data)
@@ -43,7 +43,7 @@ class ExpenseRepository extends EloquentRepository implements ExpenseRepositoryI
                 $this->orderRepo->updateOrdersheetsForExpense($expense, $data['expense_items']);
             }
 
-            return $expense->fresh(['status', 'project', 'contract', 'order', 'ordersheets']);
+            return $expense->fresh(['status', 'project', 'contract', 'order', 'ordersheets', 'refftype']);
         });
     }
 
@@ -58,7 +58,7 @@ class ExpenseRepository extends EloquentRepository implements ExpenseRepositoryI
                     $this->orderRepo->updateOrdersheetsForExpense($expense, $data['expense_items']);
                 }
                 
-                return $expense->fresh(['status', 'project', 'contract', 'order', 'ordersheets']);
+                return $expense->fresh(['status', 'project', 'contract', 'order', 'ordersheets', 'refftype']);
             }
             return null;
         });
@@ -66,7 +66,7 @@ class ExpenseRepository extends EloquentRepository implements ExpenseRepositoryI
 
     public function getAllPaginated($params)
     {
-        $query = $this->data->newQuery()->with(['status', 'project', 'contract', 'order', 'ordersheets']);
+        $query = $this->data->newQuery()->with(['status', 'project', 'contract', 'order', 'ordersheets', 'refftype']);
 
         // Search Logic
         if (!empty($params['search_query'])) {

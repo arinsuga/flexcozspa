@@ -28,10 +28,12 @@ interface ExpenseSheetTableProps {
   contractId: number;
   onchange?: (instance: any, cell: HTMLElement, x: string | number, y: string | number, value: any) => void;
   readOnly?: boolean;
+  reffTypeId?: number;
+  expenseNumber?: string;
 }
 
 const ExpenseSheetTable = forwardRef((props: ExpenseSheetTableProps, ref) => {
-  const { data, expenseId, projectId, contractId, onchange, readOnly = false } = props;
+  const { data, expenseId, projectId, contractId, onchange, readOnly = false, reffTypeId, expenseNumber } = props;
   const jRef = useRef<HTMLDivElement>(null);
   const jInstance = useRef<any>(null);
   
@@ -100,7 +102,7 @@ const ExpenseSheetTable = forwardRef((props: ExpenseSheetTableProps, ref) => {
         return strVal !== '' && strVal !== 'null' && strVal !== 'undefined';
       };
 
-      const isEditMode = orderId !== 'new' && !!orderId;
+      const isEditMode = expenseId !== 'new' && !!expenseId;
 
       return rawData
         .map((row: any[]) => {
@@ -177,8 +179,8 @@ const ExpenseSheetTable = forwardRef((props: ExpenseSheetTableProps, ref) => {
       return [
         item.id || null,
         item.sheet_code || '',
-        item.sheet_refftypeid || '',
-        item.sheet_reffno || '',
+        item.sheet_refftypeid || reffTypeId || '',
+        item.sheet_reffno || expenseNumber || '',
         item.sheet_reffnodate ? item.sheet_reffnodate.split('T')[0] : '',
         item.vendor_name || (item.vendor?.vendor_name) || '',
         item.sheet_description || (match?.sheet_name) || '',
@@ -195,7 +197,7 @@ const ExpenseSheetTable = forwardRef((props: ExpenseSheetTableProps, ref) => {
         item.sheetgroup_type || (match?.sheetgroup_type) || null,
       ];
     });
-  }, []); // summaryDataRef is used to keep it stable
+  }, [reffTypeId, expenseNumber]); // Added reffTypeId and expenseNumber to dependencies
 
 
   const handleCellChange = useCallback((instance: any, cell: any, x: any, y: any, value: any) => {
@@ -387,6 +389,28 @@ const ExpenseSheetTable = forwardRef((props: ExpenseSheetTableProps, ref) => {
         if (typeof instance.setComments === 'function') {
           instance.setComments(cellName, '');
         }
+      }
+
+      // Budget Validation (Orange Marking)
+      const totalAmount = parseNumeric(row[11]);
+      const contractAmount = parseNumeric(row[14]);
+      
+      if (totalAmount > contractAmount && contractAmount > 0) {
+        // Highlighting the Total column or the whole row?
+        // Mark the Total cell (index 11) in orange-ish color
+        const totalCellName = `${getColumnName(11)}${index + 1}`;
+        instance.setStyle(totalCellName, 'background-color', '#ffedd5'); // orange-100
+        instance.setStyle(totalCellName, 'color', '#9a3412'); // orange-900
+        if (typeof instance.setComments === 'function') {
+          const currentCombinedComment = (instance.getComments(totalCellName) || '') + ' Budget exceeded!';
+          instance.setComments(totalCellName, currentCombinedComment.trim());
+        }
+      } else {
+        const totalCellName = `${getColumnName(11)}${index + 1}`;
+        // Only clear if it was orange (don't clear the background if it's the default grey)
+        // Actually the default grey is set in options, best to just reset to default grey
+        instance.setStyle(totalCellName, 'background-color', '#f3f4f6');
+        instance.setStyle(totalCellName, 'color', 'inherit');
       }
     });
   };

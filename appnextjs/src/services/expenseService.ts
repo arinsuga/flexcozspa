@@ -17,6 +17,7 @@ export interface Expense {
   expense_description: string;
   expense_pic: string;
   expensestatus_id: number;
+  refftype_id?: number;
   created_at?: string;
   updated_at?: string;
   status?: ExpenseStatus;

@@ -18,7 +18,7 @@ class CreateOrdersheetsTable extends Migration
             $table->bigInteger('project_id');
             $table->bigInteger('contract_id');
             $table->bigInteger('contractsheets_id');
-            $table->bigInteger('expenses_id');
+            $table->bigInteger('expenses_id')->nullable();
 
             $table->date('sheet_dt')->nullable();
             $table->integer('sheet_type')->default(1); // 0=header, 1=item

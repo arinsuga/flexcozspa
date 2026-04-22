@@ -10,6 +10,7 @@ import Stepper from '@/components/common/Stepper';
 import { useExpenseMutations } from '@/hooks/useExpenses';
 import { useRouter } from 'next/navigation';
 import InfoDialog from '@/components/common/InfoDialog';
+import { orderService } from '@/services/orderService';
 
 export default function NewExpensePage() {
   const router = useRouter();
@@ -34,8 +35,28 @@ export default function NewExpensePage() {
     variant: 'info',
   });
 
-  const handleStep1Submit = (data: Partial<Expense>) => {
-    setExpenseData(prev => ({ ...prev, ...data }));
+  const handleStep1Submit = async (data: Partial<Expense>) => {
+    let preloadedItems: OrderSheet[] = [];
+    
+    if (data.order_id) {
+      try {
+        const orderResponse = await orderService.getById(data.order_id);
+        const order = orderResponse?.data || orderResponse;
+        
+        if (order?.ordersheets) {
+          // Filter items where expenses_id is null (not yet linked)
+          preloadedItems = order.ordersheets.filter((item: OrderSheet) => !item.expenses_id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch order items for pre-loading', error);
+      }
+    }
+
+    setExpenseData(prev => ({ 
+      ...prev, 
+      ...data, 
+      expense_items: preloadedItems 
+    }));
     setStep(2);
   };
 
@@ -108,7 +129,7 @@ export default function NewExpensePage() {
       {step === 3 && (
         <div className="space-y-6">
           <ExpenseSheetConfirmation 
-            order={expenseData}
+            expense={expenseData}
             onBack={() => setStep(2)}
             onSave={handleFinalSave}
             isLoading={createExpense.isPending}

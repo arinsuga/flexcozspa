@@ -34,15 +34,15 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'contract_id' => 'required|exists:contracts,id',
-            'order_dt' => 'nullable|date',
-            'order_number' => 'required|nullable|string|unique:orders,order_number',
-            'order_description' => 'required|nullable|string',
-            'order_pic' => 'nullable|string',
-            'orderstatus_id' => 'nullable|integer|in:0,1,2',
-        ]);
+        // $validated = $request->validate([
+        //     'project_id' => 'required|exists:projects,id',
+        //     'contract_id' => 'required|exists:contracts,id',
+        //     'order_dt' => 'nullable|date',
+        //     'order_number' => 'required|nullable|string|unique:orders,order_number',
+        //     'order_description' => 'required|nullable|string',
+        //     'order_pic' => 'nullable|string',
+        //     'orderstatus_id' => 'nullable|integer|in:0,1,2',
+        // ]);
 
         $order = $this->repository->create($request->all());
         return response()->json(['data' => $order], 201);

@@ -38,6 +38,7 @@ class Expense extends Model
         'expense_description',
         'expense_pic',
         'expensestatus_id',
+        'refftype_id',
     ];
 
     /**
@@ -78,5 +79,13 @@ class Expense extends Model
     public function ordersheets()
     {
         return $this->hasMany('App\Ordersheet', 'expenses_id');
+    }
+
+    /**
+     * ReffType that this expense belongs to.
+     */
+    public function refftype()
+    {
+        return $this->belongsTo('App\Refftype', 'refftype_id');
     }
 }
